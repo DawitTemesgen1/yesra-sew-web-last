@@ -1,0 +1,248 @@
+{
+    "common": {
+        "welcome": "እንቋዕ ብደሓን መጻእኩም",
+        "login": "እቶ",
+        "register": "ተመዝገብ",
+        "logout": "ውጻእ",
+        "search": "ድለ",
+        "filter": "ምርጫ",
+        "save": "ዓቅብ",
+        "cancel": "ሰርዝ",
+        "delete": "ደምስስ",
+        "edit": "ኣርትዕ",
+        "view": "ርአይ",
+        "back": "ተመለስ",
+        "next": "ቀጻሊ",
+        "submit": "ስደድ",
+        "loading": "ይጽዕን ኣሎ...",
+        "error": "ጌጋ",
+        "success": "ተዓዊቱ",
+        "close": "ዕጸው",
+        "yes": "እወ",
+        "no": "ኣይፋል",
+        "all": "ኩሉ",
+        "none": "ዋላሓደ",
+        "select": "ምረጽ",
+        "upload": "ኣስቀምጥ",
+        "download": "ኣውርድ",
+        "share": "ኣካፍል",
+        "copy": "ቅዳሕ",
+        "more": "ተወሳኺ",
+        "less": "ውሑድ",
+        "show": "ኣርኢ",
+        "hide": "ሕብእ"
+    },
+    "auth": {
+        "welcomeBack": "እንቋዕ ብደሓን ተመለስኩም!",
+        "signInToContinue": "ናብ የስራሰው ንምቕጻል እቶ",
+        "dontHaveAccount": "ሕሳብ የብልኩምን?",
+        "alreadyHaveAccount": "ሕሳብ ኣለኩም?",
+        "signUp": "ተመዝገብ",
+        "signIn": "እቶ",
+        "email": "ኢመይል",
+        "password": "ፓስዎርድ",
+        "confirmPassword": "ፓስዎርድ ኣረጋግጽ",
+        "fullName": "ምሉእ ስም",
+        "phoneNumber": "ቁጽሪ ተሌፎን",
+        "forgotPassword": "ፓስዎርድ ረሲዕኩም?",
+        "resetPassword": "ፓስዎርድ ዳግማይ ኣስጀምር",
+        "sendResetLink": "ናይ ዳግማይ ምጅማር ኣገናኒ ስደድ",
+        "createAccount": "ሕሳብ ፍጠር",
+        "orContinueWith": "ወይ ቀጽል ብ",
+        "google": "ጉግል",
+        "facebook": "ፌስቡክ",
+        "termsAgree": "ብምምዝጋብ ተሰማሚዕኩም",
+        "termsOfService": "ናይ ኣገልግሎት ውዕላት",
+        "and": "ከምኡውን",
+        "privacyPolicy": "ናይ ብሕታውነት ፖሊሲ"
+    },
+    "landing": {
+        "hero": {
+            "title": "ናይ ኢትዮጵያ ቀዳማይ ገበያ",
+            "subtitle": "ግዛእ፣ ሽየጥ፣ ከምኡውን ዝደልይዎ ኩሉ ርከብ",
+            "description": "ኣብ የስራሰው ገዛውቲ፣ መካይን፣ ስራሕቲ፣ ከምኡውን ካልእ ዝገዝኡን ዝሸይጡን ብኣሽሓት ዝቑጸሩ ኢትዮጵያውያን ተጸምበሩ - እቲ ዝእመነሉ ገበያኹም",
+            "getStarted": "ጀምር",
+            "learnMore": "ተወሳኺ ፍለጥ",
+            "browseListings": "ዝርዝራት ርአይ"
+        },
+        "features": {
+            "title": "ስለምንታይ የስራሰው ትመርጹ?",
+            "subtitle": "ኣብ ኢትዮጵያ ንምግዛእን ንምሽያጥን እቲ ዝበለጸ መድረኽ",
+            "feature1": {
+                "title": "ዝተረጋገጹ ዝርዝራት",
+                "description": "ኩሎም ዝርዝራት ጽሬትን ትክክለኛነትን ንምርግጋጽ ተረጋጊጾም"
+            },
+            "feature2": {
+                "title": "ውሕስነት ዘለዎ ግብይት",
+                "description": "ውሕስነትኩም ቀዳምነትና እዩ ብውሕስነት ዘለዎ ናይ ክፍሊት ኣማራጺታት"
+            },
+            "feature3": {
+                "title": "ሰፊሕ ምርጫ",
+                "description": "ካብ ገዛውቲ ክሳዕ መካይን፣ ካብ ስራሕቲ ክሳዕ ኣገልግሎታት ኩሉ ርከቡ"
+            },
+            "feature4": {
+                "title": "ንምጥቃም ቀሊል",
+                "description": "ንቀሊል ተመኩሮ ቀሊልን ንጹርን መተሓሳሰቢ"
+            }
+        },
+        "categories": {
+            "title": "ብምድብ ርአይ",
+            "subtitle": "ዝደልይዎ ርከቡ",
+            "homes": "ገዛውቲን ሪል እስቴትን",
+            "cars": "መካይንን ተሽከርከርቲን",
+            "jobs": "ስራሕቲን ሞያታትን",
+            "tenders": "ጨረታታትን ኮንትራታትን",
+            "viewAll": "ኩሎም ምድባት ርአይ"
+        },
+        "stats": {
+            "activeUsers": "ንጡፋት ተጠቀምቲ",
+            "listings": "ጠቅላላ ዝርዝራት",
+            "categories": "ምድባት",
+            "cities": "ዝተሸፈና ከተማታት"
+        },
+        "cta": {
+            "title": "ንምጅማር ድሉዋት ዲኹም?",
+            "subtitle": "ኣብ የስራሰው ብኣሽሓት ዝቑጸሩ ዕጉባት ተጠቀምቲ ተጸምበሩ",
+            "postAd": "መወዓውዒኹም ኣቐምጡ",
+            "signUpNow": "ሕጂ ተመዝገቡ"
+        }
+    },
+    "navbar": {
+        "home": "ገጽ ቀዳማይ",
+        "homes": "ገዛውቲ",
+        "cars": "መካይን",
+        "jobs": "ስራሕቲ",
+        "tenders": "ጨረታታት",
+        "pricing": "ዋጋ",
+        "about": "ብዛዕባና",
+        "contact": "ርኸቡና",
+        "postAd": "መወዓውዒ ኣቐምጡ",
+        "myAccount": "ሕሳበይ",
+        "myListings": "ዝርዝራተይ",
+        "favorites": "ዝፈትዎም",
+        "messages": "መልእኽታት",
+        "settings": "ኣቀማምጣ",
+        "language": "ቋንቋ"
+    },
+    "listings": {
+        "title": "ዝርዝራት",
+        "noListings": "ዝርዝራት ኣይተረኽቡን",
+        "viewDetails": "ዝርዝራት ርአይ",
+        "contactSeller": "ሻጢ ርኸቡ",
+        "addToFavorites": "ናብ ዝፈትዎም ውሰኽ",
+        "share": "ኣካፍል",
+        "report": "ሪፖርት",
+        "price": "ዋጋ",
+        "location": "ቦታ",
+        "category": "ምድብ",
+        "postedOn": "ዝተለጠፈሉ",
+        "description": "መግለጺ",
+        "features": "ባህርያት",
+        "specifications": "ዝርዝራት",
+        "similarListings": "ተመሳሳሊ ዝርዝራት",
+        "relatedListings": "ዝተኣሳሰሩ ዝርዝራት"
+    },
+    "search": {
+        "searchPlaceholder": "ዝኾነ ነገር ድለ...",
+        "searchResults": "ናይ ምድላይ ውጽኢታት",
+        "resultsFor": "ውጽኢታት ንዝስዕብ",
+        "noResults": "ውጽኢታት ኣይተረኽቡን",
+        "tryDifferentKeywords": "ዝተፈላለዩ ቁልፊ ቃላት ፈትኑ",
+        "filters": "ምርጫታት",
+        "sortBy": "ኣቐምጥ ብ",
+        "newest": "ሓድሽ",
+        "oldest": "ኣረጊት",
+        "priceLowToHigh": "ዋጋ: ትሑት ናብ ላዕለዋይ",
+        "priceHighToLow": "ዋጋ: ላዕለዋይ ናብ ትሑት",
+        "relevance": "ተዛማድነት"
+    },
+    "pricing": {
+        "title": "መደብኩም ምረጹ",
+        "subtitle": "ንድሌትኩም ዝበለጸ መደብ ምረጹ",
+        "monthly": "ወርሓዊ",
+        "yearly": "ዓመታዊ",
+        "free": "ነጻ",
+        "basic": "መሰረታዊ",
+        "pro": "ፕሮ",
+        "business": "ንግዲ",
+        "currentPlan": "ናይ ሕጂ መደብ",
+        "upgrade": "ኣመሓይሽ",
+        "downgrade": "ኣጉድል",
+        "subscribe": "ተመዝገቡ",
+        "perMonth": "ብወርሒ",
+        "perYear": "ብዓመት",
+        "features": {
+            "listings": "{count} ዝርዝራት",
+            "unlimitedListings": "ዘይተደረተ ዝርዝራት",
+            "featuredListings": "ዝተለዩ ዝርዝራት",
+            "analytics": "ናይ ትንተና ዳሽቦርድ",
+            "support": "ቀዳምነት ዘለዎ ደገፍ",
+            "verifiedBadge": "ዝተረጋገጸ ባጅ",
+            "duration": "{days} መዓልታት ግዜ"
+        }
+    },
+    "profile": {
+        "myProfile": "መገለጺኤይ",
+        "editProfile": "መገለጺ ኣርትዕ",
+        "personalInfo": "ውልቃዊ ሓበሬታ",
+        "accountSettings": "ናይ ሕሳብ ኣቀማምጣ",
+        "notifications": "መበገሲታት",
+        "privacy": "ብሕታውነት",
+        "security": "ውሕስነት",
+        "changePassword": "ፓስዎርድ ቀይር",
+        "deleteAccount": "ሕሳብ ደምስስ",
+        "memberSince": "ኣባል ካብ",
+        "verified": "ተረጋጊጹ",
+        "notVerified": "ኣይተረጋገጸን",
+        "verifyAccount": "ሕሳብ ኣረጋግጽ"
+    },
+    "postAd": {
+        "title": "መወዓውዒኹም ኣቐምጡ",
+        "selectCategory": "ምድብ ምረጹ",
+        "adDetails": "ናይ መወዓውዒ ዝርዝራት",
+        "uploadPhotos": "ስእልታት ኣስቀምጡ",
+        "pricing": "ዋጋ ምውሳን",
+        "review": "ግምግምን ኣትሙን",
+        "adTitle": "ናይ መወዓውዒ ርእሲ",
+        "adDescription": "ናይ መወዓውዒ መግለጺ",
+        "adPrice": "ዋጋ",
+        "adLocation": "ቦታ",
+        "contactInfo": "ናይ ርክብ ሓበሬታ",
+        "publish": "ኣትሙ",
+        "saveDraft": "ከም ረቂቕ ዓቅቡ",
+        "preview": "ቅድመ-ምርኣይ",
+        "uploadImages": "ስእልታት ኣስቀምጡ",
+        "dragAndDrop": "ስእልታት ኣብዚ ጎትቱ ጣሕሉ",
+        "maxImages": "ዝለዓለ {count} ስእልታት",
+        "required": "የድሊ",
+        "optional": "ኣማራጺ"
+    },
+    "footer": {
+        "aboutUs": "ብዛዕባና",
+        "contactUs": "ርኸቡና",
+        "termsOfService": "ናይ ኣገልግሎት ውዕላት",
+        "privacyPolicy": "ናይ ብሕታውነት ፖሊሲ",
+        "faq": "ተደጋጋሚ ሕቶታት",
+        "help": "ናይ ሓገዝ ማእከል",
+        "followUs": "ተኸተሉና",
+        "downloadApp": "መተግበሪ ኣውርዱ",
+        "copyright": "© 2024 የስራሰው። ኩሎም መሰላት ተሓልዮም።",
+        "madeInEthiopia": "ኣብ ኢትዮጵያ ተሰሪሑ ❤️"
+    },
+    "messages": {
+        "success": {
+            "saved": "ብዓወት ተዓቂቡ",
+            "deleted": "ብዓወት ተደምሲሱ",
+            "updated": "ብዓወት ተሓዲሱ",
+            "sent": "ብዓወት ተሰዲዱ",
+            "published": "ብዓወት ተኣቲሙ"
+        },
+        "error": {
+            "general": "ገለ ጌጋ ኣጋጢሙ",
+            "network": "ናይ መርበብ ጌጋ። በጃኹም ርክብኩም ኣረጋግጹ",
+            "notFound": "ኣይተረኽበን",
+            "unauthorized": "ዘይተፈቐደ መእተዊ",
+            "validation": "በጃኹም እታውኩም ኣረጋግጹ"
+        }
+    }
+}

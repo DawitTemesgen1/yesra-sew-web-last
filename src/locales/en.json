@@ -1,0 +1,253 @@
+{
+    "common": {
+        "welcome": "Welcome",
+        "login": "Login",
+        "register": "Register",
+        "logout": "Logout",
+        "search": "Search",
+        "filter": "Filter",
+        "save": "Save",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "edit": "Edit",
+        "view": "View",
+        "back": "Back",
+        "next": "Next",
+        "submit": "Submit",
+        "loading": "Loading...",
+        "error": "Error",
+        "success": "Success",
+        "close": "Close",
+        "yes": "Yes",
+        "no": "No",
+        "all": "All",
+        "none": "None",
+        "select": "Select",
+        "upload": "Upload",
+        "download": "Download",
+        "share": "Share",
+        "copy": "Copy",
+        "more": "More",
+        "less": "Less",
+        "show": "Show",
+        "hide": "Hide"
+    },
+    "auth": {
+        "welcomeBack": "Welcome Back!",
+        "signInToContinue": "Sign in to continue to YesraSew",
+        "dontHaveAccount": "Don't have an account?",
+        "alreadyHaveAccount": "Already have an account?",
+        "signUp": "Sign Up",
+        "signIn": "Sign In",
+        "email": "Email",
+        "password": "Password",
+        "confirmPassword": "Confirm Password",
+        "fullName": "Full Name",
+        "phoneNumber": "Phone Number",
+        "forgotPassword": "Forgot Password?",
+        "resetPassword": "Reset Password",
+        "sendResetLink": "Send Reset Link",
+        "createAccount": "Create Account",
+        "orContinueWith": "Or continue with",
+        "google": "Google",
+        "facebook": "Facebook",
+        "termsAgree": "By signing up, you agree to our",
+        "termsOfService": "Terms of Service",
+        "and": "and",
+        "privacyPolicy": "Privacy Policy",
+        "emailRequired": "Email is required",
+        "passwordRequired": "Password is required",
+        "passwordMismatch": "Passwords do not match",
+        "invalidEmail": "Invalid email address",
+        "weakPassword": "Password must be at least 6 characters"
+    },
+    "landing": {
+        "hero": {
+            "title": "Ethiopia's Premier Marketplace",
+            "subtitle": "Buy, Sell, and Discover Everything You Need",
+            "description": "Join thousands of Ethiopians buying and selling homes, cars, jobs, and more on YesraSew - Your trusted marketplace",
+            "getStarted": "Get Started",
+            "learnMore": "Learn More",
+            "browseListings": "Browse Listings"
+        },
+        "features": {
+            "title": "Why Choose YesraSew?",
+            "subtitle": "The best platform for buying and selling in Ethiopia",
+            "feature1": {
+                "title": "Verified Listings",
+                "description": "All listings are verified to ensure quality and authenticity"
+            },
+            "feature2": {
+                "title": "Secure Transactions",
+                "description": "Your safety is our priority with secure payment options"
+            },
+            "feature3": {
+                "title": "Wide Selection",
+                "description": "Find everything from homes to cars, jobs to services"
+            },
+            "feature4": {
+                "title": "Easy to Use",
+                "description": "Simple and intuitive interface for seamless experience"
+            }
+        },
+        "categories": {
+            "title": "Browse by Category",
+            "subtitle": "Find what you're looking for",
+            "homes": "Homes & Real Estate",
+            "cars": "Cars & Vehicles",
+            "jobs": "Jobs & Careers",
+            "tenders": "Tenders & Contracts",
+            "viewAll": "View All Categories"
+        },
+        "stats": {
+            "activeUsers": "Active Users",
+            "listings": "Total Listings",
+            "categories": "Categories",
+            "cities": "Cities Covered"
+        },
+        "cta": {
+            "title": "Ready to Get Started?",
+            "subtitle": "Join thousands of satisfied users on YesraSew",
+            "postAd": "Post Your Ad",
+            "signUpNow": "Sign Up Now"
+        }
+    },
+    "navbar": {
+        "home": "Home",
+        "homes": "Homes",
+        "cars": "Cars",
+        "jobs": "Jobs",
+        "tenders": "Tenders",
+        "pricing": "Pricing",
+        "about": "About",
+        "contact": "Contact",
+        "postAd": "Post Ad",
+        "myAccount": "My Account",
+        "myListings": "My Listings",
+        "favorites": "Favorites",
+        "messages": "Messages",
+        "settings": "Settings",
+        "language": "Language"
+    },
+    "listings": {
+        "title": "Listings",
+        "noListings": "No listings found",
+        "viewDetails": "View Details",
+        "contactSeller": "Contact Seller",
+        "addToFavorites": "Add to Favorites",
+        "share": "Share",
+        "report": "Report",
+        "price": "Price",
+        "location": "Location",
+        "category": "Category",
+        "postedOn": "Posted on",
+        "description": "Description",
+        "features": "Features",
+        "specifications": "Specifications",
+        "similarListings": "Similar Listings",
+        "relatedListings": "Related Listings"
+    },
+    "search": {
+        "searchPlaceholder": "Search for anything...",
+        "searchResults": "Search Results",
+        "resultsFor": "Results for",
+        "noResults": "No results found",
+        "tryDifferentKeywords": "Try different keywords",
+        "filters": "Filters",
+        "sortBy": "Sort by",
+        "newest": "Newest",
+        "oldest": "Oldest",
+        "priceLowToHigh": "Price: Low to High",
+        "priceHighToLow": "Price: High to Low",
+        "relevance": "Relevance"
+    },
+    "pricing": {
+        "title": "Choose Your Plan",
+        "subtitle": "Select the perfect plan for your needs",
+        "monthly": "Monthly",
+        "yearly": "Yearly",
+        "free": "Free",
+        "basic": "Basic",
+        "pro": "Pro",
+        "business": "Business",
+        "currentPlan": "Current Plan",
+        "upgrade": "Upgrade",
+        "downgrade": "Downgrade",
+        "subscribe": "Subscribe",
+        "perMonth": "per month",
+        "perYear": "per year",
+        "features": {
+            "listings": "{count} Listings",
+            "unlimitedListings": "Unlimited Listings",
+            "featuredListings": "Featured Listings",
+            "analytics": "Analytics Dashboard",
+            "support": "Priority Support",
+            "verifiedBadge": "Verified Badge",
+            "duration": "{days} Days Duration"
+        }
+    },
+    "profile": {
+        "myProfile": "My Profile",
+        "editProfile": "Edit Profile",
+        "personalInfo": "Personal Information",
+        "accountSettings": "Account Settings",
+        "notifications": "Notifications",
+        "privacy": "Privacy",
+        "security": "Security",
+        "changePassword": "Change Password",
+        "deleteAccount": "Delete Account",
+        "memberSince": "Member since",
+        "verified": "Verified",
+        "notVerified": "Not Verified",
+        "verifyAccount": "Verify Account"
+    },
+    "postAd": {
+        "title": "Post Your Ad",
+        "selectCategory": "Select Category",
+        "adDetails": "Ad Details",
+        "uploadPhotos": "Upload Photos",
+        "pricing": "Pricing",
+        "review": "Review & Publish",
+        "adTitle": "Ad Title",
+        "adDescription": "Ad Description",
+        "adPrice": "Price",
+        "adLocation": "Location",
+        "contactInfo": "Contact Information",
+        "publish": "Publish",
+        "saveDraft": "Save as Draft",
+        "preview": "Preview",
+        "uploadImages": "Upload Images",
+        "dragAndDrop": "Drag and drop images here",
+        "maxImages": "Maximum {count} images",
+        "required": "Required",
+        "optional": "Optional"
+    },
+    "footer": {
+        "aboutUs": "About Us",
+        "contactUs": "Contact Us",
+        "termsOfService": "Terms of Service",
+        "privacyPolicy": "Privacy Policy",
+        "faq": "FAQ",
+        "help": "Help Center",
+        "followUs": "Follow Us",
+        "downloadApp": "Download App",
+        "copyright": "© 2024 YesraSew. All rights reserved.",
+        "madeInEthiopia": "Made with ❤️ in Ethiopia"
+    },
+    "messages": {
+        "success": {
+            "saved": "Saved successfully",
+            "deleted": "Deleted successfully",
+            "updated": "Updated successfully",
+            "sent": "Sent successfully",
+            "published": "Published successfully"
+        },
+        "error": {
+            "general": "Something went wrong",
+            "network": "Network error. Please check your connection",
+            "notFound": "Not found",
+            "unauthorized": "Unauthorized access",
+            "validation": "Please check your input"
+        }
+    }
+}

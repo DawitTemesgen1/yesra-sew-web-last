@@ -1,0 +1,399 @@
+import React, { useState } from 'react';
+import {
+  AppBar, Toolbar, Typography, IconButton, Menu, MenuItem, Box,
+  Button, Paper, useMediaQuery, useTheme, Avatar, Badge, Tooltip,
+  Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions
+} from '@mui/material';
+import {
+  Home, Work, Gavel, Apartment, DirectionsCar,
+  Add as AddIcon, Notifications, AccountCircle,
+  Language, DarkMode, LightMode, Settings, Favorite, Dashboard, ExitToApp
+} from '@mui/icons-material';
+import QuickActionsToolbar from './QuickActionsToolbar';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { alpha } from '@mui/material/styles';
+import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
+import logo from '../assets/logo.png';
+import { useCustomTheme } from '../contexts/ThemeContext';
+
+// --- Embedded Multilingual Translations ---
+const translations = {
+  en: {
+    navbar: {
+      logoSubtitle: "Purified Gold",
+      home: "Home",
+      tenders: "Tenders",
+      jobs: "Jobs",
+      homes: "Homes",
+      cars: "Cars",
+      postAd: "Post Your Ad",
+      login: "Sign In",
+      register: "Register",
+      dashboard: "Dashboard",
+      myProfile: "My Profile",
+      settings: "Settings",
+      myListings: "My Listings",
+      favorites: "My Favorites",
+      logout: "Logout",
+      defaultUser: "User",
+    },
+    languages: {
+      en: "English",
+      am: "አማርኛ (Amharic)",
+      om: "Afaan Oromoo",
+      ti: "ትግርኛ (Tigrigna)"
+    },
+    tooltips: {
+      userMenu: "{name} - View Profile & More",
+      postAd: "List an item, service, or job for sale",
+      changeLanguage: "Change Language",
+      notifications: "View your notifications",
+      theme: "Toggle Theme"
+    }
+  },
+  am: {
+    navbar: {
+      logoSubtitle: "የነጠረ ወርቅ",
+      home: "መነሻ",
+      tenders: "ጨረታዎች",
+      jobs: "ስራዎች",
+      homes: "ቤቶች",
+      cars: "መኪናዎች",
+      postAd: "ማስታወቂያ ይለጥፉ",
+      login: "ይግቡ",
+      register: "ይመዝገቡ",
+      dashboard: "ዳሽቦርድ",
+      myProfile: "የግል መረጃ",
+      settings: "ቅንብሮች",
+      myListings: "የእኔ ዝርዝሮች",
+      favorites: "የምወዳቸው",
+      logout: "ውጣ",
+      defaultUser: "ተጠቃሚ",
+    },
+    languages: {
+      en: "English",
+      am: "አማርኛ",
+      om: "Afaan Oromoo",
+      ti: "ትግርኛ"
+    },
+    tooltips: {
+      userMenu: "{name} - መገለጫ እና ተጨማሪ ይመልከቱ",
+      postAd: "እቃ፣ አገልግሎት ወይም ስራ ለሽያጭ ይዘርዝሩ",
+      changeLanguage: "ቋንቋ ይቀይሩ",
+      notifications: "ማሳወቂያዎችዎን ይመልከቱ",
+      theme: "ገጽታ ቀይር"
+    }
+  },
+  om: {
+    navbar: {
+      logoSubtitle: "Warqee Qulqulluu",
+      home: "Fuula Jalqabaa",
+      tenders: "Caalbaasiiwwan",
+      jobs: "Hojiiwwan",
+      homes: "Manneen",
+      cars: "Konkolaattota",
+      postAd: "Beeksisa Maxxansi",
+      login: "Seeni",
+      register: "Galmaa'aa",
+      dashboard: "Daashboordii",
+      myProfile: "Piroofayilii Koo",
+      settings: "Qindeeffamoota",
+      myListings: "Tarreeffamoota Koo",
+      favorites: "Kan Jaallataman",
+      logout: "Bahi",
+      defaultUser: "Fayyadamtoota",
+    },
+    languages: {
+      en: "English",
+      am: "Amharic",
+      om: "Afaan Oromoo",
+      ti: "Tigrigna"
+    },
+    tooltips: {
+      userMenu: "{name} - Piroofayilii fi Dabalata Ilaali",
+      postAd: "Meeshaa, tajaajila, ykn hojii gurgurtaaf tarreessi",
+      changeLanguage: "Afaan Jijjiiri",
+      notifications: "Beeksisoota keessan ilaalaa",
+      theme: "Teema Jijjiiri"
+    }
+  },
+  ti: {
+    navbar: {
+      logoSubtitle: "ንጹህ ወርቂ",
+      home: "መበገሲ",
+      tenders: "ጨረታታት",
+      jobs: "ስራሕቲ",
+      homes: "ኣባይቲ",
+      cars: "መካይን",
+      postAd: "መ ಜಾወቂያ ለጥፉ",
+      login: "እቶ",
+      register: "ተመዝገቡ",
+      dashboard: "ዳሽቦርድ",
+      myProfile: "ናይ ገዛእ ርእሰይ ሓበሬታ",
+      settings: "ቅጥዕታት",
+      myListings: "ዝርዝራተይ",
+      favorites: "ዝፈትዎም",
+      logout: "ውጻእ",
+      defaultUser: "ተጠቃሚ",
+    },
+    languages: {
+      en: "English",
+      am: "Amharic",
+      om: "Afaan Oromoo",
+      ti: "ትግርኛ"
+    },
+    tooltips: {
+      userMenu: "{name} - ፕሮፋይልን ካልእን ርአ",
+      postAd: "ንብረት፣ ኣገልግሎት ወይ ስራሕ ንሽይጥ ዘርዚርካ",
+      changeLanguage: "ቋንቋ ቀይር",
+      notifications: "መልእኽቲታትኩም ርአዩ",
+      theme: "ቴማ ቀይር"
+    }
+  }
+};
+
+const Navbar = ({ activeTab, setActiveTab }) => {
+  const theme = useTheme();
+  const { mode: themeMode, toggleTheme } = useCustomTheme();
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [languageMenuAnchor, setLanguageMenuAnchor] = useState(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const { isAuthenticated, user, logout } = useAuth();
+
+  const { language, changeLanguage } = useLanguage();
+  const t = translations[language] || translations.en;
+
+  const [openLogoutDialog, setOpenLogoutDialog] = useState(false);
+
+  // Local storage sync is handled by LanguageContext, so we don't need it here.
+
+  const getUserDisplayName = () => {
+    if (!isAuthenticated || !user) return t.navbar.defaultUser;
+    const { first_name, last_name, phone } = user.user_metadata || {};
+    if (first_name && last_name) return `${first_name} ${last_name}`;
+    if (phone) return phone;
+    if (user.email && !user.email.startsWith('phone_')) return user.email;
+    return t.navbar.defaultUser;
+  };
+  const displayName = getUserDisplayName();
+
+  const handleProfileMenuOpen = (event) => setAnchorEl(event.currentTarget);
+  const handleMenuClose = () => setAnchorEl(null);
+  const handleLanguageMenuOpen = (event) => setLanguageMenuAnchor(event.currentTarget);
+  const handleLanguageMenuClose = () => setLanguageMenuAnchor(null);
+
+  const handleLanguageChange = (lang) => {
+    changeLanguage(lang);
+    handleLanguageMenuClose();
+  };
+
+  const handleNav = (path, index) => {
+    setActiveTab(index);
+    navigate(path);
+  };
+
+  const handleLogoutClick = () => {
+    handleMenuClose();
+    setOpenLogoutDialog(true);
+  };
+
+  const performLogout = () => {
+    logout();
+    setOpenLogoutDialog(false);
+    navigate('/');
+  };
+
+  const getActiveTabIndex = () => {
+    const path = location.pathname;
+    if (path.startsWith('/tenders')) return 1;
+    if (path.startsWith('/jobs')) return 2;
+    if (path.startsWith('/homes')) return 3;
+    if (path.startsWith('/cars')) return 4;
+    if (path === '/') return 0;
+    return -1;
+  };
+
+  const currentTab = getActiveTabIndex();
+
+  const renderMenu = (
+    <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose} PaperProps={{ elevation: 4, sx: { borderRadius: 3, mt: 1.5, minWidth: 220 } }}>
+      {isAuthenticated && user ? (
+        <>
+          <Box sx={{ px: 2, py: 1.5, borderBottom: `1px solid ${theme.palette.divider}` }}><Typography variant="subtitle2" noWrap sx={{ fontWeight: 600 }}>{displayName}</Typography></Box>
+          <MenuItem onClick={() => { handleMenuClose(); navigate('/profile'); }}><AccountCircle sx={{ mr: 1.5, fontSize: 20 }} />{t.navbar.myProfile}</MenuItem>
+          <MenuItem sx={{ borderTop: `1px solid ${theme.palette.divider}`, color: 'error.main' }} onClick={handleLogoutClick}><ExitToApp sx={{ mr: 1.5, fontSize: 20 }} />{t.navbar.logout}</MenuItem>
+        </>
+      ) : (
+        <>
+          <MenuItem onClick={() => { handleMenuClose(); navigate('/auth'); }}><AccountCircle sx={{ mr: 1.5, fontSize: 20 }} />{t.navbar.login}</MenuItem>
+          <MenuItem onClick={() => { handleMenuClose(); navigate('/auth?mode=register'); }}><AddIcon sx={{ mr: 1.5, fontSize: 20 }} />{t.navbar.register}</MenuItem>
+        </>
+      )}
+    </Menu>
+  );
+
+
+
+  const logoutDialog = (
+    <Dialog
+      open={openLogoutDialog}
+      onClose={() => setOpenLogoutDialog(false)}
+      aria-labelledby="logout-dialog-title"
+    >
+      <DialogTitle id="logout-dialog-title">Confirm Logout</DialogTitle>
+      <DialogContent>
+        <DialogContentText>Do you want to logout?</DialogContentText>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={() => setOpenLogoutDialog(false)}>No</Button>
+        <Button onClick={performLogout} color="error" autoFocus>Yes</Button>
+      </DialogActions>
+    </Dialog>
+  );
+
+  const renderLanguageMenu = (
+    <Menu anchorEl={languageMenuAnchor} open={Boolean(languageMenuAnchor)} onClose={handleLanguageMenuClose} PaperProps={{ elevation: 4, sx: { borderRadius: 3, mt: 1.5, minWidth: 220 } }}>
+      {['en', 'am', 'om', 'ti'].map(lang => (
+        <MenuItem key={lang} onClick={() => handleLanguageChange(lang)} selected={language === lang}><Typography>{t.languages[lang]}</Typography></MenuItem>
+      ))}
+    </Menu>
+  );
+
+  const NavItem = ({ label, icon, index, path }) => {
+    const isActive = currentTab === index;
+    return (
+      <Box onClick={() => handleNav(path, index)} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, cursor: 'pointer', color: isActive ? 'primary.main' : 'text.secondary', transition: 'all 0.2s', '&:active': { transform: 'scale(0.95)' } }}>
+        {React.cloneElement(icon, { color: isActive ? 'primary' : 'inherit', sx: { fontSize: 24 } })}
+        <Typography variant="caption" sx={{ fontSize: '0.65rem', mt: 0.5, fontWeight: isActive ? 600 : 400 }}>{label}</Typography>
+      </Box>
+    );
+  };
+
+  const navLinks = [
+    { label: t.navbar.home, path: '/' }, { label: t.navbar.tenders, path: '/tenders' }, { label: t.navbar.jobs, path: '/jobs' },
+    { label: t.navbar.homes, path: '/homes' }, { label: t.navbar.cars, path: '/cars' }
+  ];
+
+  if (!isMobile) {
+    return (
+      <>
+        <AppBar position="sticky" color="inherit" elevation={0} sx={{ backdropFilter: 'blur(20px)', backgroundColor: alpha(theme.palette.background.paper, 0.8), borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
+          <Toolbar sx={{ minHeight: 80, px: { md: 4 } }}>
+            <Box onClick={() => navigate('/')} sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center', mr: 4 }}>
+              <Box component="img" src={logo} sx={{ width: 45, height: 45, mr: 1.5 }} alt="Logo" />
+              <Box>
+                <Typography variant="h4" sx={{
+                  fontWeight: 900,
+                  lineHeight: 1,
+                  background: themeMode === 'dark' ? '#fff' : 'linear-gradient(135deg, #1E3A8A 0%, #0055FF 50%, #D4AF37 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: themeMode === 'dark' ? '#fff' : 'transparent',
+                  letterSpacing: '-0.5px'
+                }}>
+                  YesraSew
+                </Typography>
+                <Typography variant="caption" sx={{
+                  color: themeMode === 'dark' ? '#D4AF37' : '#1E3A8A',
+                  letterSpacing: '2px',
+                  display: 'block',
+                  fontWeight: 700,
+                  mt: 0.5,
+                  fontSize: '0.65rem',
+                  textTransform: 'uppercase'
+                }}>
+                  {t.navbar.logoSubtitle}
+                </Typography>
+              </Box>
+            </Box>
+            <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', gap: 1 }}>
+              {navLinks.map((item, idx) => (
+                <Button key={item.label} onClick={() => handleNav(item.path, idx)} sx={{ color: currentTab === idx ? 'primary.main' : 'text.secondary', fontWeight: currentTab === idx ? 700 : 500, px: 2.5, py: 1, borderRadius: 3, backgroundColor: currentTab === idx ? alpha(theme.palette.primary.main, 0.08) : 'transparent', '&:hover': { backgroundColor: alpha(theme.palette.primary.main, 0.12) } }}>{item.label}</Button>
+              ))}
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              {isAuthenticated ? (
+                <>
+                  <Tooltip title={t.tooltips.postAd}><Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/post-ad', { state: location.pathname.startsWith('/admin') ? { from: location.pathname } : undefined })} sx={{ borderRadius: 3, px: 3, py: 1.2, fontWeight: 600 }}>{t.navbar.postAd}</Button></Tooltip>
+                  <Box sx={{ borderLeft: `1px solid ${theme.palette.divider}`, height: 32, mx: 1 }} />
+                  <Tooltip title={t.tooltips.theme}><IconButton onClick={toggleTheme} sx={{ border: `1px solid ${theme.palette.divider}` }}>{themeMode === 'light' ? <DarkMode fontSize="small" /> : <LightMode fontSize="small" />}</IconButton></Tooltip>
+                  <Tooltip title={t.tooltips.changeLanguage}><IconButton onClick={handleLanguageMenuOpen} sx={{ border: `1px solid ${theme.palette.divider}` }}><Language fontSize="small" /></IconButton></Tooltip>
+                  <Tooltip title={t.tooltips.userMenu.replace('{name}', displayName)}><IconButton onClick={handleProfileMenuOpen} sx={{ p: 0.5, border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}` }}><Avatar sx={{ width: 40, height: 40, bgcolor: 'primary.main' }}>{displayName.charAt(0).toUpperCase()}</Avatar></IconButton></Tooltip>
+                </>
+              ) : (
+                <>
+                  <Tooltip title={t.tooltips.theme}><IconButton onClick={toggleTheme} sx={{ border: `1px solid ${theme.palette.divider}` }}>{themeMode === 'light' ? <DarkMode fontSize="small" /> : <LightMode fontSize="small" />}</IconButton></Tooltip>
+                  <Tooltip title={t.tooltips.changeLanguage}><IconButton onClick={handleLanguageMenuOpen} sx={{ border: `1px solid ${theme.palette.divider}` }}><Language fontSize="small" /></IconButton></Tooltip>
+                  <Box sx={{ borderLeft: `1px solid ${theme.palette.divider}`, height: 32, mx: 1 }} />
+                  <Button variant="outlined" onClick={() => navigate('/auth')} sx={{ borderRadius: 3, px: 3, py: 1.2, fontWeight: 600 }}>{t.navbar.login}</Button>
+                  <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/auth?mode=register')} sx={{ borderRadius: 3, px: 3, py: 1.2, fontWeight: 600 }}>{t.navbar.register}</Button>
+                </>
+              )}
+            </Box>
+          </Toolbar>
+        </AppBar>
+        {renderMenu}
+        {renderLanguageMenu}
+        {logoutDialog}
+      </>
+    );
+  }
+
+  // Mobile View
+  return (
+    <>
+      <AppBar position="fixed" elevation={0} sx={{ bgcolor: 'transparent', backdropFilter: 'blur(10px)', background: `linear-gradient(to bottom, ${alpha(theme.palette.background.default, 0.9)}, transparent)` }}>
+        <Toolbar sx={{ justifyContent: 'space-between', px: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Box component="img" src={logo} sx={{ width: 36, height: 36, mr: 1 }} alt="Logo" />
+            <Box>
+              <Typography variant="h6" sx={{
+                fontWeight: 900,
+                lineHeight: 1,
+                background: themeMode === 'dark' ? '#fff' : 'linear-gradient(135deg, #1E3A8A 0%, #0055FF 50%, #D4AF37 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: themeMode === 'dark' ? '#fff' : 'transparent',
+                fontSize: '1.25rem'
+              }}>
+                YesraSew
+              </Typography>
+              <Typography variant="caption" sx={{
+                color: themeMode === 'dark' ? '#D4AF37' : '#1E3A8A',
+                fontSize: '0.6rem',
+                fontWeight: 700,
+                letterSpacing: '1px',
+                mt: 0.2,
+                textTransform: 'uppercase'
+              }}>
+                {t.navbar.logoSubtitle}
+              </Typography>
+            </Box>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Tooltip title={t.tooltips.changeLanguage}><IconButton size="small" color="inherit" onClick={handleLanguageMenuOpen}><Language fontSize="small" /></IconButton></Tooltip>
+            <Tooltip title={t.tooltips.theme}><IconButton onClick={toggleTheme} sx={{ border: `1px solid ${theme.palette.divider}` }}>{themeMode === 'light' ? <DarkMode fontSize="small" /> : <LightMode fontSize="small" />}</IconButton></Tooltip>
+            <Tooltip title={t.tooltips.userMenu.replace('{name}', displayName)}><IconButton size="small" onClick={handleProfileMenuOpen} color="inherit">{isAuthenticated ? <Avatar sx={{ width: 24, height: 24, bgcolor: 'primary.main', fontSize: '0.7rem' }}>{displayName.charAt(0).toUpperCase()}</Avatar> : <AccountCircle fontSize="small" />}</IconButton></Tooltip>
+          </Box>
+        </Toolbar>
+      </AppBar>
+      <Box sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000 }}>
+        <Box sx={{ position: 'absolute', bottom: 30, left: '50%', transform: 'translateX(-50%)', zIndex: 10 }}>
+          <Tooltip title={t.tooltips.postAd}><Button variant="contained" onClick={() => navigate('/post-ad', { state: location.pathname.startsWith('/admin') ? { from: location.pathname } : undefined })} sx={{ borderRadius: '50%', width: 64, height: 64, minWidth: 64, boxShadow: `0 8px 24px ${alpha(theme.palette.primary.main, 0.5)}`, border: `4px solid ${theme.palette.background.paper}` }}><AddIcon fontSize="large" /></Button></Tooltip>
+        </Box>
+        <QuickActionsToolbar listing={null} user={user} />
+        <Paper elevation={24} sx={{ borderRadius: '20px 20px 0 0', overflow: 'hidden', bgcolor: alpha(theme.palette.background.paper, 0.95), backdropFilter: 'blur(20px)', height: 70, display: 'flex', alignItems: 'center' }}>
+          <Box sx={{ display: 'flex', width: '40%', justifyContent: 'space-around', pl: 2 }}><NavItem label={t.navbar.home} icon={<Home />} index={0} path="/" /><NavItem label={t.navbar.tenders} icon={<Gavel />} index={1} path="/tenders" /></Box>
+          <Box sx={{ width: '20%' }} />
+          <Box sx={{ display: 'flex', width: '40%', justifyContent: 'space-around', pr: 2 }}><NavItem label={t.navbar.jobs} icon={<Work />} index={2} path="/jobs" /><NavItem label={t.navbar.homes} icon={<Apartment />} index={3} path="/homes" /><NavItem label={t.navbar.cars} icon={<DirectionsCar />} index={4} path="/cars" /></Box>
+        </Paper>
+      </Box>
+      {renderMenu}
+      {renderLanguageMenu}
+      {logoutDialog}
+    </>
+  );
+};
+
+export default Navbar;

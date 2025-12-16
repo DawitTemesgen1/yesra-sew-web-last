@@ -1,0 +1,68 @@
+User-agent: *
+Allow: /
+
+# Allow search engines to crawl all content
+Allow: /$
+Allow: /categories
+Allow: /listings
+Allow: /search
+Allow: /about
+Allow: /contact
+
+# Disallow admin and private areas
+Disallow: /admin/
+Disallow: /api/
+Disallow: /profile/
+Disallow: /messages/
+Disallow: /notifications/
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+
+# Disallow search and filter parameters
+Disallow: /*?q=*
+Disallow: /*?category=*
+Disallow: /*?location=*
+Disallow: /*?price=*
+Disallow: /*?sort=*
+Disallow: /*?page=*
+
+# Disallow temporary and duplicate content
+Disallow: /temp/
+Disallow: /drafts/
+Disallow: /*?ref=*
+Disallow: /*?utm_*
+
+# Allow specific search pages with important parameters
+Allow: /search?q=$
+Allow: /category/*?location=$
+
+# Sitemap location
+Sitemap: https://yesrasewsolution.com/sitemap.xml
+Sitemap: https://yesrasewsolution.com/sitemap-index.xml
+
+# Crawl delay (optional, be careful with this)
+Crawl-delay: 1
+
+# Specific bot rules
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0.5
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Baiduspider
+Allow: /
+Crawl-delay: 2
+
+# Block unwanted bots
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /

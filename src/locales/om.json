@@ -1,0 +1,253 @@
+{
+    "common": {
+        "welcome": "Baga nagaan dhuftan",
+        "login": "Seeni",
+        "register": "Galmaa'i",
+        "logout": "Ba'i",
+        "search": "Barbaadi",
+        "filter": "Filannoo",
+        "save": "Olkaa'i",
+        "cancel": "Dhiisi",
+        "delete": "Haqi",
+        "edit": "Gulaali",
+        "view": "Ilaali",
+        "back": "Deebi'i",
+        "next": "Itti aanuu",
+        "submit": "Ergi",
+        "loading": "Fe'aa jira...",
+        "error": "Dogongora",
+        "success": "Milkaa'ina",
+        "close": "Cufi",
+        "yes": "Eeyyee",
+        "no": "Lakki",
+        "all": "Hunda",
+        "none": "Homaa",
+        "select": "Filadhu",
+        "upload": "Ol kaa'i",
+        "download": "Buufadhu",
+        "share": "Qooddi",
+        "copy": "Garagalchi",
+        "more": "Dabalataa",
+        "less": "Xiqqaa",
+        "show": "Mul'isi",
+        "hide": "Dhoksi"
+    },
+    "auth": {
+        "welcomeBack": "Baga nagaan deebitan!",
+        "signInToContinue": "Gara YesraSew itti fufuuf seeni",
+        "dontHaveAccount": "Herrega hin qabduu?",
+        "alreadyHaveAccount": "Herrega qabdaa?",
+        "signUp": "Galmaa'i",
+        "signIn": "Seeni",
+        "email": "Email",
+        "password": "Jecha Icciitii",
+        "confirmPassword": "Jecha Icciitii Mirkaneessi",
+        "fullName": "Maqaa Guutuu",
+        "phoneNumber": "Lakkoofsa Bilbilaa",
+        "forgotPassword": "Jecha Icciitii Irraanfatte?",
+        "resetPassword": "Jecha Icciitii Irra Deebi'ii Jalqabi",
+        "sendResetLink": "Geessituu Irra Deebi'ii Jalqabuu Ergi",
+        "createAccount": "Herrega Uumi",
+        "orContinueWith": "Ykn itti fufi",
+        "google": "Google",
+        "facebook": "Facebook",
+        "termsAgree": "Galmaa'uudhaan walii galtee",
+        "termsOfService": "Haala Tajaajilaa",
+        "and": "fi",
+        "privacyPolicy": "Imaammata Dhuunfaa",
+        "emailRequired": "Email barbaachisaa dha",
+        "passwordRequired": "Jecha Icciitii barbaachisaa dha",
+        "passwordMismatch": "Jecha Icciitiin wal hin simne",
+        "invalidEmail": "Teessoo email sirrii miti",
+        "weakPassword": "Jecha Icciitiin yoo xiqqaate qubee 6 ta'uu qaba"
+    },
+    "landing": {
+        "hero": {
+            "title": "Gabaa Guddaa Itoophiyaa",
+            "subtitle": "Bitaa, Gurguraa fi Waan Barbaaddan Hunda Argadhaa",
+            "description": "YesraSew irratti manneen, konkolaatota, hojiiwwan fi kan biroo bitan fi gurguratan Itoophiyoota kumaatamaan waliin makamaa - Gabaa amanamaa keessan",
+            "getStarted": "Jalqabi",
+            "learnMore": "Dabalataan Baraa",
+            "browseListings": "Tarreewwan Sakatta'aa"
+        },
+        "features": {
+            "title": "Maaliif YesraSew Filattan?",
+            "subtitle": "Itoophiyaa keessatti bituuf fi gurguratuuf waltajjii gaarii",
+            "feature1": {
+                "title": "Tarreewwan Mirkaneeffaman",
+                "description": "Tarreewwan hundi qulqullina fi dhugummaa mirkaneessuuf mirkaneeffamaniiru"
+            },
+            "feature2": {
+                "title": "Daldala Nageenya Qabu",
+                "description": "Nageenya keessan dursa keenyaati filannoo kaffaltii nageenya qabuun"
+            },
+            "feature3": {
+                "title": "Filannoo Bal'aa",
+                "description": "Manneen hanga konkolaatotatti, hojiiwwan hanga tajaajilootti hunda argadhaa"
+            },
+            "feature4": {
+                "title": "Fayyadamuuf Salphaa",
+                "description": "Muuxannoo salphaa ta'eef walqunnamtii salphaa fi ifa ta'e"
+            }
+        },
+        "categories": {
+            "title": "Ramaddii Sakatta'aa",
+            "subtitle": "Waan barbaaddan argadhaa",
+            "homes": "Manneen fi Qabeenya Dhuunfaa",
+            "cars": "Konkolaatotaa fi Konkolaatota",
+            "jobs": "Hojiiwwan fi Ogummaa",
+            "tenders": "Tenderootaa fi Waliigaltee",
+            "viewAll": "Ramaddii Hunda Ilaali"
+        },
+        "stats": {
+            "activeUsers": "Fayyadamtoota Sochii",
+            "listings": "Tarreewwan Waliigalaa",
+            "categories": "Ramaddii",
+            "cities": "Magaalota Haguugaman"
+        },
+        "cta": {
+            "title": "Jalqabuuf Qophii Dha?",
+            "subtitle": "YesraSew irratti fayyadamtoota gammadan kumaatamaan waliin makamaa",
+            "postAd": "Beeksisa Keessan Maxxansaa",
+            "signUpNow": "Amma Galmaa'aa"
+        }
+    },
+    "navbar": {
+        "home": "Mana",
+        "homes": "Manneen",
+        "cars": "Konkolaatota",
+        "jobs": "Hojiiwwan",
+        "tenders": "Tenderoota",
+        "pricing": "Gatii",
+        "about": "Waa'ee Keenya",
+        "contact": "Nu Qunnamaa",
+        "postAd": "Beeksisa Maxxansaa",
+        "myAccount": "Herrega Koo",
+        "myListings": "Tarreewwan Koo",
+        "favorites": "Jaallatamoo",
+        "messages": "Ergaa",
+        "settings": "Qindaa'ina",
+        "language": "Afaan"
+    },
+    "listings": {
+        "title": "Tarreewwan",
+        "noListings": "Tarreewwan hin argamne",
+        "viewDetails": "Bal'ina Ilaali",
+        "contactSeller": "Gurgurtaa Qunnamaa",
+        "addToFavorites": "Gara Jaallatamoo Itti Dabali",
+        "share": "Qooddi",
+        "report": "Gabaasi",
+        "price": "Gatii",
+        "location": "Bakka",
+        "category": "Ramaddii",
+        "postedOn": "Maxxanfame",
+        "description": "Ibsa",
+        "features": "Amaloota",
+        "specifications": "Ibsa",
+        "similarListings": "Tarreewwan Walfakkaatoo",
+        "relatedListings": "Tarreewwan Walqabatoo"
+    },
+    "search": {
+        "searchPlaceholder": "Waan kamiyyuu barbaadi...",
+        "searchResults": "Bu'aa Barbaacha",
+        "resultsFor": "Bu'aa",
+        "noResults": "Bu'aan hin argamne",
+        "tryDifferentKeywords": "Jecha ijoo adda addaa yaali",
+        "filters": "Filannoo",
+        "sortBy": "Qindeessi",
+        "newest": "Haaraa",
+        "oldest": "Moofaa",
+        "priceLowToHigh": "Gatii: Gadi Gara Olitti",
+        "priceHighToLow": "Gatii: Ol Gara Gaditti",
+        "relevance": "Walqabata"
+    },
+    "pricing": {
+        "title": "Karoora Keessan Filaadhaa",
+        "subtitle": "Fedhii keessaniif karoora gaarii filadhaa",
+        "monthly": "Ji'aa",
+        "yearly": "Waggaa",
+        "free": "Bilisaa",
+        "basic": "Bu'uuraa",
+        "pro": "Pro",
+        "business": "Daldala",
+        "currentPlan": "Karoora Ammaa",
+        "upgrade": "Fooyya'aa",
+        "downgrade": "Gadi Bu'aa",
+        "subscribe": "Galmaa'aa",
+        "perMonth": "ji'aatti",
+        "perYear": "waggaatti",
+        "features": {
+            "listings": "Tarreewwan {count}",
+            "unlimitedListings": "Tarreewwan Daangaa Hin Qabne",
+            "featuredListings": "Tarreewwan Mul'atan",
+            "analytics": "Dashboard Xiinxala",
+            "support": "Deeggarsa Dursa",
+            "verifiedBadge": "Badge Mirkaneeffame",
+            "duration": "Guyyoota {days} Yeroo"
+        }
+    },
+    "profile": {
+        "myProfile": "Piroofaayilii Koo",
+        "editProfile": "Piroofaayilii Gulaali",
+        "personalInfo": "Odeeffannoo Dhuunfaa",
+        "accountSettings": "Qindaa'ina Herrega",
+        "notifications": "Beeksisa",
+        "privacy": "Iccitii",
+        "security": "Nageenyaa",
+        "changePassword": "Jecha Icciitii Jijjiiri",
+        "deleteAccount": "Herrega Haqi",
+        "memberSince": "Miseensa Erga",
+        "verified": "Mirkaneeffame",
+        "notVerified": "Hin Mirkaneeffamne",
+        "verifyAccount": "Herrega Mirkaneessi"
+    },
+    "postAd": {
+        "title": "Beeksisa Keessan Maxxansaa",
+        "selectCategory": "Ramaddii Filadhaa",
+        "adDetails": "Bal'ina Beeksisa",
+        "uploadPhotos": "Suuraa Ol kaa'aa",
+        "pricing": "Gatii Kaa'uu",
+        "review": "Gamaaggamaa fi Maxxansaa",
+        "adTitle": "Mata Duree Beeksisa",
+        "adDescription": "Ibsa Beeksisa",
+        "adPrice": "Gatii",
+        "adLocation": "Bakka",
+        "contactInfo": "Odeeffannoo Quunnamtii",
+        "publish": "Maxxansaa",
+        "saveDraft": "Akka Qophii Olkaa'aa",
+        "preview": "Dura Ilaali",
+        "uploadImages": "Suuraa Ol kaa'aa",
+        "dragAndDrop": "Suuraa asitti harkisaa fi dhiisaa",
+        "maxImages": "Suuraa {count} ol",
+        "required": "Barbaachisaa",
+        "optional": "Filannoo"
+    },
+    "footer": {
+        "aboutUs": "Waa'ee Keenya",
+        "contactUs": "Nu Qunnamaa",
+        "termsOfService": "Haala Tajaajilaa",
+        "privacyPolicy": "Imaammata Dhuunfaa",
+        "faq": "Gaaffii Yeroo Baay'ee Gaafatamu",
+        "help": "Gargaarsa Giddugaleessaa",
+        "followUs": "Nu Hordofaa",
+        "downloadApp": "App Buufadhaa",
+        "copyright": "© 2024 YesraSew. Mirgi hundi eegameera.",
+        "madeInEthiopia": "Itoophiyaa keessatti hojjetame ❤️"
+    },
+    "messages": {
+        "success": {
+            "saved": "Milkaa'inaan olkaa'ame",
+            "deleted": "Milkaa'inaan haqame",
+            "updated": "Milkaa'inaan haaromfame",
+            "sent": "Milkaa'inaan ergame",
+            "published": "Milkaa'inaan maxxanfame"
+        },
+        "error": {
+            "general": "Wanti tokko dogoggore",
+            "network": "Dogongora networkii. Mee walitti dhufeenya keessan mirkaneessaa",
+            "notFound": "Hin argamne",
+            "unauthorized": "Eeyyama hin qabu",
+            "validation": "Mee galtee keessan mirkaneessaa"
+        }
+    }
+}

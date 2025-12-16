@@ -1,0 +1,602 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import adminService from '../services/adminService';
+import { supabase } from '../services/api';
+import toast from 'react-hot-toast';
+import {
+    Box, Container, Typography, Card, CardContent, Button,
+    Grid, Divider, Stack, Chip, CircularProgress, Radio,
+    RadioGroup, FormControlLabel, FormControl, Paper, alpha,
+    List, ListItem, ListItemIcon, ListItemText, useTheme
+} from '@mui/material';
+import {
+    Check, ArrowBack, CreditCard, AccountBalance,
+    Security, Verified, Star
+} from '@mui/icons-material';
+import { motion } from 'framer-motion';
+import { useLanguage } from '../contexts/LanguageContext';
+
+const translations = {
+    en: {
+        backToPlans: "Back to Plans",
+        mostPopular: "MOST POPULAR",
+        free: "FREE",
+        whatsIncluded: "What's Included",
+        securePayment: "Secure payment processing",
+        cancelAnytime: "Cancel anytime, no questions asked",
+        paymentMethod: "Payment Method",
+        choosePreferred: "Choose your preferred payment provider",
+        cardsMobileMoney: "Cards, Mobile Money, Bank Transfer",
+        ethiopianGateway: "Ethiopian Payment Gateway",
+        orderSummary: "Order Summary",
+        plan: "Plan",
+        duration: "Duration",
+        total: "Total",
+        pay: "Pay",
+        activateFree: "Activate Free Plan",
+        termsAgreement: "By proceeding, you agree to our Terms of Service and Privacy Policy",
+        unlimited: "Unlimited",
+        posts: "posts",
+        per: "per",
+        viewAll: "View all",
+        listings: "listings",
+        currency: "ETB",
+        featured: "Featured listings",
+        priority: "Priority support",
+        verified: "Verified badge",
+        analytics: "Advanced analytics",
+        month: "month",
+        months: "months",
+        day: "day",
+        days: "days",
+        categories: {
+            cars: "Cars",
+            homes: "Homes",
+            jobs: "Jobs",
+            tenders: "Tenders"
+        }
+    },
+    am: {
+        backToPlans: "ወደ እቅዶች ተመለስ",
+        mostPopular: "በጣም ታዋቂ",
+        free: "ነፃ",
+        whatsIncluded: "ምን ተካቷል",
+        securePayment: "ደህንነቱ የተጠበቀ ክፍያ",
+        cancelAnytime: "በማንኛውም ጊዜ ይሰርዙ፣ ምንም ጥያቄ የለም",
+        paymentMethod: "የመክፈያ ዘዴ",
+        choosePreferred: "የመረጡትን የመክፈያ አቅራቢ ይምረጡ",
+        cardsMobileMoney: "ካርዶች፣ ሞባይል ገንዘብ፣ የባንክ ዝውውር",
+        ethiopianGateway: "የኢትዮጵያ ክፍያ መግቢያ",
+        orderSummary: "የትዕዛዝ ማጠቃለያ",
+        plan: "እቅድ",
+        duration: "ቆይታ",
+        total: "ጠቅላላ",
+        pay: "ይክፈሉ",
+        activateFree: "ነፃ እቅድ ያግብሩ",
+        termsAgreement: "በመቀጠልዎ በእኛ የአገልግሎት ውል እና የግላዊነት ፖሊሲ ተስማምተዋል",
+        unlimited: "ያልተገደበ",
+        posts: "ልጥፎች",
+        per: "በ",
+        viewAll: "ሁሉንም ይመልከቱ",
+        listings: "ዝርዝሮች",
+        currency: "ብር",
+        featured: "ተለይተው የቀረቡ ዝርዝሮች",
+        priority: "ቅድሚያ የሚሰጠው ድጋፍ",
+        verified: "የተረጋገጠ ባጅ",
+        analytics: "የላቀ ትንታኔ",
+        month: "ወር",
+        months: "ወራት",
+        day: "ቀን",
+        days: "ቀናት",
+        categories: {
+            cars: "መኪናዎች",
+            homes: "ቤቶች",
+            jobs: "ስራዎች",
+            tenders: "ጨረታዎች"
+        }
+    },
+    om: {
+        backToPlans: "Gara Karooraatti Deebi'aa",
+        mostPopular: "BAAY'EE BEEKAMAA",
+        free: "BILISA",
+        whatsIncluded: "Maaltu Hammatame",
+        securePayment: "Kaffaltii Eegumsa Qabu",
+        cancelAnytime: "Yeroo barbaaddanitti haquu dandeessu",
+        paymentMethod: "Mala Kaffaltii",
+        choosePreferred: "Dhiyeessaa kaffaltii filadhaa",
+        cardsMobileMoney: "Kaardii, Mobile Money, Baankii",
+        ethiopianGateway: "Gatway Kaffaltii Itoophiyaa",
+        orderSummary: "Cuunfaa Ajaja",
+        plan: "Karoora",
+        duration: "Turtii",
+        total: "Waliigala",
+        pay: "Kaffali",
+        activateFree: "Karoora Bilisaa Eegali",
+        termsAgreement: "Itti fufuudhaan, Haalawwan Tajaajilaa fi Imaammata Dhuunfaa keenyatti waliigaltu",
+        unlimited: "Daangaa Hin Qabne",
+        posts: "maxxansa",
+        per: "/",
+        viewAll: "Hunda Ilaali",
+        listings: "tarreeffama",
+        currency: "Birr",
+        featured: "Tarreeffama Filatamaa",
+        priority: "Deeggarsa Dursee Kennamu",
+        verified: "Mallattoo Mirkaneeffame",
+        analytics: "Xiinxala Olaanaa",
+        month: "ji'a",
+        months: "ji'oota",
+        day: "guyyaa",
+        days: "guyyoota",
+        categories: {
+            cars: "Konkolaataa",
+            homes: "Manneen",
+            jobs: "Hojiiwwan",
+            tenders: "Caalbaasii"
+        }
+    },
+    ti: {
+        backToPlans: "ናብ መደባት ተመለስ",
+        mostPopular: "ብዝያዳ ፍቱው",
+        free: "ነፃ",
+        whatsIncluded: "እንታይ ተኻቲቱ",
+        securePayment: "ድሕንነቱ ዝተሓለወ ክፍሊት",
+        cancelAnytime: "ኣብ ዝኾነ ግዜ ምስራዝ ይከኣል",
+        paymentMethod: "መንገዲ ክፍሊት",
+        choosePreferred: "ዝመረጽኩሞ ኣቕራቢ ክፍሊት ምረጹ",
+        cardsMobileMoney: "ካርዶች፣ ሞባይል ገንዘብ፣ ባንክ",
+        ethiopianGateway: "ናይ ኢትዮጵያ መእተዊ ክፍሊት",
+        orderSummary: "ማጠቃለሊ ትእዛዝ",
+        plan: "መደብ",
+        duration: "ንውሓት ግዜ",
+        total: "ጠቕላላ",
+        pay: "ክፈሉ",
+        activateFree: "ነፃ መደብ ጀምሩ",
+        termsAgreement: "ብምቕጻልኩም ምስ ውልናን ፖሊሲ ብሕትናና ትሰማምዑ",
+        unlimited: "ዘይተገደበ",
+        posts: "ልጥፋት",
+        per: "ኣብ",
+        viewAll: "ኩሉ ረአ",
+        listings: "ዝርዝራት",
+        currency: "ብር",
+        featured: "ዝተመረጹ ዝርዝራት",
+        priority: "ቀዳማይ ዝወሃብ ደገፍ",
+        verified: "ዝተረጋገለ ምልክት",
+        analytics: "ዝተራቐቐ ትንታነ",
+        month: "ወርሒ",
+        months: "ወርሒታት",
+        day: "መዓልቲ",
+        days: "መዓልታት",
+        categories: {
+            cars: "መካይን",
+            homes: "ኣባይቲ",
+            jobs: "ስራሕቲ",
+            tenders: "ጨረታታት"
+        }
+    }
+};
+
+const BRAND_COLORS = {
+    gold: '#FFD700',
+    blue: '#1E3A8A',
+    gradient: 'linear-gradient(135deg, #1E3A8A 0%, #3B82F6 50%, #FFD700 100%)',
+};
+
+const CheckoutPage = () => {
+    const theme = useTheme();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const { user } = useAuth();
+    const { language } = useLanguage();
+    const t = translations[language] || translations.en;
+    const [searchParams] = useSearchParams();
+
+    const planId = searchParams.get('plan');
+    const preloadedPlan = location.state?.plan;
+
+    const [plan, setPlan] = useState(preloadedPlan || null);
+    const [loading, setLoading] = useState(!preloadedPlan);
+    const [processing, setProcessing] = useState(false);
+    const [paymentProvider, setPaymentProvider] = useState('');
+    const [userProfile, setUserProfile] = useState(null);
+    const [enabledProviders, setEnabledProviders] = useState([]);
+
+    useEffect(() => {
+        if (!user) {
+            toast.error('Please login to continue');
+            navigate('/auth', { state: { returnTo: `/checkout?plan=${planId}` } });
+            return;
+        }
+
+        // If we don't have the plan yet (direct link access), fetch it
+        if (!plan) {
+            fetchPlanDetails();
+        } else {
+            // We have the plan, but let's make sure it matches the URL param just in case
+            if (plan.slug !== planId && String(plan.id) !== planId) {
+                fetchPlanDetails();
+            }
+        }
+
+        fetchUserProfile();
+        fetchEnabledProviders();
+    }, [planId, user, plan]);
+
+    const fetchUserProfile = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', user.id)
+                .single();
+
+            if (error) throw error;
+            setUserProfile(data);
+        } catch (error) {
+            console.error('Error fetching profile:', error);
+        }
+    };
+
+    const fetchEnabledProviders = async () => {
+        try {
+            const providers = await adminService.getPaymentProviders();
+            const enabled = providers.filter(p => p.is_enabled);
+            setEnabledProviders(enabled);
+
+            // Auto-select first enabled provider
+            if (enabled.length > 0 && !paymentProvider) {
+                setPaymentProvider(enabled[0].name);
+            }
+        } catch (error) {
+            console.error('Error fetching payment providers:', error);
+        }
+    };
+
+    const fetchPlanDetails = async () => {
+        try {
+            if (!plan) setLoading(true);
+            const plans = await adminService.getMembershipPlans();
+            const selectedPlan = plans.find(p => p.slug === planId || String(p.id) === planId);
+
+            if (!selectedPlan) {
+                toast.error('Plan not found');
+                navigate('/pricing');
+                return;
+            }
+
+            setPlan(selectedPlan);
+        } catch (error) {
+            console.error('Error fetching plan:', error);
+            toast.error('Failed to load plan details');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handlePayment = async () => {
+        if (!user || !plan) return;
+
+        setProcessing(true);
+        try {
+            // Call Supabase Edge Function
+            const { data, error } = await supabase.functions.invoke('payment-handler', {
+                body: {
+                    action: 'initiate',
+                    provider: paymentProvider,
+                    amount: plan.price,
+                    currency: 'ETB',
+                    userId: user.id,
+                    email: userProfile?.email || user.email,
+                    firstName: userProfile?.full_name?.split(' ')[0] || 'User',
+                    lastName: userProfile?.full_name?.split(' ')[1] || '',
+                    returnUrlPrefix: window.location.origin,
+                    metadata: {
+                        plan_id: plan.id,
+                        plan_name: plan.name,
+                        plan_slug: plan.slug,
+                        duration_value: plan.duration_value,
+                        duration_unit: plan.duration_unit
+                    }
+                }
+            });
+
+            if (error) throw error;
+
+            if (data?.success && data?.checkoutUrl) {
+                // Redirect to payment gateway
+                window.location.href = data.checkoutUrl;
+            } else {
+                throw new Error(data?.message || 'Failed to initialize payment');
+            }
+        } catch (error) {
+            console.error('Payment error:', error);
+            toast.error(error.message || 'Payment initialization failed');
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+    const formatDuration = (value, unit) => {
+        if (!value || !unit) return `1 ${t.month}`;
+        const v = parseInt(value);
+        // Map unit to translation key (remove 's' for simple singular check if needed, strictly reliance on keys here)
+        // unit usually 'months', 'days'
+        let unitKey = unit;
+        if (v === 1 && unit.endsWith('s')) unitKey = unit.slice(0, -1);
+        else if (v > 1 && !unit.endsWith('s')) unitKey = unit + 's';
+
+        const translatedUnit = t[unitKey] || unit;
+        return `${v} ${translatedUnit}`;
+    };
+
+    const getPlanFeatures = () => {
+        const features = [];
+
+        // Category limits
+        Object.entries(plan.category_limits || {}).forEach(([cat, limit]) => {
+            const catLabel = t.categories?.[cat] || cat;
+            if (limit === -1) {
+                features.push(`${t.unlimited} ${catLabel} ${t.posts}`);
+            } else if (limit > 0) {
+                const durUnit = t[plan.duration_unit] || plan.duration_unit;
+                features.push(`${limit} ${catLabel} ${t.posts} ${t.per} ${durUnit}`);
+            }
+        });
+
+        // View access
+        Object.entries(plan.permissions?.view_access || {}).forEach(([cat, access]) => {
+            if (access === -1 || access === true || (typeof access === 'number' && access > 0)) {
+                const catLabel = t.categories?.[cat] || cat;
+                features.push(`${t.viewAll} ${catLabel} ${t.listings}`);
+            }
+        });
+
+        // Additional features
+        if (Array.isArray(plan.features)) {
+            features.push(...plan.features);
+        }
+
+        // Permissions
+        if (plan.permissions?.can_post_featured) features.push(t.featured);
+        if (plan.permissions?.priority_support) features.push(t.priority);
+        if (plan.permissions?.verified_badge) features.push(t.verified);
+        if (plan.permissions?.analytics_access) features.push(t.analytics);
+
+        return features;
+    };
+
+    if (loading) {
+        return (
+            <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <CircularProgress />
+            </Box>
+        );
+    }
+
+    if (!plan) return null;
+
+    const features = getPlanFeatures();
+
+    return (
+        <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4 }}>
+            <Container maxWidth="lg">
+                {/* Back Button */}
+                <Button
+                    startIcon={<ArrowBack />}
+                    onClick={() => navigate(-1)}
+                    sx={{ mb: 3 }}
+                >
+                    {t.backToPlans}
+                </Button>
+
+                <Grid container spacing={4}>
+                    {/* Left Column - Plan Details */}
+                    <Grid item xs={12} md={7}>
+                        <motion.div
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.5 }}
+                        >
+                            <Card elevation={3}>
+                                <Box sx={{
+                                    p: 4,
+                                    background: plan.color ? `linear-gradient(135deg, ${plan.color} 0%, ${alpha(plan.color, 0.7)} 100%)` : BRAND_COLORS.gradient,
+                                    color: 'white'
+                                }}>
+                                    {plan.is_popular && (
+                                        <Chip
+                                            icon={<Star />}
+                                            label={t.mostPopular}
+                                            sx={{ bgcolor: 'white', color: plan.color || BRAND_COLORS.blue, fontWeight: 'bold', mb: 2 }}
+                                        />
+                                    )}
+                                    <Typography variant="h3" fontWeight="bold" gutterBottom>
+                                        {plan.name}
+                                    </Typography>
+                                    <Typography variant="h6" sx={{ opacity: 0.9, mb: 3 }}>
+                                        {plan.description}
+                                    </Typography>
+                                    <Box display="flex" alignItems="baseline" gap={1}>
+                                        <Typography variant="h2" fontWeight="bold">
+                                            {plan.price === 0 ? t.free : `${plan.price} ${t.currency}`}
+                                        </Typography>
+                                        <Typography variant="h6" sx={{ opacity: 0.8 }}>
+                                            / {formatDuration(plan.duration_value, plan.duration_unit)}
+                                        </Typography>
+                                    </Box>
+                                </Box>
+
+                                <CardContent sx={{ p: 4 }}>
+                                    <Typography variant="h6" fontWeight="bold" gutterBottom>
+                                        {t.whatsIncluded}
+                                    </Typography>
+                                    <List>
+                                        {features.map((feature, idx) => (
+                                            <ListItem key={idx} sx={{ px: 0 }}>
+                                                <ListItemIcon sx={{ minWidth: 36 }}>
+                                                    <Box sx={{
+                                                        width: 24, height: 24, borderRadius: '50%',
+                                                        bgcolor: alpha(plan.color || BRAND_COLORS.blue, 0.1),
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                                    }}>
+                                                        <Check sx={{ fontSize: 16, color: plan.color || BRAND_COLORS.blue }} />
+                                                    </Box>
+                                                </ListItemIcon>
+                                                <ListItemText
+                                                    primary={typeof feature === 'string' ? feature : feature.text || feature}
+                                                    primaryTypographyProps={{ variant: 'body1' }}
+                                                />
+                                            </ListItem>
+                                        ))}
+                                    </List>
+
+                                    <Divider sx={{ my: 3 }} />
+
+                                    <Stack spacing={2}>
+                                        <Box display="flex" alignItems="center" gap={1}>
+                                            <Security color="action" />
+                                            <Typography variant="body2" color="text.secondary">
+                                                {t.securePayment}
+                                            </Typography>
+                                        </Box>
+                                        <Box display="flex" alignItems="center" gap={1}>
+                                            <Verified color="action" />
+                                            <Typography variant="body2" color="text.secondary">
+                                                {t.cancelAnytime}
+                                            </Typography>
+                                        </Box>
+                                    </Stack>
+                                </CardContent>
+                            </Card>
+                        </motion.div>
+                    </Grid>
+
+                    {/* Right Column - Payment */}
+                    <Grid item xs={12} md={5}>
+                        <motion.div
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.5, delay: 0.2 }}
+                        >
+                            <Card elevation={3}>
+                                <CardContent sx={{ p: 4 }}>
+                                    <Typography variant="h5" fontWeight="bold" gutterBottom>
+                                        {t.paymentMethod}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary" paragraph>
+                                        {t.choosePreferred}
+                                    </Typography>
+
+                                    <FormControl component="fieldset" fullWidth sx={{ mb: 4 }}>
+                                        {enabledProviders.length === 0 ? (
+                                            <Paper variant="outlined" sx={{ p: 3, textAlign: 'center' }}>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    No payment providers are currently enabled. Please contact support.
+                                                </Typography>
+                                            </Paper>
+                                        ) : (
+                                            <RadioGroup
+                                                value={paymentProvider}
+                                                onChange={(e) => setPaymentProvider(e.target.value)}
+                                            >
+                                                {enabledProviders.map((provider) => (
+                                                    <Paper
+                                                        key={provider.name}
+                                                        variant="outlined"
+                                                        sx={{
+                                                            p: 2,
+                                                            mb: 2,
+                                                            cursor: 'pointer',
+                                                            border: paymentProvider === provider.name ? `2px solid ${BRAND_COLORS.blue}` : '1px solid',
+                                                            borderColor: paymentProvider === provider.name ? BRAND_COLORS.blue : 'divider'
+                                                        }}
+                                                        onClick={() => setPaymentProvider(provider.name)}
+                                                    >
+                                                        <FormControlLabel
+                                                            value={provider.name}
+                                                            control={<Radio />}
+                                                            label={
+                                                                <Box display="flex" alignItems="center" gap={2}>
+                                                                    {provider.name === 'chapa' ? <CreditCard /> : <AccountBalance />}
+                                                                    <Box>
+                                                                        <Typography variant="body1" fontWeight="bold">
+                                                                            {provider.display_name}
+                                                                        </Typography>
+                                                                        <Typography variant="caption" color="text.secondary">
+                                                                            {provider.config?.description || (provider.name === 'chapa' ? t.cardsMobileMoney : t.ethiopianGateway)}
+                                                                        </Typography>
+                                                                    </Box>
+                                                                </Box>
+                                                            }
+                                                        />
+                                                    </Paper>
+                                                ))}
+                                            </RadioGroup>
+                                        )}
+                                    </FormControl>
+
+                                    <Divider sx={{ mb: 3 }} />
+
+                                    {/* Order Summary */}
+                                    <Typography variant="h6" fontWeight="bold" gutterBottom>
+                                        {t.orderSummary}
+                                    </Typography>
+                                    <Stack spacing={2} sx={{ mb: 3 }}>
+                                        <Box display="flex" justifyContent="space-between">
+                                            <Typography variant="body2" color="text.secondary">{t.plan}</Typography>
+                                            <Typography variant="body2" fontWeight="500">{plan.name}</Typography>
+                                        </Box>
+                                        <Box display="flex" justifyContent="space-between">
+                                            <Typography variant="body2" color="text.secondary">{t.duration}</Typography>
+                                            <Typography variant="body2" fontWeight="500">
+                                                {formatDuration(plan.duration_value, plan.duration_unit)}
+                                            </Typography>
+                                        </Box>
+                                        <Divider />
+                                        <Box display="flex" justifyContent="space-between">
+                                            <Typography variant="h6" fontWeight="bold">{t.total}</Typography>
+                                            <Typography variant="h6" fontWeight="bold" color="primary">
+                                                {plan.price} {t.currency}
+                                            </Typography>
+                                        </Box>
+                                    </Stack>
+
+                                    <Button
+                                        fullWidth
+                                        variant="contained"
+                                        size="large"
+                                        onClick={handlePayment}
+                                        disabled={processing || plan.price === 0 || enabledProviders.length === 0}
+                                        sx={{
+                                            py: 2,
+                                            background: BRAND_COLORS.gradient,
+                                            fontSize: '1.1rem',
+                                            fontWeight: 'bold',
+                                            '&:hover': {
+                                                background: BRAND_COLORS.blue
+                                            }
+                                        }}
+                                    >
+                                        {processing ? (
+                                            <CircularProgress size={24} color="inherit" />
+                                        ) : plan.price === 0 ? (
+                                            t.activateFree
+                                        ) : (
+                                            `${t.pay} ${plan.price} ${t.currency}`
+                                        )}
+                                    </Button>
+
+                                    <Typography variant="caption" color="text.secondary" textAlign="center" display="block" mt={2}>
+                                        {t.termsAgreement}
+                                    </Typography>
+                                </CardContent>
+                            </Card>
+                        </motion.div>
+                    </Grid>
+                </Grid>
+            </Container>
+        </Box>
+    );
+};
+
+export default CheckoutPage;

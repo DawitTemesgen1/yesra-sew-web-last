@@ -1,0 +1,63 @@
+{
+  "name": "yesrasew-web",
+  "version": "1.0.0",
+  "description": "Yesra Sew Ethiopian Classifieds - React Web App",
+  "private": true,
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^5.18.0",
+    "@mui/lab": "^5.0.0-alpha.154",
+    "@mui/material": "^5.18.0",
+    "@mui/x-date-pickers": "^6.18.0",
+    "@supabase/supabase-js": "^2.86.0",
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
+    "axios": "^1.6.2",
+    "date-fns": "^3.6.0",
+    "framer-motion": "^10.18.0",
+    "i18next": "^23.7.6",
+    "i18next-browser-languagedetector": "^7.2.0",
+    "nodemailer": "^7.0.11",
+    "react": "^18.2.0",
+    "react-beautiful-dnd": "^13.1.1",
+    "react-cookie": "^7.0.2",
+    "react-dom": "^18.2.0",
+    "react-helmet-async": "^2.0.4",
+    "react-hot-toast": "^2.6.0",
+    "react-i18next": "^13.5.0",
+    "react-query": "^3.39.3",
+    "react-router-dom": "^6.30.2",
+    "react-scripts": "^5.0.1",
+    "recharts": "^3.5.1",
+    "web-vitals": "^2.1.4"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "build:fast": "node build-optimized.js",
+    "build:prod": "set GENERATE_SOURCEMAP=false && set INLINE_RUNTIME_CHUNK=false && set ESLINT_NO_DEV_ERRORS=true && react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "proxy": "http://localhost:8000"
+}

@@ -1,0 +1,253 @@
+{
+    "common": {
+        "welcome": "እንኳን ደህና መጡ",
+        "login": "ግባ",
+        "register": "ተመዝገብ",
+        "logout": "ውጣ",
+        "search": "ፈልግ",
+        "filter": "አጣራ",
+        "save": "አስቀምጥ",
+        "cancel": "ሰርዝ",
+        "delete": "ሰርዝ",
+        "edit": "አርትዕ",
+        "view": "ተመልከት",
+        "back": "ተመለስ",
+        "next": "ቀጣይ",
+        "submit": "አስገባ",
+        "loading": "በመጫን ላይ...",
+        "error": "ስህተት",
+        "success": "ተሳክቷል",
+        "close": "ዝጋ",
+        "yes": "አዎ",
+        "no": "አይ",
+        "all": "ሁሉም",
+        "none": "ምንም",
+        "select": "ምረጥ",
+        "upload": "ስቀል",
+        "download": "አውርድ",
+        "share": "አጋራ",
+        "copy": "ቅዳ",
+        "more": "ተጨማሪ",
+        "less": "ያነሰ",
+        "show": "አሳይ",
+        "hide": "ደብቅ"
+    },
+    "auth": {
+        "welcomeBack": "እንኳን ደህና ተመለሱ!",
+        "signInToContinue": "ወደ የስራሰው ለመቀጠል ይግቡ",
+        "dontHaveAccount": "መለያ የለዎትም?",
+        "alreadyHaveAccount": "መለያ አለዎት?",
+        "signUp": "ተመዝገብ",
+        "signIn": "ግባ",
+        "email": "ኢሜይል",
+        "password": "የይለፍ ቃል",
+        "confirmPassword": "የይለፍ ቃል አረጋግጥ",
+        "fullName": "ሙሉ ስም",
+        "phoneNumber": "ስልክ ቁጥር",
+        "forgotPassword": "የይለፍ ቃል ረሱ?",
+        "resetPassword": "የይለፍ ቃል ዳግም አስጀምር",
+        "sendResetLink": "የዳግም ማስጀመሪያ አገናኝ ላክ",
+        "createAccount": "መለያ ፍጠር",
+        "orContinueWith": "ወይም ቀጥል በ",
+        "google": "ጉግል",
+        "facebook": "ፌስቡክ",
+        "termsAgree": "በመመዝገብ ተስማምተዋል",
+        "termsOfService": "የአገልግሎት ውሎች",
+        "and": "እና",
+        "privacyPolicy": "የግላዊነት ፖሊሲ",
+        "emailRequired": "ኢሜይል ያስፈልጋል",
+        "passwordRequired": "የይለፍ ቃል ያስፈልጋል",
+        "passwordMismatch": "የይለፍ ቃሎች አይዛመዱም",
+        "invalidEmail": "ልክ ያልሆነ ኢሜይል አድራሻ",
+        "weakPassword": "የይለፍ ቃል ቢያንስ 6 ቁምፊዎች መሆን አለበት"
+    },
+    "landing": {
+        "hero": {
+            "title": "የኢትዮጵያ ዋና የገበያ ቦታ",
+            "subtitle": "ግዙ፣ ሽጡ እና የሚፈልጉትን ሁሉ ያግኙ",
+            "description": "በየስራሰው ላይ ቤቶችን፣ መኪናዎችን፣ ስራዎችን እና ሌሎችንም የሚገዙ እና የሚሸጡ በሺዎች የሚቆጠሩ ኢትዮጵያውያን ይቀላቀሉ - የእርስዎ የታመነ የገበያ ቦታ",
+            "getStarted": "ጀምር",
+            "learnMore": "ተጨማሪ ይወቁ",
+            "browseListings": "ዝርዝሮችን አስሱ"
+        },
+        "features": {
+            "title": "ለምን የስራሰውን ይመርጣሉ?",
+            "subtitle": "በኢትዮጵያ ውስጥ ለመግዛት እና ለመሸጥ ምርጡ መድረክ",
+            "feature1": {
+                "title": "የተረጋገጡ ዝርዝሮች",
+                "description": "ሁሉም ዝርዝሮች ጥራት እና ትክክለኛነትን ለማረጋገጥ ተረጋግጠዋል"
+            },
+            "feature2": {
+                "title": "ደህንነቱ የተጠበቀ ግብይት",
+                "description": "ደህንነትዎ ቅድሚያችን ነው ደህንነቱ በተጠበቀ የክፍያ አማራጮች"
+            },
+            "feature3": {
+                "title": "ሰፊ ምርጫ",
+                "description": "ከቤቶች እስከ መኪናዎች፣ ከስራዎች እስከ አገልግሎቶች ሁሉንም ያግኙ"
+            },
+            "feature4": {
+                "title": "ለመጠቀም ቀላል",
+                "description": "ለቀላል ተሞክሮ ቀላል እና ግልጽ በይነገጽ"
+            }
+        },
+        "categories": {
+            "title": "በምድብ አስስ",
+            "subtitle": "የሚፈልጉትን ያግኙ",
+            "homes": "ቤቶች እና ሪል እስቴት",
+            "cars": "መኪናዎች እና ተሽከርካሪዎች",
+            "jobs": "ስራዎች እና ሙያዎች",
+            "tenders": "ጨረታዎች እና ኮንትራቶች",
+            "viewAll": "ሁሉንም ምድቦች ይመልከቱ"
+        },
+        "stats": {
+            "activeUsers": "ንቁ ተጠቃሚዎች",
+            "listings": "ጠቅላላ ዝርዝሮች",
+            "categories": "ምድቦች",
+            "cities": "የተሸፈኑ ከተሞች"
+        },
+        "cta": {
+            "title": "ለመጀመር ዝግጁ ነዎት?",
+            "subtitle": "በየስራሰው ላይ በሺዎች የሚቆጠሩ እርካታ ያላቸውን ተጠቃሚዎች ይቀላቀሉ",
+            "postAd": "ማስታወቂያዎን ያስቀምጡ",
+            "signUpNow": "አሁን ይመዝገቡ"
+        }
+    },
+    "navbar": {
+        "home": "መነሻ",
+        "homes": "ቤቶች",
+        "cars": "መኪናዎች",
+        "jobs": "ስራዎች",
+        "tenders": "ጨረታዎች",
+        "pricing": "ዋጋ",
+        "about": "ስለ እኛ",
+        "contact": "አግኙን",
+        "postAd": "ማስታወቂያ ያስቀምጡ",
+        "myAccount": "የእኔ መለያ",
+        "myListings": "የእኔ ዝርዝሮች",
+        "favorites": "ተወዳጆች",
+        "messages": "መልዕክቶች",
+        "settings": "ቅንብሮች",
+        "language": "ቋንቋ"
+    },
+    "listings": {
+        "title": "ዝርዝሮች",
+        "noListings": "ምንም ዝርዝሮች አልተገኙም",
+        "viewDetails": "ዝርዝሮችን ይመልከቱ",
+        "contactSeller": "ሻጩን ያግኙ",
+        "addToFavorites": "ወደ ተወዳጆች ጨምር",
+        "share": "አጋራ",
+        "report": "ሪፖርት",
+        "price": "ዋጋ",
+        "location": "አድራሻ",
+        "category": "ምድብ",
+        "postedOn": "የተለጠፈበት",
+        "description": "መግለጫ",
+        "features": "ባህሪያት",
+        "specifications": "ዝርዝሮች",
+        "similarListings": "ተመሳሳይ ዝርዝሮች",
+        "relatedListings": "ተዛማጅ ዝርዝሮች"
+    },
+    "search": {
+        "searchPlaceholder": "ማንኛውንም ነገር ፈልግ...",
+        "searchResults": "የፍለጋ ውጤቶች",
+        "resultsFor": "ውጤቶች ለ",
+        "noResults": "ምንም ውጤቶች አልተገኙም",
+        "tryDifferentKeywords": "የተለያዩ ቁልፍ ቃላትን ይሞክሩ",
+        "filters": "ማጣሪያዎች",
+        "sortBy": "አደራጅ በ",
+        "newest": "አዲስ",
+        "oldest": "ቆየ",
+        "priceLowToHigh": "ዋጋ: ዝቅተኛ ወደ ከፍተኛ",
+        "priceHighToLow": "ዋጋ: ከፍተኛ ወደ ዝቅተኛ",
+        "relevance": "ተዛማጅነት"
+    },
+    "pricing": {
+        "title": "እቅድዎን ይምረጡ",
+        "subtitle": "ለፍላጎትዎ ተስማሚ የሆነውን እቅድ ይምረጡ",
+        "monthly": "ወርሃዊ",
+        "yearly": "ዓመታዊ",
+        "free": "ነጻ",
+        "basic": "መሰረታዊ",
+        "pro": "ፕሮ",
+        "business": "ንግድ",
+        "currentPlan": "የአሁን እቅድ",
+        "upgrade": "አሻሽል",
+        "downgrade": "ቀንስ",
+        "subscribe": "ይመዝገቡ",
+        "perMonth": "በወር",
+        "perYear": "በዓመት",
+        "features": {
+            "listings": "{count} ዝርዝሮች",
+            "unlimitedListings": "ያልተገደበ ዝርዝሮች",
+            "featuredListings": "የተለዩ ዝርዝሮች",
+            "analytics": "የትንታኔ ዳሽቦርድ",
+            "support": "ቅድሚያ የሚሰጥ ድጋፍ",
+            "verifiedBadge": "የተረጋገጠ ባጅ",
+            "duration": "{days} ቀናት ጊዜ"
+        }
+    },
+    "profile": {
+        "myProfile": "የእኔ መገለጫ",
+        "editProfile": "መገለጫ አርትዕ",
+        "personalInfo": "የግል መረጃ",
+        "accountSettings": "የመለያ ቅንብሮች",
+        "notifications": "ማሳወቂያዎች",
+        "privacy": "ግላዊነት",
+        "security": "ደህንነት",
+        "changePassword": "የይለፍ ቃል ቀይር",
+        "deleteAccount": "መለያ ሰርዝ",
+        "memberSince": "አባል ከ",
+        "verified": "ተረጋግጧል",
+        "notVerified": "አልተረጋገጠም",
+        "verifyAccount": "መለያ አረጋግጥ"
+    },
+    "postAd": {
+        "title": "ማስታወቂያዎን ያስቀምጡ",
+        "selectCategory": "ምድብ ይምረጡ",
+        "adDetails": "የማስታወቂያ ዝርዝሮች",
+        "uploadPhotos": "ፎቶዎችን ስቀል",
+        "pricing": "ዋጋ አወጣጥ",
+        "review": "ይገምግሙ እና ያትሙ",
+        "adTitle": "የማስታወቂያ ርዕስ",
+        "adDescription": "የማስታወቂያ መግለጫ",
+        "adPrice": "ዋጋ",
+        "adLocation": "አድራሻ",
+        "contactInfo": "የመገኛ መረጃ",
+        "publish": "አትም",
+        "saveDraft": "እንደ ረቂቅ አስቀምጥ",
+        "preview": "ቅድመ እይታ",
+        "uploadImages": "ምስሎችን ስቀል",
+        "dragAndDrop": "ምስሎችን እዚህ ጎትተው ይጣሉ",
+        "maxImages": "ከፍተኛ {count} ምስሎች",
+        "required": "ያስፈልጋል",
+        "optional": "አማራጭ"
+    },
+    "footer": {
+        "aboutUs": "ስለ እኛ",
+        "contactUs": "አግኙን",
+        "termsOfService": "የአገልግሎት ውሎች",
+        "privacyPolicy": "የግላዊነት ፖሊሲ",
+        "faq": "ተደጋግሞ የሚጠየቁ ጥያቄዎች",
+        "help": "የእገዛ ማእከል",
+        "followUs": "ይከተሉን",
+        "downloadApp": "መተግበሪያ አውርድ",
+        "copyright": "© 2024 የስራሰው። ሁሉም መብቶች የተጠበቁ ናቸው።",
+        "madeInEthiopia": "በኢትዮጵያ ተሰርቷል ❤️"
+    },
+    "messages": {
+        "success": {
+            "saved": "በተሳካ ሁኔታ ተቀምጧል",
+            "deleted": "በተሳካ ሁኔታ ተሰርዟል",
+            "updated": "በተሳካ ሁኔታ ተዘምኗል",
+            "sent": "በተሳካ ሁኔታ ተልኳል",
+            "published": "በተሳካ ሁኔታ ታትሟል"
+        },
+        "error": {
+            "general": "የሆነ ችግር ተፈጥሯል",
+            "network": "የአውታረ መረብ ስህተት። እባክዎ ግንኙነትዎን ያረጋግጡ",
+            "notFound": "አልተገኘም",
+            "unauthorized": "ያልተፈቀደ መዳረሻ",
+            "validation": "እባክዎ ግብዓትዎን ያረጋግጡ"
+        }
+    }
+}
