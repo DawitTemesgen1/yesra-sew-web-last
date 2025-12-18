@@ -6,6 +6,9 @@ const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs').promises;
 const { createClient } = require('@supabase/supabase-js');
+
+// Load environment variables - try local .env first, then root .env
+require('dotenv').config();
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 const app = express();
@@ -29,8 +32,8 @@ const pool = mysql.createPool({
 
 // Supabase Client (for templates only)
 const supabase = createClient(
-    process.env.SUPABASE_URL || '',
-    process.env.SUPABASE_ANON_KEY || ''
+    process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL || '',
+    process.env.SUPABASE_ANON_KEY || process.env.REACT_APP_SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || ''
 );
 
 // Configure multer for image uploads
@@ -103,7 +106,6 @@ async function resolveCategoryId(input) {
     if (isUUID) return input;
 
     if (categoryCache.has(input)) {
-        console.log(`[DEBUG] Cache Hit: ${input} -> ${categoryCache.get(input)}`);
         return categoryCache.get(input);
     }
 
@@ -114,8 +116,6 @@ async function resolveCategoryId(input) {
     if (input.endsWith('s')) variations.push(input.slice(0, -1)); // homes -> home
     else variations.push(input + 's'); // car -> cars
 
-    console.log(`[DEBUG] Resolving slug: ${input}. Trying variations: ${variations.join(', ')}`);
-
     for (const attempt of variations) {
         try {
             const { data } = await supabase
@@ -125,7 +125,6 @@ async function resolveCategoryId(input) {
                 .maybeSingle();
 
             if (data?.id) {
-                console.log(`[DEBUG] Resolved ${input} -> ${data.id} (Matched: ${data.slug})`);
                 categoryCache.set(input, data.id);
                 return data.id;
             }
@@ -134,7 +133,6 @@ async function resolveCategoryId(input) {
         }
     }
 
-    console.log(`[DEBUG] FAILED to resolve slug: ${input}`);
     return input;
 }
 
@@ -158,8 +156,6 @@ app.get('/api/listings', async (req, res) => {
             order = 'DESC'
         } = req.query;
 
-        console.log('[DEBUG] GET /api/listings Request:', { category, status, user_id, page });
-
         let query = `
             SELECT 
                 l.*,
@@ -178,11 +174,7 @@ app.get('/api/listings', async (req, res) => {
             query += ' AND l.status = ?';
             params.push(dbStatus);
         } else if (!status) {
-            // If user_id is provided, and no status specified, default to active
-            // Note: Profile usually fetches with user_id + status (if implemented)
-            // but we keep default active for consistency.
             query += " AND l.status = 'active'";
-            console.log('[DEBUG] Defaulting to status=active');
         }
         // If status === 'all', we don't add any AND clause for status
 
@@ -193,7 +185,6 @@ app.get('/api/listings', async (req, res) => {
 
         if (category) {
             const resolvedCategory = await resolveCategoryId(category);
-            console.log(`[DEBUG] Final Category Query: ${resolvedCategory} (Input: ${category})`);
             query += ' AND l.category = ?';
             params.push(resolvedCategory);
         }

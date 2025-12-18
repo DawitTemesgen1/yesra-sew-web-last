@@ -48,7 +48,6 @@ const listingService = {
      */
     async getListings(filters = {}) {
         try {
-            console.log('listingService.getListings filters:', filters); // DEBUG
             // Map frontend filters to backend params
             const params = {
                 category: filters.category,
