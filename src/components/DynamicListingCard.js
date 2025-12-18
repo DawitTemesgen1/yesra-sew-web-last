@@ -168,7 +168,7 @@ const DynamicListingCard = ({
             );
         }
 
-        if (field.field_name === 'price') {
+        if (field.field_name === 'price' || field.field_type === 'price') {
             return (
                 <Typography key={field.id} variant="h6" color="primary.main" fontWeight={900} sx={{ fontSize: '1.15rem' }}>
                     {typeof value === 'number' ? `ETB ${value.toLocaleString()}` : value}
@@ -176,36 +176,130 @@ const DynamicListingCard = ({
             );
         }
 
-        // Icon Logic
+        // Icon Logic - Smart icon matching
         let Icon = null;
         const lowerName = field.field_name.toLowerCase();
-        if (lowerName.includes('bed')) Icon = Bed;
-        else if (lowerName.includes('bath')) Icon = Bathtub;
-        else if (lowerName.includes('area') || lowerName.includes('sqft')) Icon = SquareFoot;
-        else if (lowerName.includes('year')) Icon = CalendarToday;
-        else if (lowerName.includes('transmission')) Icon = Speed;
-        else if (lowerName.includes('fuel')) Icon = LocalGasStation;
-        else if (lowerName.includes('location')) Icon = LocationOn;
+        const lowerLabel = (field.field_label || '').toLowerCase();
 
-        // Type-Based Rendering
+        // Match by field name or label
+        if (lowerName.includes('bed') || lowerLabel.includes('bed')) Icon = Bed;
+        else if (lowerName.includes('bath') || lowerLabel.includes('bath')) Icon = Bathtub;
+        else if (lowerName.includes('area') || lowerName.includes('sqft') || lowerLabel.includes('area')) Icon = SquareFoot;
+        else if (lowerName.includes('year') || lowerLabel.includes('year')) Icon = CalendarToday;
+        else if (lowerName.includes('transmission') || lowerLabel.includes('transmission')) Icon = Speed;
+        else if (lowerName.includes('fuel') || lowerLabel.includes('fuel')) Icon = LocalGasStation;
+        else if (lowerName.includes('location') || field.field_type === 'location') Icon = LocationOn;
+
+        // ========================================
+        // COMPREHENSIVE FIELD TYPE RENDERING
+        // ========================================
+
         switch (field.field_type) {
-            case 'file':
-                // Display file as a downloadable/viewable link
-                const fileUrl = Array.isArray(value) ? value[0] : value;
+            // --- TEXT TYPES ---
+            case 'text':
+                // Short text - single line
                 return (
-                    <Box key={field.id} onClick={(e) => { e.stopPropagation(); window.open(fileUrl, '_blank'); }} sx={{
-                        display: 'flex', alignItems: 'center', gap: 0.5, p: 0.5, px: 1,
-                        bgcolor: alpha(theme.palette.primary.main, 0.1), borderRadius: 1, cursor: 'pointer',
-                        maxWidth: 'fit-content', mt: 0.5
-                    }}>
-                        <AutoAwesome sx={{ fontSize: 14, color: 'primary.main' }} />
-                        <Typography variant="caption" color="primary.main" fontWeight={600}>
-                            {field.field_label || 'View File'}
-                        </Typography>
-                    </Box>
+                    <Typography key={field.id} variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
+                        <span style={{ fontWeight: 600, color: theme.palette.text.primary }}>{field.field_label}:</span> {value}
+                    </Typography>
                 );
+
+            case 'textarea':
+                // Long text - multi-line with truncation
+                return (
+                    <Typography key={field.id} variant="body2" color="text.secondary" sx={{
+                        fontSize: '0.85rem',
+                        display: '-webkit-box',
+                        WebkitLineClamp: context === 'overlay' ? 2 : 3,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden'
+                    }}>
+                        {value}
+                    </Typography>
+                );
+
+            // --- NUMBER TYPES ---
+            case 'number':
+                return Icon ? (
+                    <Stack direction="row" spacing={0.5} alignItems="center" key={field.id} title={field.field_label}>
+                        <Icon sx={{ fontSize: 16, color: theme.palette.text.secondary }} />
+                        <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ fontSize: '0.85rem' }}>
+                            {Number(value).toLocaleString()} {field.field_name.includes('area') ? 'sqft' : ''}
+                        </Typography>
+                    </Stack>
+                ) : (
+                    <Typography key={field.id} variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
+                        <span style={{ fontWeight: 600, color: theme.palette.text.primary }}>{field.field_label}:</span> {Number(value).toLocaleString()}
+                    </Typography>
+                );
+
+            // --- SELECT/DROPDOWN ---
+            case 'select':
+                return context === 'overlay' ? (
+                    <Chip key={field.id} label={value} size="small"
+                        icon={Icon ? <Icon sx={{ fontSize: '12px !important', color: 'inherit' }} /> : null}
+                        sx={{
+                            bgcolor: alpha('#000', 0.5), color: 'white',
+                            backdropFilter: 'blur(4px)', height: 22, fontSize: '0.7rem',
+                            border: `1px solid ${alpha('#fff', 0.2)}`
+                        }}
+                    />
+                ) : (
+                    <Chip key={field.id} label={value} size="small"
+                        icon={Icon ? <Icon sx={{ fontSize: 14 }} /> : null}
+                        sx={{
+                            bgcolor: alpha(theme.palette.primary.main, 0.1),
+                            color: 'primary.main',
+                            fontWeight: 600,
+                            fontSize: '0.75rem'
+                        }}
+                    />
+                );
+
+            // --- CHECKBOX/BOOLEAN ---
+            case 'checkbox':
+            case 'boolean':
+                const boolValue = value === true || value === 'true' || value === 'yes' || value === '1';
+                return (
+                    <Chip key={field.id}
+                        label={field.field_label}
+                        size="small"
+                        color={boolValue ? "success" : "default"}
+                        sx={{ fontSize: '0.75rem', fontWeight: 600 }}
+                    />
+                );
+
+            // --- RADIO ---
+            case 'radio':
+                return (
+                    <Chip key={field.id} label={value} size="small"
+                        sx={{
+                            bgcolor: alpha(theme.palette.secondary.main, 0.1),
+                            color: 'secondary.main',
+                            fontWeight: 600,
+                            fontSize: '0.75rem'
+                        }}
+                    />
+                );
+
+            // --- DATE ---
+            case 'date':
+                const dateValue = new Date(value).toLocaleDateString();
+                return Icon ? (
+                    <Stack direction="row" spacing={0.5} alignItems="center" key={field.id} title={field.field_label}>
+                        <Icon sx={{ fontSize: 16, color: theme.palette.text.secondary }} />
+                        <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ fontSize: '0.85rem' }}>
+                            {dateValue}
+                        </Typography>
+                    </Stack>
+                ) : (
+                    <Typography key={field.id} variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
+                        <span style={{ fontWeight: 600, color: theme.palette.text.primary }}>{field.field_label}:</span> {dateValue}
+                    </Typography>
+                );
+
+            // --- IMAGE ---
             case 'image':
-                // If an image field is placed in body/footer, render a small preview/thumbnail
                 const imgSrc = Array.isArray(value) ? value[0] : value;
                 return (
                     <Box key={field.id} sx={{ mt: 1, borderRadius: 1, overflow: 'hidden', width: '100%', height: 150 }}>
@@ -219,7 +313,9 @@ const DynamicListingCard = ({
                         />
                     </Box>
                 );
-            case 'images': // Handle known array type if distinct
+
+            // --- IMAGES (Array) ---
+            case 'images':
                 if (Array.isArray(value) && value.length > 0) {
                     return (
                         <Box key={field.id} sx={{ mt: 1, borderRadius: 1, overflow: 'hidden', width: '100%', height: 150 }}>
@@ -235,67 +331,158 @@ const DynamicListingCard = ({
                     );
                 }
                 break;
-            case 'date':
-                value = new Date(value).toLocaleDateString();
-                break;
-            case 'boolean':
-                value = value ? 'Yes' : 'No';
-                break;
-            case 'number':
-                value = Number(value).toLocaleString();
-                break;
-            default:
-                break;
-        }
 
-        // Context-Based Styling
-        if (context === 'overlay') {
-            return (
-                <Chip key={field.id} label={value} size="small"
-                    icon={Icon ? <Icon sx={{ fontSize: '12px !important', color: 'inherit' }} /> : null}
-                    sx={{
-                        bgcolor: alpha('#000', 0.5), color: 'white',
-                        backdropFilter: 'blur(4px)', height: 22, fontSize: '0.7rem',
-                        border: `1px solid ${alpha('#fff', 0.2)}`
-                    }}
-                />
-            );
-        }
+            // --- VIDEO ---
+            case 'video':
+                const videoUrl = Array.isArray(value) ? value[0] : value;
+                return (
+                    <Box key={field.id} onClick={(e) => { e.stopPropagation(); window.open(videoUrl, '_blank'); }} sx={{
+                        display: 'flex', alignItems: 'center', gap: 0.5, p: 0.5, px: 1,
+                        bgcolor: alpha(theme.palette.error.main, 0.1), borderRadius: 1, cursor: 'pointer',
+                        maxWidth: 'fit-content', mt: 0.5,
+                        border: `1px solid ${alpha(theme.palette.error.main, 0.3)}`
+                    }}>
+                        <Box sx={{
+                            width: 0, height: 0,
+                            borderLeft: '8px solid',
+                            borderTop: '5px solid transparent',
+                            borderBottom: '5px solid transparent',
+                            borderColor: theme.palette.error.main,
+                            ml: 0.5
+                        }} />
+                        <Typography variant="caption" color="error.main" fontWeight={600}>
+                            {field.field_label || 'Play Video'}
+                        </Typography>
+                    </Box>
+                );
 
-        // Default Body Styling
-        if (Icon) {
-            return (
-                <Stack direction="row" spacing={0.5} alignItems="center" key={field.id} title={field.field_label}>
-                    <Icon sx={{ fontSize: 16, color: theme.palette.text.secondary }} />
-                    <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ fontSize: '0.85rem' }}>
-                        {value} {field.field_name.includes('area') ? 'sqft' : ''}
+            // --- FILE ---
+            case 'file':
+                const fileUrl = Array.isArray(value) ? value[0] : value;
+                return (
+                    <Box key={field.id} onClick={(e) => { e.stopPropagation(); window.open(fileUrl, '_blank'); }} sx={{
+                        display: 'flex', alignItems: 'center', gap: 0.5, p: 0.5, px: 1,
+                        bgcolor: alpha(theme.palette.primary.main, 0.1), borderRadius: 1, cursor: 'pointer',
+                        maxWidth: 'fit-content', mt: 0.5
+                    }}>
+                        <AutoAwesome sx={{ fontSize: 14, color: 'primary.main' }} />
+                        <Typography variant="caption" color="primary.main" fontWeight={600}>
+                            {field.field_label || 'View File'}
+                        </Typography>
+                    </Box>
+                );
+
+            // --- LOCATION ---
+            case 'location':
+                return (
+                    <Stack direction="row" spacing={0.5} alignItems="center" key={field.id} title={field.field_label}>
+                        <LocationOn sx={{ fontSize: 16, color: theme.palette.text.secondary }} />
+                        <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ fontSize: '0.85rem' }}>
+                            {value}
+                        </Typography>
+                    </Stack>
+                );
+
+            // --- PRICE ---
+            case 'price':
+                return (
+                    <Typography key={field.id} variant="h6" color="primary.main" fontWeight={900} sx={{ fontSize: '1.15rem' }}>
+                        {typeof value === 'number' ? `ETB ${value.toLocaleString()}` : value}
                     </Typography>
-                </Stack>
-            );
-        }
+                );
 
-        // Generic Key-Value
-        // Check if the generic string value is actually an image URL
-        if (typeof value === 'string' && (value.includes('supabase') || value.match(/\.(jpeg|jpg|gif|png|webp)$/i))) {
-            return (
-                <Box key={field.id} sx={{ mt: 1, borderRadius: 1, overflow: 'hidden', width: '100%', height: 150 }}>
-                    <UltraOptimizedImage
-                        src={value}
-                        alt={field.field_label}
-                        width="100%"
-                        height="100%"
-                        objectFit="cover"
-                        aspectRatio={16 / 9}
-                    />
-                </Box>
-            );
-        }
+            // --- DEFAULT/UNKNOWN ---
+            default:
+                // Smart detection for untyped fields
 
-        return (
-            <Typography key={field.id} variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
-                <span style={{ fontWeight: 600, color: theme.palette.text.primary }}>{field.field_label}:</span> {value}
-            </Typography>
-        );
+                // Check if it's an image URL
+                if (typeof value === 'string' && (value.includes('supabase') || value.match(/\.(jpeg|jpg|gif|png|webp)$/i))) {
+                    return (
+                        <Box key={field.id} sx={{ mt: 1, borderRadius: 1, overflow: 'hidden', width: '100%', height: 150 }}>
+                            <UltraOptimizedImage
+                                src={value}
+                                alt={field.field_label}
+                                width="100%"
+                                height="100%"
+                                objectFit="cover"
+                                aspectRatio={16 / 9}
+                            />
+                        </Box>
+                    );
+                }
+
+                // Check if it's a video URL
+                if (typeof value === 'string' && value.match(/\.(mp4|webm|ogg|mov)$/i)) {
+                    return (
+                        <Box key={field.id} onClick={(e) => { e.stopPropagation(); window.open(value, '_blank'); }} sx={{
+                            display: 'flex', alignItems: 'center', gap: 0.5, p: 0.5, px: 1,
+                            bgcolor: alpha(theme.palette.error.main, 0.1), borderRadius: 1, cursor: 'pointer',
+                            maxWidth: 'fit-content', mt: 0.5
+                        }}>
+                            <Box sx={{
+                                width: 0, height: 0,
+                                borderLeft: '8px solid',
+                                borderTop: '5px solid transparent',
+                                borderBottom: '5px solid transparent',
+                                borderColor: theme.palette.error.main,
+                                ml: 0.5
+                            }} />
+                            <Typography variant="caption" color="error.main" fontWeight={600}>
+                                {field.field_label || 'Play Video'}
+                            </Typography>
+                        </Box>
+                    );
+                }
+
+                // Check if it's a file URL
+                if (typeof value === 'string' && value.match(/\.(pdf|doc|docx|xls|xlsx|zip|rar)$/i)) {
+                    return (
+                        <Box key={field.id} onClick={(e) => { e.stopPropagation(); window.open(value, '_blank'); }} sx={{
+                            display: 'flex', alignItems: 'center', gap: 0.5, p: 0.5, px: 1,
+                            bgcolor: alpha(theme.palette.primary.main, 0.1), borderRadius: 1, cursor: 'pointer',
+                            maxWidth: 'fit-content', mt: 0.5
+                        }}>
+                            <AutoAwesome sx={{ fontSize: 14, color: 'primary.main' }} />
+                            <Typography variant="caption" color="primary.main" fontWeight={600}>
+                                {field.field_label || 'View File'}
+                            </Typography>
+                        </Box>
+                    );
+                }
+
+                // Context-Based Styling for generic text
+                if (context === 'overlay') {
+                    return (
+                        <Chip key={field.id} label={value} size="small"
+                            icon={Icon ? <Icon sx={{ fontSize: '12px !important', color: 'inherit' }} /> : null}
+                            sx={{
+                                bgcolor: alpha('#000', 0.5), color: 'white',
+                                backdropFilter: 'blur(4px)', height: 22, fontSize: '0.7rem',
+                                border: `1px solid ${alpha('#fff', 0.2)}`
+                            }}
+                        />
+                    );
+                }
+
+                // Default Body Styling with Icon
+                if (Icon) {
+                    return (
+                        <Stack direction="row" spacing={0.5} alignItems="center" key={field.id} title={field.field_label}>
+                            <Icon sx={{ fontSize: 16, color: theme.palette.text.secondary }} />
+                            <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ fontSize: '0.85rem' }}>
+                                {value} {field.field_name.includes('area') ? 'sqft' : ''}
+                            </Typography>
+                        </Stack>
+                    );
+                }
+
+                // Generic Key-Value
+                return (
+                    <Typography key={field.id} variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
+                        <span style={{ fontWeight: 600, color: theme.palette.text.primary }}>{field.field_label}:</span> {value}
+                    </Typography>
+                );
+        }
     };
 
     // Responsive sizing logic
