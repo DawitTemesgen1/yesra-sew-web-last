@@ -260,12 +260,28 @@ app.get('/api/listings', async (req, res) => {
 
         const [listings] = await pool.query(query, params);
 
+        // Get base URL for images
+        const baseUrl = `http://localhost:${PORT}`;
+
         // Process listings
-        const processedListings = listings.map(listing => ({
-            ...listing,
-            images: listing.images ? listing.images.split(',') : [],
-            custom_fields: listing.custom_fields ? JSON.parse(listing.custom_fields) : {}
-        }));
+        const processedListings = listings.map(listing => {
+            // Convert relative image paths to absolute URLs
+            let images = [];
+            if (listing.images) {
+                images = listing.images.split(',').map(img => {
+                    // If already absolute URL, return as-is
+                    if (img.startsWith('http')) return img;
+                    // Convert relative path to absolute
+                    return `${baseUrl}${img}`;
+                });
+            }
+
+            return {
+                ...listing,
+                images,
+                custom_fields: listing.custom_fields ? JSON.parse(listing.custom_fields) : {}
+            };
+        });
 
         res.json({
             success: true,
@@ -325,9 +341,21 @@ app.get('/api/listings/:id', async (req, res) => {
             return res.status(404).json({ success: false, error: 'Listing not found' });
         }
 
+        // Get base URL for images
+        const baseUrl = `http://localhost:${PORT}`;
+
+        // Convert relative image paths to absolute URLs
+        let images = [];
+        if (listings[0].images) {
+            images = listings[0].images.split(',').map(img => {
+                if (img.startsWith('http')) return img;
+                return `${baseUrl}${img}`;
+            });
+        }
+
         const listing = {
             ...listings[0],
-            images: listings[0].images ? listings[0].images.split(',') : [],
+            images,
             custom_fields: listings[0].custom_fields ? JSON.parse(listings[0].custom_fields) : {}
         };
 
