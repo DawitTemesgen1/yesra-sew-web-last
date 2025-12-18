@@ -221,15 +221,9 @@ const LoginPage = () => {
 
   return (
     <Box sx={{
-      bgcolor: 'background.default',
+      bgcolor: '#0a192f',
       minHeight: '100vh',
-      backgroundImage: {
-        xs: `linear-gradient(${alpha(theme.palette.background.default, 0.92)}, ${alpha(theme.palette.background.default, 0.92)}), url("https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=1080")`,
-        md: `linear-gradient(${alpha(theme.palette.background.default, 0.95)}, ${alpha(theme.palette.background.default, 0.95)}), url("https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=1080")`
-      },
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      backgroundAttachment: 'fixed',
+      background: 'linear-gradient(135deg, #0a192f 0%, #172a45 100%)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center'

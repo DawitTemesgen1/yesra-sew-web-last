@@ -26,6 +26,7 @@ import SEO from '../components/SEO';
 import MembershipTab from '../components/MembershipTab';
 import CompanyVerificationForm from '../components/CompanyVerificationForm';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
+import DynamicListingCard from '../components/DynamicListingCard';
 
 // Brand Colors
 const BRAND_COLORS = {
@@ -436,6 +437,19 @@ const ProfilePage = () => {
     );
   }
 
+  const handleShareListing = (listing) => {
+    if (navigator.share) {
+      navigator.share({
+        title: listing.title,
+        text: listing.description,
+        url: `${window.location.origin}/listings/${listing.id}`
+      }).catch(console.error);
+    } else {
+      navigator.clipboard.writeText(`${window.location.origin}/listings/${listing.id}`);
+      toast.success(t.linkCopied || 'Link copied to clipboard');
+    }
+  };
+
   const StatCard = ({ icon, label, value, color }) => (
     <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
       <Card sx={{
@@ -459,83 +473,6 @@ const ProfilePage = () => {
           </Box>
           <Typography variant="h4" fontWeight="bold" color={color}>{value}</Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>{label}</Typography>
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
-
-  const ListingCard = ({ listing }) => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-    >
-      <Card sx={{
-        height: '100%',
-        background: BRAND_COLORS.cardGradient,
-        border: `1px solid ${alpha(BRAND_COLORS.gold, 0.2)}`,
-        transition: 'all 0.3s',
-        '&:hover': {
-          transform: 'translateY(-4px)',
-          boxShadow: `0 8px 24px ${alpha(BRAND_COLORS.blue, 0.2)}`
-        }
-      }}>
-        <CardContent>
-          <Stack direction="row" justifyContent="space-between" alignItems="start" mb={2}>
-            <Typography variant="h6" fontWeight="bold" noWrap sx={{ flex: 1, color: BRAND_COLORS.blue }}>
-              {listing.title}
-            </Typography>
-            <Chip
-              label={listing.status}
-              size="small"
-              sx={{
-                bgcolor: listing.status === 'approved' ? alpha(BRAND_COLORS.gold, 0.2) : alpha(BRAND_COLORS.blue, 0.1),
-                color: listing.status === 'approved' ? BRAND_COLORS.darkGold : BRAND_COLORS.blue,
-                fontWeight: 'bold'
-              }}
-            />
-          </Stack>
-
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2, height: 40, overflow: 'hidden' }}>
-            {listing.description?.substring(0, 80)}...
-          </Typography>
-
-          <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
-            <Chip icon={<Visibility sx={{ fontSize: 16 }} />} label={listing.views || 0} size="small" />
-            <Chip icon={<Favorite sx={{ fontSize: 16 }} />} label={listing.favorites_count || 0} size="small" />
-          </Stack>
-
-          <Typography variant="caption" color="text.secondary" display="block" mb={2}>
-            {t.posted} {listing.created_at ? formatDistanceToNow(new Date(listing.created_at), { addSuffix: true }) : t.recently}
-          </Typography>
-
-          <Divider sx={{ my: 1 }} />
-
-          <Stack direction="row" spacing={1} justifyContent="flex-end" mt={2}>
-            <Tooltip title="Edit">
-              <IconButton
-                size="small"
-                onClick={() => navigate(`/post-ad?edit=${listing.id}`)}
-                sx={{ color: BRAND_COLORS.blue }}
-              >
-                <Edit fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Share">
-              <IconButton size="small" sx={{ color: BRAND_COLORS.gold }}>
-                <Share fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Delete">
-              <IconButton
-                size="small"
-                onClick={() => handleDeleteListing(listing.id)}
-                sx={{ color: 'error.main' }}
-              >
-                <Delete fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          </Stack>
         </CardContent>
       </Card>
     </motion.div>
@@ -873,7 +810,13 @@ const ProfilePage = () => {
                     <Grid container spacing={2}>
                       {userListings.map((listing) => (
                         <Grid item xs={12} sm={6} md={4} key={listing.id}>
-                          <ListingCard listing={listing} />
+                          <DynamicListingCard
+                            listing={listing}
+                            showActions={true}
+                            onEdit={() => navigate(`/post-ad?edit=${listing.id}`)}
+                            onDelete={handleDeleteListing}
+                            onShare={handleShareListing}
+                          />
                         </Grid>
                       ))}
                     </Grid>
@@ -900,7 +843,9 @@ const ProfilePage = () => {
                     <Grid container spacing={2}>
                       {userFavorites.map((listing) => (
                         <Grid item xs={12} sm={6} md={4} key={listing.id}>
-                          <ListingCard listing={listing} />
+                          <DynamicListingCard
+                            listing={listing}
+                          />
                         </Grid>
                       ))}
                     </Grid>

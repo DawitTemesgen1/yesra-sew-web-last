@@ -74,6 +74,7 @@ const Layout = ({ children }) => {
 
 
 function App() {
+    // App Root with Providers
     return (
         <HelmetProvider>
             <QueryClientProvider client={queryClient}>

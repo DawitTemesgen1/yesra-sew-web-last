@@ -80,10 +80,20 @@ const listingService = {
     },
 
     async getListings(filters = {}) {
+        // PERFORMANCE OPTIMIZATION: Only select fields we actually need
+        const fields = filters.fullData
+            ? '*'
+            : 'id,title,description,price,location,images,category_id,user_id,is_premium,custom_fields,created_at,status,type';
+
         let query = supabase
             .from('listings')
-            .select('*')  // Simplified - just get all listing fields
+            .select(fields)
             .order('created_at', { ascending: false });
+
+        // PERFORMANCE: Add pagination support
+        const limit = filters.limit || 50; // Default to 50 items
+        const offset = filters.offset || 0;
+        query = query.range(offset, offset + limit - 1);
 
         if (filters.category) {
             const term = filters.category.trim().toLowerCase();
@@ -159,9 +169,8 @@ const listingService = {
                 query = query.eq('status', filters.status);
             }
         } else {
-            // DEBUG: Show 'pending' as well locally so user can see their own new posts immediately
-            // In production this should be strictly ['active', 'approved']
-            query = query.in('status', ['active', 'approved', 'pending']);
+            // Strictly show only approved/verified listings for public
+            query = query.eq('status', 'approved');
         }
 
         // Filter by type (For Sale, For Rent, etc.)
@@ -174,10 +183,10 @@ const listingService = {
             query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
         }
 
-        // Timeout protection for public query (Increased to 30s)
+        // PERFORMANCE: Reduced timeout from 30s to 8s for faster failure feedback
         const { data, error } = await Promise.race([
             query,
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Public listings query timeout')), 30000))
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Listings query timeout')), 8000))
         ]);
 
         if (error) {
@@ -194,7 +203,7 @@ const listingService = {
             is_premium: l.is_premium || l.custom_fields?.is_premium || false
         }));
 
-        return { success: true, listings: formattedListings };
+        return { success: true, listings: formattedListings, hasMore: data?.length === limit };
     },
 
     async getListingById(id) {

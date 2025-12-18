@@ -77,7 +77,7 @@ const UpgradePlanPage = () => {
 
     const handleSelectPlan = (plan) => {
         if (plan.slug === currentPlan) {
-            toast.info('This is your current plan');
+            toast('This is your current plan');
             return;
         }
         setSelectedPlan(plan);
@@ -86,7 +86,7 @@ const UpgradePlanPage = () => {
 
     const handleConfirmUpgrade = () => {
         if (selectedPlan.price === 0) {
-            toast.info('Downgrading to free plan');
+            toast('Downgrading to free plan');
             setShowConfirmModal(false);
             return;
         }

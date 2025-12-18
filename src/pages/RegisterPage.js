@@ -127,15 +127,10 @@ const RegisterPage = () => {
 
   return (
     <Box sx={{
-      bgcolor: 'background.default',
+      bgcolor: '#f8fafc',
       minHeight: '100vh',
-      backgroundImage: {
-        xs: 'linear-gradient(rgba(255,255,255,0.92), rgba(255,255,255,0.92)), url("https://images.unsplash.com/photo-1556761175-5973dc0f32e7?q=80&w=1080")',
-        md: 'linear-gradient(rgba(255,255,255,0.95), rgba(255,255,255,0.95)), url("https://images.unsplash.com/photo-1556761175-5973dc0f32e7?q=80&w=1080")'
-      },
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      backgroundAttachment: 'fixed',
+      background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+      pb: isMobile ? 10 : 0,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center'

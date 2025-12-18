@@ -297,7 +297,7 @@ const EnhancedAuthPage = () => {
     const t = translations[language] || translations.en;
     const navigate = useNavigate();
     const location = useLocation();
-    const from = location.state?.from?.pathname || "/dashboard";
+    const from = location.state?.from?.pathname || "/profile";
 
     // Parse URL for initial mode
     const searchParams = new URLSearchParams(location.search);

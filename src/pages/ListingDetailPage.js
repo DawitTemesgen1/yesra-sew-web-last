@@ -14,7 +14,7 @@ import { alpha } from '@mui/material/styles';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useQuery, useMutation, useQueryClient } from 'react-query'; // Added imports
-import apiService from '../services/api';
+import apiService, { supabase } from '../services/api'; /* Added supabase export in apiService or import directly if available? Usually apiService is default. We need supabase client for RPC. */
 import adminService from '../services/adminService';
 import toast from 'react-hot-toast';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -268,32 +268,61 @@ const ListingDetailPage = () => {
       }
 
       // OPTIMIZED: Use hardcoded restrictions first to avoid extra API call if possible
-      // But we need slug. Rely on listing category_id -> find in cached categories
       const categories = await adminService.getCategories(); // Should be cached
       const category = categories.find(c => c.id === listing.category_id);
       const catSlug = category?.slug || 'general';
 
-      const isRestrictedCategory = ['jobs', 'tenders'].includes(catSlug);
+      // We treat jobs/tenders as restricted. Others might be too depending on plan?
+      // For now, let's assume all categories check permissions if user is logged in, 
+      // but maybe non-logged in can see non-restricted?
+      const isRestrictedCategory = ['jobs', 'tenders', 'homes', 'cars'].includes(catSlug);
+
+      if (!isRestrictedCategory) {
+        setHasAccess(true);
+        setAccessChecked(true);
+        return;
+      }
 
       if (user) {
-        const perms = await adminService.checkSubscriptionAccess(user.id);
-        if (!isRestrictedCategory) {
+        // Check if already viewed in this session to avoid double counting
+        const viewedSessionKey = `viewed_${listing.id}_${user.id}`;
+        if (sessionStorage.getItem(viewedSessionKey)) {
           setHasAccess(true);
-        } else {
-          const viewLimit = perms?.can_view?.[catSlug];
-          if (viewLimit === -1 || viewLimit === true || (typeof viewLimit === 'number' && viewLimit > 0)) {
-            setHasAccess(true);
-          } else {
-            setHasAccess(false);
+          setAccessChecked(true);
+          return;
+        }
+
+        // Check Permissions (Now uses robust count-based logic)
+        const perms = await adminService.checkSubscriptionAccess(user.id);
+        const viewLimit = perms?.can_view?.[catSlug];
+
+        // If unlimited (-1) or has remaining (> 0)
+        // If undefined, assume 0 (blocked) for restricted categories
+        if (viewLimit === -1 || (typeof viewLimit === 'number' && viewLimit > 0)) {
+          // Record view (Robust Row Insert)
+          const { error: usageError } = await supabase.rpc('record_listing_view', {
+            p_listing_id: listing.id,
+            p_category_slug: catSlug
+          });
+
+          if (usageError) {
+            console.error("View record error:", usageError);
           }
+
+          // Grant access
+          setHasAccess(true);
+          sessionStorage.setItem(viewedSessionKey, 'true');
+        } else {
+          console.log("No view access remaining for category:", catSlug);
+          setHasAccess(false);
         }
       } else {
-        setHasAccess(!isRestrictedCategory);
+        setHasAccess(false);
       }
-      setAccessChecked(true);
     } catch (error) {
       console.error('Error checking access:', error);
       setHasAccess(false);
+    } finally {
       setAccessChecked(true);
     }
   };

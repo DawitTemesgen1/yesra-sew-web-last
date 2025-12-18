@@ -238,7 +238,7 @@ const FavoritesPage = () => {
                                             <Box sx={{ position: 'relative', height: 200 }}>
                                                 <Box
                                                     component="img"
-                                                    src={listing.image || listing.images?.[0] || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=500'}
+                                                    src={listing.image || listing.images?.[0] || '/logo.png'}
                                                     alt={listing.title}
                                                     sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                                 />

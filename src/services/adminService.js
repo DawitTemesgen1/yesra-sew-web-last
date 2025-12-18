@@ -768,52 +768,85 @@ const adminService = {
 
             if (error) throw error;
 
-            // Default permissions for non-subscribers (Free tier)
-            // Jobs/Tenders require subscription, Homes/Cars are open
+            // Default permissions for non-subscribers
             const permissions = {
                 can_post: { jobs: 0, tenders: 0, homes: 0, cars: 0 },
-                can_view: { jobs: 0, tenders: 0, homes: -1, cars: -1 }, // -1 = unlimited for free categories
-                is_premium: false,
-                active_plans: []
+                can_view: { jobs: 0, tenders: 0, homes: -1, cars: -1 }, // -1 = unlimited by default? Or 0?
+                active_plans: [],
+                is_premium: false
             };
 
             if (subs && subs.length > 0) {
                 permissions.is_premium = true;
+
+                // --- 1. Fetch Real Usage (Row Count) ---
+                const { data: usageStats, error: usageError } = await supabase.rpc('get_user_subscription_stats', { p_user_id: userId });
+                const realPostUsage = usageStats?.post_usage || {};
+                const realViewUsage = usageStats?.view_usage || {};
+
+                // --- 2. Calculate Total Limits (Sum of all active plans) ---
+                const totalPostLimits = {};
+                const totalViewLimits = {};
+
                 subs.forEach(sub => {
                     const plan = sub.membership_plans;
                     if (!plan) return;
-
                     permissions.active_plans.push(plan.name);
 
-                    // Aggregate View Access (Sum logic similar to posting)
-                    const viewAccess = plan.permissions?.view_access || {};
-                    Object.entries(viewAccess).forEach(([cat, val]) => {
-                        // Handle legacy boolean true -> -1 (unlimited)
-                        let limit = val;
-                        if (val === true) limit = -1;
-                        if (val === false) limit = 0;
+                    // View Limits Summation
+                    const viewLimits = plan.permissions?.view_access || {};
+                    Object.entries(viewLimits).forEach(([cat, rawLimit]) => {
+                        let limit = rawLimit;
+                        if (rawLimit === true) limit = -1;
+                        if (rawLimit === false) limit = 0;
+                        if (typeof rawLimit === 'string') limit = parseInt(rawLimit);
 
-                        // Default current to 0 (unless we define free tier defaults above)
-                        const current = permissions.can_view[cat] === true ? -1 : (typeof permissions.can_view[cat] === 'number' ? permissions.can_view[cat] : 0);
-
-                        if (current === -1 || limit === -1) {
-                            permissions.can_view[cat] = -1;
+                        // -1 Dominates (Unlimited)
+                        if (totalViewLimits[cat] === -1 || limit === -1) {
+                            totalViewLimits[cat] = -1;
                         } else {
-                            permissions.can_view[cat] = current + limit;
+                            totalViewLimits[cat] = (totalViewLimits[cat] || 0) + limit;
                         }
                     });
 
-                    // Aggregate Posting Limits (Sum logic: add limits from multiple plans)
-                    // If any plan has -1 (unlimited), result is -1
-                    const limits = plan.category_limits || {};
-                    Object.entries(limits).forEach(([cat, limit]) => {
-                        const current = permissions.can_post[cat] ?? 0;
-                        if (current === -1 || limit === -1) {
-                            permissions.can_post[cat] = -1;
+                    // Post Limits Summation
+                    const postLimits = plan.category_limits || {};
+                    Object.entries(postLimits).forEach(([cat, rawLimit]) => {
+                        let limit = parseInt(rawLimit);
+                        if (isNaN(limit)) limit = 0;
+
+                        if (totalPostLimits[cat] === -1 || limit === -1) {
+                            totalPostLimits[cat] = -1; // Assuming -1 logic exists for posts too? Usually explicit number
                         } else {
-                            permissions.can_post[cat] = current + limit;
+                            totalPostLimits[cat] = (totalPostLimits[cat] || 0) + limit;
                         }
                     });
+                });
+
+                // --- 3. Calculate Permissions (Limit - RealUsage) ---
+
+                // Views
+                Object.keys(totalViewLimits).forEach(cat => {
+                    const limit = totalViewLimits[cat];
+                    if (limit === -1) {
+                        permissions.can_view[cat] = -1;
+                    } else {
+                        // Normalize keys? DB usually returns lowercase 'jobs'. If plan has 'Jobs', keys mismatch.
+                        // We try both.
+                        const used = realViewUsage[cat] || realViewUsage[cat.toLowerCase()] || 0;
+                        permissions.can_view[cat] = Math.max(0, limit - used);
+                    }
+                });
+
+                // Posts
+                Object.keys(totalPostLimits).forEach(cat => {
+                    const limit = totalPostLimits[cat];
+                    if (limit === -1) {
+                        permissions.can_post[cat] = -1;
+                    } else {
+                        const used = realPostUsage[cat] || realPostUsage[cat.toLowerCase()] || 0;
+                        permissions.can_post[cat] = Math.max(0, limit - used);
+                    }
                 });
             }
 

@@ -53,8 +53,9 @@ const PaymentCallbackPage = () => {
             if (error) throw error;
 
             if (data?.success && data?.status === 'success') {
-                // Payment verified! Now activate subscription
-                await activateSubscription(txRef);
+                // Payment verified! The Edge Function has already activated the subscription.
+                // We just need to fetch the details to show the user.
+                await fetchActiveSubscription();
                 setStatus('success');
                 setMessage('Payment successful! Your subscription is now active.');
                 toast.success('Subscription activated successfully!');
@@ -71,74 +72,29 @@ const PaymentCallbackPage = () => {
         }
     };
 
-    const activateSubscription = async (transactionId) => {
+    const fetchActiveSubscription = async () => {
         try {
-            // 1. Get transaction details
-            const { data: transaction, error: txError } = await supabase
-                .from('payment_transactions')
-                .select('*')
-                .eq('id', transactionId)
-                .single();
-
-            if (txError) throw txError;
-
-            // 2. Get plan details
-            const planId = transaction.metadata?.plan_id;
-            const { data: plan, error: planError } = await supabase
-                .from('membership_plans')
-                .select('*')
-                .eq('id', planId)
-                .single();
-
-            if (planError) throw planError;
-
-            // 3. Calculate subscription dates
-            const startDate = new Date();
-            const endDate = new Date();
-            const durationValue = plan.duration_value || 1;
-            const durationUnit = plan.duration_unit || 'months';
-
-            switch (durationUnit) {
-                case 'days':
-                    endDate.setDate(endDate.getDate() + durationValue);
-                    break;
-                case 'weeks':
-                    endDate.setDate(endDate.getDate() + (durationValue * 7));
-                    break;
-                case 'months':
-                    endDate.setMonth(endDate.getMonth() + durationValue);
-                    break;
-                case 'years':
-                    endDate.setFullYear(endDate.getFullYear() + durationValue);
-                    break;
-            }
-
-            // 4. Create user subscription
-            const { data: subscription, error: subError } = await supabase
+            // Fetch the most recent active subscription for this user
+            const { data: sub, error } = await supabase
                 .from('user_subscriptions')
-                .insert({
-                    user_id: user.id,
-                    plan_id: planId,
-                    status: 'active',
-                    start_date: startDate.toISOString(),
-                    end_date: endDate.toISOString(),
-                    payment_transaction_id: transactionId,
-                    auto_renew: false
-                })
-                .select()
+                .select('*, membership_plans(*)')
+                .eq('user_id', user.id)
+                .eq('status', 'active')
+                .order('created_at', { ascending: false })
+                .limit(1)
                 .single();
 
-            if (subError) throw subError;
-
-            setSubscriptionDetails({
-                planName: plan.name,
-                startDate: startDate.toLocaleDateString(),
-                endDate: endDate.toLocaleDateString()
-            });
-
+            if (error) throw error;
+            if (sub) {
+                setSubscriptionDetails({
+                    planName: sub.membership_plans?.name || 'Subscription',
+                    startDate: new Date(sub.start_date).toLocaleDateString(),
+                    endDate: new Date(sub.end_date).toLocaleDateString()
+                });
+            }
         } catch (error) {
-            console.error('Subscription activation error:', error);
-            throw new Error('Failed to activate subscription: ' + error.message);
+            console.error('Error fetching details:', error);
+            // Don't fail the page, just don't show details
         }
     };
 

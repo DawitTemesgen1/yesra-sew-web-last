@@ -6,7 +6,7 @@ import {
 import adminService from '../../services/adminService';
 import toast from 'react-hot-toast';
 
-const SystemSettingsScreen = ({ t, settings }) => {
+const SystemSettingsScreen = ({ t, systemSettings }) => {
   const [localSettings, setLocalSettings] = useState({
     site_maintenance: false,
     maintenance_message: "Site is under maintenance. Please check back later.",
@@ -30,7 +30,7 @@ const SystemSettingsScreen = ({ t, settings }) => {
     session_timeout: 30,
     // Social Media
     social_facebook: "",
-    social_twitter: "",
+    social_tiktok: "",
     social_instagram: "",
     social_linkedin: "",
     social_telegram: "",
@@ -46,32 +46,54 @@ const SystemSettingsScreen = ({ t, settings }) => {
   });
 
   const [loading, setLoading] = useState(false);
+  const [changedKeys, setChangedKeys] = useState(new Set());
 
+  // Use the prop if passed from AdminDashboard
   useEffect(() => {
-    if (settings) {
-      // Merge incoming settings with defaults, handling potential missing keys
+    if (systemSettings && Object.keys(systemSettings).length > 0) {
+      // Merge incoming settings with defaults
       setLocalSettings(prev => ({
         ...prev,
-        ...settings
+        ...systemSettings
       }));
     }
-  }, [settings]);
+  }, [systemSettings]);
+
+  // Fallback: Fetch directly if not provided via props
+  useEffect(() => {
+    if (!systemSettings || Object.keys(systemSettings).length === 0) {
+      const loadFresh = async () => {
+        const data = await adminService.getSystemSettings();
+        if (data) setLocalSettings(prev => ({ ...prev, ...data }));
+      };
+      loadFresh();
+    }
+  }, []);
 
   const handleChange = (key, value) => {
     setLocalSettings(prev => ({
       ...prev,
       [key]: value
     }));
+    // Mark as changed so we only save what's necessary
+    setChangedKeys(prev => new Set(prev).add(key));
   };
 
   const handleSave = async () => {
+    if (changedKeys.size === 0) {
+      toast.success('No changes to save');
+      return;
+    }
+
     try {
       setLoading(true);
-      const promises = Object.entries(localSettings).map(([key, value]) =>
-        adminService.updateSystemSetting(key, value)
+      // Only update keys that actually changed to avoid massive DB calls
+      const updatePromises = Array.from(changedKeys).map(key =>
+        adminService.updateSystemSetting(key, localSettings[key])
       );
 
-      await Promise.all(promises);
+      await Promise.all(updatePromises);
+      setChangedKeys(new Set()); // Reset tracking after successful save
       toast.success(t('settingsSaved') || 'Settings saved successfully');
     } catch (error) {
       console.error('Error saving settings:', error);
@@ -224,7 +246,7 @@ const SystemSettingsScreen = ({ t, settings }) => {
                   {localSettings.show_social_footer && (
                     <Grid container spacing={2} sx={{ mt: 1 }}>
                       <Grid item xs={12} sm={6}><TextField fullWidth label="Facebook URL" value={localSettings.social_facebook} onChange={(e) => handleChange('social_facebook', e.target.value)} size="small" /></Grid>
-                      <Grid item xs={12} sm={6}><TextField fullWidth label="Twitter URL" value={localSettings.social_twitter} onChange={(e) => handleChange('social_twitter', e.target.value)} size="small" /></Grid>
+                      <Grid item xs={12} sm={6}><TextField fullWidth label="TikTok URL" value={localSettings.social_tiktok} onChange={(e) => handleChange('social_tiktok', e.target.value)} size="small" /></Grid>
                       <Grid item xs={12} sm={6}><TextField fullWidth label="Instagram URL" value={localSettings.social_instagram} onChange={(e) => handleChange('social_instagram', e.target.value)} size="small" /></Grid>
                       <Grid item xs={12} sm={6}><TextField fullWidth label="LinkedIn URL" value={localSettings.social_linkedin} onChange={(e) => handleChange('social_linkedin', e.target.value)} size="small" /></Grid>
                       <Grid item xs={12} sm={6}><TextField fullWidth label="Telegram URL" value={localSettings.social_telegram} onChange={(e) => handleChange('social_telegram', e.target.value)} size="small" /></Grid>

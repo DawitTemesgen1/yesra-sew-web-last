@@ -16,9 +16,9 @@ import apiService from '../services/api';
 import adminService from '../services/adminService';
 import { useLanguage } from '../contexts/LanguageContext';
 
-// Import Love Features
 import SmartSearch from '../components/SmartSearch';
 import LiveActivityIndicators from '../components/LiveActivityIndicators';
+import DynamicListingCard from '../components/DynamicListingCard';
 
 // --- Translations ---
 const translations = {
@@ -174,179 +174,7 @@ const getIconForField = (fieldName) => {
 
 // --- Sub-components ---
 
-const ListingCard = ({ listing, templateFields, viewMode, toggleFavorite, favorites, t, navigate }) => {
-  const theme = useTheme();
 
-  // Determine what to display based on template OR fallback to specs
-  const displayFields = useMemo(() => {
-    if (templateFields && templateFields.length > 0) {
-      return templateFields.sort((a, b) => (a.view_order || 0) - (b.view_order || 0));
-    }
-    return [];
-  }, [templateFields]);
-
-  // Generic renderer for a field value
-  const renderValue = (label, value, Icon, key) => (
-    <Stack key={key} direction="row" spacing={0.5} alignItems="center">
-      {Icon && <Icon sx={{ fontSize: 14, color: 'primary.main' }} />}
-      {!Icon && label && <Typography variant="caption" color="text.secondary">{label}:</Typography>}
-      <Typography variant="caption" color="text.secondary" fontWeight={500} sx={{ fontSize: '0.75rem' }}>
-        {value}
-      </Typography>
-    </Stack>
-  );
-
-  const renderSpecs = () => {
-    // Collect all showable specs/fields
-    const items = [];
-
-    // 1. Dynamic Template Fields in 'sidebar' or 'main' (excluding title/price/location/images)
-    if (displayFields.length > 0) {
-      displayFields.forEach(field => {
-        if (['title', 'price', 'location', 'images', 'description'].includes(field.field_name)) return;
-        const val = listing.custom_fields?.[field.field_name] || listing[field.field_name];
-        if (val) {
-          items.push({
-            label: field.field_label,
-            value: val,
-            icon: getIconForField(field.field_name),
-            id: field.id
-          });
-        }
-      });
-    } else {
-      // 2. Fallback to known specs keys for older listings
-      const specs = listing.specs || {};
-      if (specs.bedrooms) items.push({ value: `${specs.bedrooms} ${t.beds}`, icon: Bed, id: 'beds' });
-      if (specs.bathrooms) items.push({ value: `${specs.bathrooms} ${t.baths}`, icon: Bathtub, id: 'baths' });
-      if (specs.area) items.push({ value: `${specs.area} ${t.sqFt}`, icon: SquareFoot, id: 'area' });
-      if (specs.year) items.push({ value: specs.year, icon: CalendarToday, id: 'year' });
-      if (specs.transmission) items.push({ value: specs.transmission, icon: Speed, id: 'trans' });
-      if (specs.fuel) items.push({ value: specs.fuel, icon: LocalGasStation, id: 'fuel' });
-    }
-
-    if (items.length === 0) return null;
-
-    return (
-      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 1.5, mb: 1.5 }}>
-        {items.slice(0, 4).map((item) => renderValue(item.label, item.value, item.icon, item.id))}
-      </Stack>
-    );
-  };
-
-  return (
-    <Card
-      onClick={() => navigate(`/listings/${listing.id}`)}
-      sx={{
-        borderRadius: 4,
-        overflow: 'hidden',
-        cursor: 'pointer',
-        transition: 'all 0.3s ease',
-        display: 'flex',
-        flexDirection: viewMode === 'list' ? 'row' : 'column',
-        height: viewMode === 'list' ? 'auto' : '100%',
-        '&:hover': {
-          transform: 'translateY(-4px)',
-          boxShadow: 4
-        }
-      }}
-    >
-      {/* Image Section */}
-      <Box sx={{
-        position: 'relative',
-        width: viewMode === 'list' ? 300 : '100%',
-        height: viewMode === 'list' ? 200 : 220,
-        flexShrink: 0
-      }}>
-        <Box
-          component="img"
-          src={listing.image_url || listing.image || 'https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=500'}
-          alt={listing.title}
-          sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          loading="lazy"
-        />
-        <Chip
-          label={listing.category_name || listing.category}
-          size="small"
-          sx={{
-            position: 'absolute',
-            top: 12, left: 12,
-            bgcolor: alpha(theme.palette.background.paper, 0.95),
-            fontWeight: 600, fontSize: '0.6875rem'
-          }}
-        />
-        <Chip
-          label={getDaysAgo(listing.created_at, t)}
-          size="small"
-          sx={{
-            position: 'absolute',
-            top: 12, right: 12,
-            bgcolor: alpha('#000', 0.7), color: 'white',
-            fontWeight: 600, fontSize: '0.625rem'
-          }}
-        />
-        <IconButton
-          onClick={(e) => {
-            e.stopPropagation();
-            toggleFavorite(listing.id);
-          }}
-          sx={{
-            position: 'absolute', bottom: 12, left: 12,
-            bgcolor: alpha('#fff', 0.9), '&:hover': { bgcolor: 'white' }
-          }}
-        >
-          {favorites.includes(listing.id) || listing.is_favorited ? (
-            <Favorite color="error" />
-          ) : (
-            <FavoriteBorder />
-          )}
-        </IconButton>
-      </Box>
-
-      {/* Content Section */}
-      <Box sx={{
-        p: 2.5,
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-      }}>
-        <Stack direction="row" justifyContent="space-between" alignItems="flex-start" mb={1}>
-          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.6875rem', fontWeight: 600 }}>
-            {listing.type || 'Listing'}
-          </Typography>
-        </Stack>
-
-        <Typography variant="h6" sx={{
-          fontWeight: 'bold', mb: 1, fontSize: '1.05rem', lineHeight: 1.4,
-          overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
-          minHeight: viewMode === 'list' ? 'auto' : 48
-        }}>
-          {listing.title}
-        </Typography>
-
-        <Stack direction="row" spacing={0.5} alignItems="center" mb={0.5}>
-          <LocationOn sx={{ fontSize: 16, color: 'text.secondary' }} />
-          <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8125rem' }} noWrap>
-            {listing.location || t.locationNotSpecified}
-          </Typography>
-        </Stack>
-
-        {/* Specs Display (Unified) */}
-        {renderSpecs()}
-
-        {/* Price & Footer */}
-        <Box sx={{ mt: 'auto', pt: 1 }}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center">
-            <Typography variant="h6" color="primary.main" fontWeight="bold" sx={{ fontSize: '1.25rem' }}>
-              ETB {listing.price?.toLocaleString()}
-            </Typography>
-          </Stack>
-          <LiveActivityIndicators listing={listing} compact />
-        </Box>
-      </Box>
-    </Card>
-  );
-};
 
 // --- Main Page Component ---
 
@@ -559,14 +387,12 @@ const ListingsPage = () => {
                       exit={{ opacity: 0, scale: 0.9 }}
                       transition={{ duration: 0.3, delay: index * 0.05 }}
                     >
-                      <ListingCard
+                      <DynamicListingCard
                         listing={listing}
                         templateFields={templateFields}
                         viewMode={viewMode}
-                        toggleFavorite={toggleFavorite}
-                        favorites={favorites}
-                        t={t}
-                        navigate={navigate}
+                        onToggleFavorite={toggleFavorite}
+                        isFavorite={favorites.includes(listing.id) || listing.is_favorited}
                       />
                     </motion.div>
                   </Grid>

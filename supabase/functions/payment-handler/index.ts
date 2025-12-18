@@ -214,10 +214,65 @@ serve(async (req) => {
             }
 
             if (status === 'success') {
-                await supabaseClient
+                // 1. Update Transaction
+                const { data: updatedTx, error: updateError } = await supabaseClient
                     .from('payment_transactions')
                     .update({ status: 'completed', paid_at: new Date().toISOString() })
-                    .or(`provider_transaction_id.eq.${txRef},id.eq.${txRef}`);
+                    .or(`provider_transaction_id.eq.${txRef},id.eq.${txRef}`)
+                    .select()
+                    .single();
+
+                if (updateError) console.error('Error updating transaction status:', updateError);
+
+                if (updatedTx) {
+                    // 2. ACTIVATE SUBSCRIPTION
+                    const metadata = updatedTx.metadata || {};
+                    const planId = metadata.plan_id;
+                    const userId = updatedTx.user_id;
+
+                    if (planId && userId) {
+                        // Calculate duration days
+                        let days = 30; // default
+                        const val = parseInt(String(metadata.duration_value)) || 1;
+                        const unit = (String(metadata.duration_unit) || 'months').toLowerCase();
+
+                        if (unit.includes('day')) days = val;
+                        else if (unit.includes('week')) days = val * 7;
+                        else if (unit.includes('month')) days = val * 30;
+                        else if (unit.includes('year')) days = val * 365;
+
+                        console.log(`Activating plan ${planId} for user ${userId} for ${days} days`);
+
+                        const { data: subData, error: subError } = await supabaseClient.rpc('activate_user_plan', {
+                            p_user_id: userId,
+                            p_plan_id: planId,
+                            p_duration_days: days
+                        });
+
+                        if (subError) {
+                            console.error('Error activating plan via RPC:', subError);
+                        } else if (subData && subData.success && subData.subscription_id) {
+                            // Update subscription with payment provider info
+                            const { error: patchError } = await supabaseClient
+                                .from('user_subscriptions')
+                                .update({
+                                    payment_method: provider,
+                                    notes: `Paid via ${provider} (Tx: ${txRef})`
+                                })
+                                .eq('id', subData.subscription_id);
+
+                            if (patchError) console.error('Error patching subscription:', patchError);
+
+                            // Link subscription to transaction
+                            await supabaseClient
+                                .from('payment_transactions')
+                                .update({ subscription_id: subData.subscription_id })
+                                .eq('id', updatedTx.id);
+                        }
+                    } else {
+                        console.error('Missing plan_id or user_id in transaction metadata', metadata);
+                    }
+                }
             }
 
             return new Response(

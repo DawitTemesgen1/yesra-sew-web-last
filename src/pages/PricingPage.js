@@ -212,11 +212,40 @@ const PricingPage = () => {
             return;
         }
 
+        // For FREE plans (price = 0), activate immediately
         if (plan.price === 0) {
-            toast.info('You already have free access!');
+            try {
+                // Use RPC function to activate plan (bypasses RLS)
+                const { data, error } = await supabase.rpc('activate_user_plan', {
+                    p_user_id: user.id,
+                    p_plan_id: plan.id,
+                    p_duration_days: 30
+                });
+
+                if (error) throw error;
+
+                if (!data.success) {
+                    if (data.already_active) {
+                        toast.success('You already have this plan activated!');
+                    } else {
+                        toast.error(data.error || 'Failed to activate plan');
+                    }
+                    return;
+                }
+
+                toast.success(`${plan.name} activated successfully! You can now post ads.`);
+                // Redirect to post ad page after short delay
+                setTimeout(() => {
+                    navigate('/post-ad');
+                }, 1500);
+            } catch (error) {
+                console.error('Error activating plan:', error);
+                toast.error(`Failed to activate plan: ${error.message}`);
+            }
             return;
         }
 
+        // For PAID plans, navigate to checkout
         navigate(`/checkout?plan=${plan.slug || plan.id}`, { state: { plan } });
     };
 

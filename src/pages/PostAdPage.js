@@ -534,7 +534,17 @@ const PostAdPage = () => {
 
       toast.success(editListingId ? "Listing updated successfully!" : t.adPostedSuccessfully);
 
+      // USAGE TRACKING: 
+      // We switched to "Row Counting" strategy. 
+      // So we don't need to manually increment usage. The new row in 'listings' counts as usage automatically.
+
       // Navigate based on previous location or default to profile
+      if (editListingId) {
+        toast.success("Listing updated successfully!");
+      } else {
+        toast.success("Listing posted successfully!");
+      }
+
       const from = location.state?.from || '/profile';
       navigate(from);
     } catch (error) {

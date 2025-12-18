@@ -204,15 +204,41 @@ const JobsTendersPricingPage = ({ category = 'jobs' }) => {
     };
 
     const handleSelectPlan = async (plan) => {
-        // No network call needed here
         if (!currentUser) {
             toast.error('Please login to subscribe');
             navigate('/auth');
             return;
         }
 
+        // For FREE plans (price = 0), activate immediately
         if (plan.price === 0) {
-            toast.info('You already have free access!');
+            try {
+                // Use RPC function to activate plan (bypasses RLS)
+                const { data, error } = await supabase.rpc('activate_user_plan', {
+                    p_user_id: currentUser.id,
+                    p_plan_id: plan.id,
+                    p_duration_days: 30
+                });
+
+                if (error) throw error;
+
+                if (!data.success) {
+                    if (data.already_active) {
+                        toast.success('You already have this plan activated!');
+                    } else {
+                        toast.error(data.error || 'Failed to activate plan');
+                    }
+                    return;
+                }
+
+                toast.success(`${plan.name} activated successfully! You can now post ads.`);
+                setTimeout(() => {
+                    navigate('/post-ad');
+                }, 1500);
+            } catch (error) {
+                console.error('Error activating plan:', error);
+                toast.error(`Failed to activate plan: ${error.message}`);
+            }
             return;
         }
 

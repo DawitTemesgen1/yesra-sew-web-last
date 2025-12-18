@@ -16,43 +16,45 @@ import { MENU_ITEMS } from './constants/menuItems';
 // Import services
 import adminService from '../services/adminService';
 
-// Lazy Load Screen Components
-const AdminHomepage = React.lazy(() => import('./components/AdminHomepage'));
-const TenderScreen = React.lazy(() => import('./components/TenderScreen'));
-const HomeScreen = React.lazy(() => import('./components/HomeScreen'));
-const CarsScreen = React.lazy(() => import('./components/CarsScreen'));
-const JobsScreen = React.lazy(() => import('./components/JobsScreen'));
-const CategoriesScreen = React.lazy(() => import('./components/CategoriesScreen'));
-const CompaniesScreen = React.lazy(() => import('./components/CompaniesScreen'));
-const AnalyticsScreen = React.lazy(() => import('./components/AnalyticsScreen'));
-const SystemSettingsScreen = React.lazy(() => import('./components/SystemSettingsScreen'));
-const FinancialScreen = React.lazy(() => import('./components/FinancialScreen'));
+import lazyWithRetry from '../utils/lazyWithRetry';
+
+// Lazy Load Screen Components with Auto-Retry
+const AdminHomepage = lazyWithRetry(() => import('./components/AdminHomepage'));
+const TenderScreen = lazyWithRetry(() => import('./components/TenderScreen'));
+const HomeScreen = lazyWithRetry(() => import('./components/HomeScreen'));
+const CarsScreen = lazyWithRetry(() => import('./components/CarsScreen'));
+const JobsScreen = lazyWithRetry(() => import('./components/JobsScreen'));
+const CategoriesScreen = lazyWithRetry(() => import('./components/CategoriesScreen'));
+const CompaniesScreen = lazyWithRetry(() => import('./components/CompaniesScreen'));
+const AnalyticsScreen = lazyWithRetry(() => import('./components/AnalyticsScreen'));
+const SystemSettingsScreen = lazyWithRetry(() => import('./components/SystemSettingsScreen'));
+const FinancialScreen = lazyWithRetry(() => import('./components/FinancialScreen'));
 
 // Secondary Screens
-const HomepageManagementScreen = React.lazy(() => import('./components/HomepageManagementScreen'));
-const CommunicationScreen = React.lazy(() => import('./components/CommunicationScreen'));
-const ContentModerationScreen = React.lazy(() => import('./components/ContentModerationScreen'));
-const MembershipScreen = React.lazy(() => import('./components/MembershipScreen'));
-const LegalComplianceScreen = React.lazy(() => import('./components/LegalComplianceScreen'));
-const MobileAppScreen = React.lazy(() => import('./components/MobileAppScreen'));
-const ReportsScreen = React.lazy(() => import('./components/ReportsScreen'));
-const UserManagementScreen = React.lazy(() => import('./components/UserManagementScreen'));
-const SecurityScreen = React.lazy(() => import('./components/SecurityScreen'));
-const BackupScreen = React.lazy(() => import('./components/BackupScreen'));
-const ApiManagementScreen = React.lazy(() => import('./components/ApiManagementScreen'));
-const SupportScreen = React.lazy(() => import('./components/SupportScreen'));
-const AdvancedAnalyticsScreen = React.lazy(() => import('./components/AdvancedAnalyticsScreen'));
-const WorkflowScreen = React.lazy(() => import('./components/WorkflowScreen'));
-const NotificationScreen = React.lazy(() => import('./components/NotificationScreen'));
-const IntegrationScreen = React.lazy(() => import('./components/IntegrationScreen'));
-const HelpScreen = React.lazy(() => import('./components/HelpScreen'));
+const HomepageManagementScreen = lazyWithRetry(() => import('./components/HomepageManagementScreen'));
+const CommunicationScreen = lazyWithRetry(() => import('./components/CommunicationScreen'));
+const ContentModerationScreen = lazyWithRetry(() => import('./components/ContentModerationScreen'));
+const MembershipScreen = lazyWithRetry(() => import('./components/MembershipScreen'));
+const LegalComplianceScreen = lazyWithRetry(() => import('./components/LegalComplianceScreen'));
+const MobileAppScreen = lazyWithRetry(() => import('./components/MobileAppScreen'));
+const ReportsScreen = lazyWithRetry(() => import('./components/ReportsScreen'));
+const UserManagementScreen = lazyWithRetry(() => import('./components/UserManagementScreen'));
+const SecurityScreen = lazyWithRetry(() => import('./components/SecurityScreen'));
+const BackupScreen = lazyWithRetry(() => import('./components/BackupScreen'));
+const ApiManagementScreen = lazyWithRetry(() => import('./components/ApiManagementScreen'));
+const SupportScreen = lazyWithRetry(() => import('./components/SupportScreen'));
+const AdvancedAnalyticsScreen = lazyWithRetry(() => import('./components/AdvancedAnalyticsScreen'));
+const WorkflowScreen = lazyWithRetry(() => import('./components/WorkflowScreen'));
+const NotificationScreen = lazyWithRetry(() => import('./components/NotificationScreen'));
+const IntegrationScreen = lazyWithRetry(() => import('./components/IntegrationScreen'));
+const HelpScreen = lazyWithRetry(() => import('./components/HelpScreen'));
 
 // NEW: Payment & Membership Screens
-const PaymentIntegrationScreen = React.lazy(() => import('./components/PaymentIntegrationScreen'));
-const MembershipPlansScreen = React.lazy(() => import('./components/MembershipPlansScreen'));
-const PagesManagementScreen = React.lazy(() => import('./components/PagesManagementScreen'));
-const PostTemplateScreen = React.lazy(() => import('./components/PostTemplateScreen'));
-const EmailSettingsPage = React.lazy(() => import('./components/EmailSettingsPage'));
+const PaymentIntegrationScreen = lazyWithRetry(() => import('./components/PaymentIntegrationScreen'));
+const MembershipPlansScreen = lazyWithRetry(() => import('./components/MembershipPlansScreen'));
+const PagesManagementScreen = lazyWithRetry(() => import('./components/PagesManagementScreen'));
+const PostTemplateScreen = lazyWithRetry(() => import('./components/PostTemplateScreen'));
+const EmailSettingsPage = lazyWithRetry(() => import('./components/EmailSettingsPage'));
 
 const AdminDashboard = () => {
   const { t } = useTranslation();
