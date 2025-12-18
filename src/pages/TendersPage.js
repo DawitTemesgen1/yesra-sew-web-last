@@ -349,19 +349,19 @@ const TendersPage = () => {
       </Container>
 
       {/* Tenders Grid */}
-      <Container maxWidth="lg" sx={{ pb: 4 }}>
+      <Container maxWidth="lg" sx={{ pb: 4, minHeight: 500 }}>
         {isLoading ? (
           // Loading Skeletons
           <Grid container spacing={2.5}>
             {[...Array(6)].map((_, i) => (
               <Grid item xs={12} md={6} key={i}>
-                <Card sx={{ borderRadius: 4, height: 250 }}>
-                  <Skeleton variant="rectangular" height={120} />
-                  <CardContent>
+                <Card sx={{ borderRadius: 4, height: 250, border: 'none', boxShadow: 'none', bgcolor: 'transparent' }}>
+                  <Skeleton variant="rectangular" height={120} sx={{ borderRadius: 4 }} />
+                  <Box sx={{ pt: 1 }}>
                     <Skeleton width="70%" height={30} sx={{ mb: 1 }} />
                     <Skeleton width="90%" height={20} />
                     <Skeleton width="40%" height={20} sx={{ mt: 1 }} />
-                  </CardContent>
+                  </Box>
                 </Card>
               </Grid>
             ))}
@@ -383,9 +383,14 @@ const TendersPage = () => {
                   </Stack>
 
                   {premiumTenders.length > 0 ? (
-                    <Grid container spacing={2.5}>
+                    <Grid container spacing={2.5} component={motion.div} initial="hidden" animate="visible" variants={{
+                      visible: { transition: { staggerChildren: 0.1 } }
+                    }}>
                       {premiumTenders.map((tender) => (
-                        <Grid item xs={12} md={6} key={tender.id}>
+                        <Grid item xs={12} md={6} key={tender.id} component={motion.div} variants={{
+                          hidden: { opacity: 0, y: 30 },
+                          visible: { opacity: 1, y: 0 }
+                        }}>
                           <DynamicListingCard
                             listing={tender}
                             templateFields={templateFields}

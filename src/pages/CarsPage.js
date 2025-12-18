@@ -275,18 +275,19 @@ const CarsPage = () => {
 
       {/* Cars Grid */}
       {/* Cars Grid */}
-      <Container maxWidth="lg" sx={{ py: 3 }}>
+      {/* Cars Grid */}
+      <Container maxWidth="lg" sx={{ py: 3, minHeight: 500 }}>
         {isLoading ? (
           // Loading Skeletons
           <Grid container spacing={3}>
             {[...Array(6)].map((_, i) => (
               <Grid item xs={12} sm={6} lg={4} key={i}>
-                <Card sx={{ borderRadius: 4, height: 320 }}>
-                  <Skeleton variant="rectangular" height={200} />
-                  <CardContent>
+                <Card sx={{ borderRadius: 4, height: 320, border: 'none', boxShadow: 'none', bgcolor: 'transparent' }}>
+                  <Skeleton variant="rectangular" height={200} sx={{ borderRadius: 4 }} />
+                  <Box sx={{ pt: 1 }}>
                     <Skeleton width="60%" height={30} sx={{ mb: 1 }} />
                     <Skeleton width="40%" height={20} />
-                  </CardContent>
+                  </Box>
                 </Card>
               </Grid>
             ))}
@@ -295,7 +296,7 @@ const CarsPage = () => {
           <>
 
             {/* --- PREMIUM CARS SECTION --- */}
-            < Box sx={{ mb: 4 }}>
+            <Box sx={{ mb: 4 }}>
               <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
                 <WorkspacePremium sx={{ color: '#FFD700', fontSize: 28 }} />
                 <Typography variant="h5" fontWeight="bold" sx={{ color: 'text.primary' }}>
@@ -304,9 +305,14 @@ const CarsPage = () => {
               </Stack>
 
               {premiumCars.length > 0 ? (
-                <Grid container spacing={3}>
+                <Grid container spacing={3} component={motion.div} initial="hidden" animate="visible" variants={{
+                  visible: { transition: { staggerChildren: 0.1 } }
+                }}>
                   {premiumCars.map((car) => (
-                    <Grid item xs={12} sm={6} lg={4} key={car.id}>
+                    <Grid item xs={12} sm={6} lg={4} key={car.id} component={motion.div} variants={{
+                      hidden: { opacity: 0, y: 30 },
+                      visible: { opacity: 1, y: 0 }
+                    }}>
                       <DynamicListingCard
                         listing={car}
                         templateFields={templateFields}

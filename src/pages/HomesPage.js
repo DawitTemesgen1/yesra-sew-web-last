@@ -238,7 +238,7 @@ const HomesPage = () => {
       </Box>
 
       {/* Properties Grid */}
-      < Container maxWidth="lg" sx={{ py: 4 }}>
+      < Container maxWidth="lg" sx={{ py: 4, minHeight: 500 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
           <Typography variant="body2" color="text.secondary">
             {t.propertiesFound.replace('{count}', properties.length)}
@@ -251,12 +251,12 @@ const HomesPage = () => {
             <Grid container spacing={{ xs: 2, md: 3 }}>
               {[...Array(6)].map((_, i) => (
                 <Grid item xs={12} md={6} key={i}>
-                  <Card sx={{ borderRadius: 4, height: 320 }}>
-                    <Skeleton variant="rectangular" height={200} />
-                    <CardContent>
+                  <Card sx={{ borderRadius: 4, height: 320, border: 'none', boxShadow: 'none', bgcolor: 'transparent' }}>
+                    <Skeleton variant="rectangular" height={200} sx={{ borderRadius: 4 }} />
+                    <Box sx={{ pt: 1 }}>
                       <Skeleton width="60%" height={30} sx={{ mb: 1 }} />
                       <Skeleton width="40%" height={20} />
-                    </CardContent>
+                    </Box>
                   </Card>
                 </Grid>
               ))}

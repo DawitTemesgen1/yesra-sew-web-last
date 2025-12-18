@@ -289,95 +289,97 @@ const JobsPage = () => {
       </Box>
 
       {/* Jobs Grid */}
-      <Container maxWidth="lg" sx={{ py: 3 }}>
+      <Container maxWidth="lg" sx={{ py: 3, minHeight: 500 }}>
         {isLoading ? (
-          // Loading Skeletons
-          <Grid container spacing={3}>
+          <Grid container spacing={2}>
             {[...Array(6)].map((_, i) => (
-              <Grid item xs={12} md={6} lg={4} key={i}>
-                <Card sx={{ borderRadius: 4, height: 280 }}>
-                  <Skeleton variant="rectangular" height={150} />
-                  <CardContent>
-                    <Skeleton width="80%" height={30} sx={{ mb: 1 }} />
-                    <Skeleton width="50%" height={20} />
-                  </CardContent>
+              <Grid item xs={12} key={i}>
+                <Card sx={{ borderRadius: 3, height: 140, display: 'flex', border: 'none', boxShadow: 'none', bgcolor: 'transparent' }}>
+                  <Skeleton variant="rectangular" width={140} height={140} sx={{ borderRadius: 3 }} />
+                  <Box sx={{ p: 2, flex: 1 }}>
+                    <Skeleton width="60%" height={30} sx={{ mb: 1 }} />
+                    <Skeleton width="40%" height={20} />
+                  </Box>
                 </Card>
               </Grid>
             ))}
           </Grid>
         ) : (
-          (() => {
+        ): (
+            (() => {
             const premiumJobs = jobs.filter(job => job.is_premium);
             const regularJobs = jobs.filter(job => !job.is_premium);
 
-            return (
-              <>
-                {/* --- PREMIUM JOBS SECTION --- */}
-                <Box sx={{ mb: 4 }}>
-                  <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-                    <WorkspacePremium sx={{ color: '#FFD700', fontSize: 28 }} />
-                    <Typography variant="h5" fontWeight="bold" sx={{ color: 'text.primary' }}>
-                      Premium Jobs
-                    </Typography>
-                  </Stack>
+        return (
+        <>
+          {/* --- PREMIUM JOBS SECTION --- */}
+          <Box sx={{ mb: 4 }}>
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
+              <WorkspacePremium sx={{ color: '#FFD700', fontSize: 28 }} />
+              <Typography variant="h5" fontWeight="bold" sx={{ color: 'text.primary' }}>
+                Premium Jobs
+              </Typography>
+            </Stack>
 
-                  {premiumJobs.length > 0 ? (
-                    <Grid container spacing={3}>
-                      {premiumJobs.map((job) => (
-                        <Grid item xs={12} md={6} lg={4} key={job.id}>
-                          <DynamicListingCard
-                            listing={job}
-                            templateFields={templateFields}
-                            // ... rest of code
+            {premiumJobs.length > 0 ? (
+              <Stack spacing={2} component={motion.div} initial="hidden" animate="visible" variants={{
+                visible: { transition: { staggerChildren: 0.05 } }
+              }}>
+                {premiumJobs.map((job) => (
+                  <motion.div key={job.id} variants={{
+                    hidden: { opacity: 0, x: -20 },
+                    visible: { opacity: 1, x: 0 }
+                  }}>
+                    <DynamicListingCard
+                      listing={job}
+                      templateFields={templateFields}
+                      viewMode="list" // Jobs usually better as list
+                      isLocked={isListingLocked(job)}
+                    />
+                  </motion.div>
+                ))}
+              </Stack>
+            ) : (
+              <PremiumUpsellBanner category="jobs" />
+            )}
+          </Box>
 
-                            viewMode="grid"
-                            isLocked={isListingLocked(job)}
-                          />
-                        </Grid>
-                      ))}
-                    </Grid>
-                  ) : (
-                    /* Upsell Banner */
-                    <PremiumUpsellBanner category="jobs" />
-                  )}
-                </Box>
+          {/* --- STANDARD JOBS SECTION --- */}
+          <Box>
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2, mt: 4 }}>
+              <Work sx={{ color: 'text.secondary', fontSize: 26 }} />
+              <Typography variant="h5" fontWeight="bold" sx={{ color: 'text.secondary' }}>
+                {t.freeListings}
+              </Typography>
+            </Stack>
 
-                {/* --- STANDARD JOBS SECTION --- */}
-                <Box>
-                  <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2, mt: 4 }}>
-                    <Work sx={{ color: 'text.secondary', fontSize: 26 }} />
-                    <Typography variant="h5" fontWeight="bold" sx={{ color: 'text.secondary' }}>
-                      {t.freeListings}
-                    </Typography>
-                  </Stack>
-
-                  <Grid container spacing={3}>
-                    {regularJobs.length > 0 ? (
-                      regularJobs.map((job) => (
-                        <Grid item xs={12} md={6} lg={4} key={job.id}>
-                          <DynamicListingCard
-                            listing={job}
-                            templateFields={templateFields}
-                            viewMode="grid"
-                            isLocked={false}
-                          />
-                        </Grid>
-                      ))
-                    ) : (
-                      <Grid item xs={12}>
-                        <Box sx={{ textAlign: 'center', py: 4 }}>
-                          <Typography color="text.secondary">No standard jobs available.</Typography>
-                        </Box>
-                      </Grid>
-                    )}
+            <Stack spacing={2}>
+              {regularJobs.length > 0 ? (
+                regularJobs.map((job) => (
+                  <Grid item xs={12} key={job.id}>
+                    <DynamicListingCard
+                      listing={job}
+                      templateFields={templateFields}
+                      viewMode="list"
+                      isLocked={false}
+                    />
                   </Grid>
-                </Box>
-              </>
-            );
+                ))
+              ) : (
+                <Grid item xs={12}>
+                  <Typography variant="body1" color="text.secondary" textAlign="center" sx={{ py: 4 }}>
+                    {t.noJobs}
+                  </Typography>
+                </Grid>
+              )}
+            </Stack>
+          </Box>
+        </>
+        );
           })()
         )}
       </Container>
-    </Box >
+    </Box>
   );
 };
 
