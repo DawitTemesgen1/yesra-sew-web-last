@@ -6,7 +6,7 @@ const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs').promises;
 const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config();
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -102,23 +102,39 @@ async function resolveCategoryId(input) {
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9-a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(input);
     if (isUUID) return input;
 
-    if (categoryCache.has(input)) return categoryCache.get(input);
-
-    try {
-        const { data } = await supabase
-            .from('categories')
-            .select('id')
-            .eq('slug', input)
-            .single();
-
-        if (data?.id) {
-            categoryCache.set(input, data.id);
-            return data.id;
-        }
-    } catch (e) {
-        console.error('Category resolve error:', e);
+    if (categoryCache.has(input)) {
+        console.log(`[DEBUG] Cache Hit: ${input} -> ${categoryCache.get(input)}`);
+        return categoryCache.get(input);
     }
 
+    // Fuzzy matching strategy:
+    // 1. Try input exactly (but case insensitive)
+    // 2. Try variations (singular/plural)
+    const variations = [input];
+    if (input.endsWith('s')) variations.push(input.slice(0, -1)); // homes -> home
+    else variations.push(input + 's'); // car -> cars
+
+    console.log(`[DEBUG] Resolving slug: ${input}. Trying variations: ${variations.join(', ')}`);
+
+    for (const attempt of variations) {
+        try {
+            const { data } = await supabase
+                .from('categories')
+                .select('id, slug')
+                .ilike('slug', attempt) // Case-insensitive match
+                .maybeSingle();
+
+            if (data?.id) {
+                console.log(`[DEBUG] Resolved ${input} -> ${data.id} (Matched: ${data.slug})`);
+                categoryCache.set(input, data.id);
+                return data.id;
+            }
+        } catch (e) {
+            console.error('Category resolve error:', e);
+        }
+    }
+
+    console.log(`[DEBUG] FAILED to resolve slug: ${input}`);
     return input;
 }
 
@@ -142,6 +158,8 @@ app.get('/api/listings', async (req, res) => {
             order = 'DESC'
         } = req.query;
 
+        console.log('[DEBUG] GET /api/listings Request:', { category, status, user_id, page });
+
         let query = `
             SELECT 
                 l.*,
@@ -164,6 +182,7 @@ app.get('/api/listings', async (req, res) => {
             // Note: Profile usually fetches with user_id + status (if implemented)
             // but we keep default active for consistency.
             query += " AND l.status = 'active'";
+            console.log('[DEBUG] Defaulting to status=active');
         }
         // If status === 'all', we don't add any AND clause for status
 
@@ -174,6 +193,7 @@ app.get('/api/listings', async (req, res) => {
 
         if (category) {
             const resolvedCategory = await resolveCategoryId(category);
+            console.log(`[DEBUG] Final Category Query: ${resolvedCategory} (Input: ${category})`);
             query += ' AND l.category = ?';
             params.push(resolvedCategory);
         }

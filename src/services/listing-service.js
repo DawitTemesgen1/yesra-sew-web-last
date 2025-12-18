@@ -25,6 +25,7 @@ const listingService = {
                 category: listingData.category,
                 location: listingData.location,
                 user_id: user.id,
+                status: listingData.status, // Pass status
                 category_id: listingData.category_id,
                 custom_fields: listingData.custom_fields || {}
             };
@@ -47,6 +48,7 @@ const listingService = {
      */
     async getListings(filters = {}) {
         try {
+            console.log('listingService.getListings filters:', filters); // DEBUG
             // Map frontend filters to backend params
             const params = {
                 category: filters.category,

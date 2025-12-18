@@ -15,6 +15,7 @@ import apiService, { supabase } from '../services/api';
 import DynamicField from '../components/DynamicField';
 import { useLanguage } from '../contexts/LanguageContext';
 import SEO from '../components/SEO';
+import { useQueryClient } from 'react-query';
 
 const BRAND_COLORS = {
   gold: '#FFD700',
@@ -126,6 +127,7 @@ const PostAdPage = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const editListingId = searchParams.get('edit');
+  const queryClient = useQueryClient();
 
   const [activeStep, setActiveStep] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -526,6 +528,10 @@ const PostAdPage = () => {
       }
 
       toast.success(editListingId ? "Listing updated successfully!" : t.adPostedSuccessfully);
+
+      // Invalidate queries to ensure ProfilePage and other lists refresh
+      queryClient.invalidateQueries(['userListings']);
+      queryClient.invalidateQueries(['listings']);
 
       // USAGE TRACKING: 
       // We switched to "Row Counting" strategy. 
