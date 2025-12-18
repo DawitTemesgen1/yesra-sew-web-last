@@ -1,130 +1,220 @@
 import { supabase } from '../lib/supabaseClient';
-import listingsAPI from './listingsAPI';
+// Removed new createClient to share session/auth state
 
-/**
- * Listing Service - Now uses Node.js/MySQL backend for listings
- * Supabase is still used for favorites, comments, and user data
- */
+
 const listingService = {
-    /**
-     * Create new listing - Uses Node.js backend
-     */
     async createListing(listingData) {
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error('User not authenticated');
 
-            // Extract images from various possible locations
-            let images = [];
-
-            // Priority 1: Direct images array
+            // Handle image uploads if they are File objects
+            let imageUrls = [];
             if (listingData.images && Array.isArray(listingData.images)) {
-                images = listingData.images;
-            }
-            // Priority 2: Images in custom_fields
-            else if (listingData.custom_fields?.images) {
-                const customImages = listingData.custom_fields.images;
-                images = Array.isArray(customImages) ? customImages : [customImages];
-            }
-            // Priority 3: Scan custom_fields for any image-like fields
-            else if (listingData.custom_fields) {
-                Object.keys(listingData.custom_fields).forEach(key => {
-                    const value = listingData.custom_fields[key];
-                    // Check if it's an image URL or array of image URLs
-                    if (typeof value === 'string' && (value.includes('supabase') || value.match(/\.(jpeg|jpg|gif|png|webp)$/i))) {
-                        images.push(value);
-                    } else if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'string' && (value[0].includes('supabase') || value[0].match(/\.(jpeg|jpg|gif|png|webp)$/i))) {
-                        images = [...images, ...value];
+                const uploadPromises = listingData.images.map(async (img) => {
+                    if (img.file instanceof File) {
+                        const { url, error } = await this.uploadFile(img.file);
+                        if (error) throw error;
+                        return url;
+                    } else if (typeof img === 'string') {
+                        return img; // Already a URL
                     }
+                    return null;
                 });
+                imageUrls = (await Promise.all(uploadPromises)).filter(url => url !== null);
             }
 
-            // Prepare listing data for backend
-            const backendData = {
-                title: listingData.title,
-                description: listingData.description,
-                price: parseFloat(listingData.price) || 0,
-                category: listingData.category,
-                location: listingData.location,
+            // Prepare data for insertion
+            const dbData = {
+                ...listingData,
                 user_id: user.id,
-                status: listingData.status, // Pass status
-                category_id: listingData.category_id,
-                custom_fields: listingData.custom_fields || {}
+                status: 'pending',
+                created_at: new Date().toISOString(),
+                images: imageUrls, // Store array of URLs
+                // Ensure numeric fields are numbers
+                price: parseFloat(listingData.price) || 0,
+                year: listingData.year ? parseInt(listingData.year) : null,
+                bedrooms: listingData.bedrooms ? parseInt(listingData.bedrooms) : null,
+                bathrooms: listingData.bathrooms ? parseInt(listingData.bathrooms) : null,
+                area_sqft: listingData.area_sqft ? parseInt(listingData.area_sqft) : null,
             };
 
-            // Call Node.js backend with extracted images
-            const result = await listingsAPI.createListing(backendData, images);
+            // Remove temporary fields if any
+            delete dbData.video; // Handle video separately if needed
 
-            return {
-                success: result.success,
-                listing: { id: result.data?.id, ...backendData }
-            };
+            const { data, error } = await supabase
+                .from('listings')
+                .insert([dbData])
+                .select()
+                .single();
+
+            if (error) throw error;
+            return { success: true, listing: data };
         } catch (error) {
             console.error('Error creating listing:', error);
             return { success: false, error: error.message };
         }
     },
 
-    /**
-     * Get all listings - Uses Node.js backend
-     */
-    async getListings(filters = {}) {
+    async uploadFile(file, bucket = 'listings') {
         try {
-            // Map frontend filters to backend params
-            const params = {
-                category: filters.category,
-                search: filters.search,
-                brand: filters.brand,
-                min_price: filters.min_price,
-                max_price: filters.max_price,
-                location: filters.location,
-                user_id: filters.user_id, // Add user_id
-                status: filters.status,   // Add status
-                page: filters.page || 1,
-                limit: filters.limit || 12,
-                sort: filters.sort || 'created_at',
-                order: filters.order || 'DESC'
-            };
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+            const filePath = `${fileName}`;
 
-            // Remove undefined values
-            Object.keys(params).forEach(key =>
-                params[key] === undefined && delete params[key]
-            );
+            const { error: uploadError } = await supabase.storage
+                .from(bucket)
+                .upload(filePath, file);
 
-            const result = await listingsAPI.getListings(params);
+            if (uploadError) throw uploadError;
 
-            return {
-                success: result.success,
-                listings: result.listings || [],
-                pagination: result.pagination,
-                hasMore: result.pagination?.page < result.pagination?.pages
-            };
+            const { data: { publicUrl } } = supabase.storage
+                .from(bucket)
+                .getPublicUrl(filePath);
+
+            return { success: true, url: publicUrl };
         } catch (error) {
-            console.error('Error fetching listings:', error);
-            return { success: false, listings: [], hasMore: false };
+            console.error('Error uploading file:', error);
+            return { success: false, error: error.message };
         }
     },
 
-    /**
-     * Get single listing by ID - Uses Node.js backend
-     */
+    async getListings(filters = {}) {
+        let query = supabase
+            .from('listings')
+            .select('*')  // Simplified - just get all listing fields
+            .order('created_at', { ascending: false });
+
+        if (filters.category) {
+            const term = filters.category.trim().toLowerCase();
+            const variations = [term];
+            if (!term.endsWith('s')) variations.push(term + 's');
+            if (term.endsWith('s')) variations.push(term.slice(0, -1));
+
+            // Optimistic Cache or Hardcoded Map for core categories to save a roundtrip
+            // This is critical for performance on Home Page which calls getListings multiple times
+            // Optimistic Map for core categories using VERIFIED PROD IDs
+            // This ensures immediate loading without waiting for the category fetch roundtrip
+            const coreMap = {
+                'homes': '85259f35-6146-4fd2-b75e-046199527aec',
+                'cars': '461d8ebf-be96-474a-8d51-d97f84c7a042',
+                'jobs': 'eade00c5-cfe5-4a6c-8d4f-42b3de59d792',
+                'tenders': '4422d860-015c-44ba-b296-9823bc4470ec',
+                // Singular variations just in case
+                'home': '85259f35-6146-4fd2-b75e-046199527aec',
+                'car': '461d8ebf-be96-474a-8d51-d97f84c7a042',
+                'job': 'eade00c5-cfe5-4a6c-8d4f-42b3de59d792',
+                'tender': '4422d860-015c-44ba-b296-9823bc4470ec'
+            };
+
+            let matchedId = coreMap[term] || coreMap[term + 's'] || coreMap[term.replace(/s$/, '')];
+
+            if (matchedId) {
+                query = query.eq('category_id', matchedId);
+            } else {
+                // CACHE STRATEGY - Only if not found in core map
+                if (!window._categoryCache) {
+                    try {
+                        const { data: allCats } = await supabase.from('categories').select('id, name, slug');
+                        if (allCats) window._categoryCache = allCats;
+                    } catch (err) {
+                        console.warn("Category lookup failed:", err);
+                    }
+                }
+
+                const allCats = window._categoryCache || [];
+                const matchedCat = allCats.find(c =>
+                    variations.includes(c.slug?.toLowerCase()) ||
+                    variations.includes(c.name?.toLowerCase())
+                );
+
+                if (matchedCat) {
+                    query = query.eq('category_id', matchedCat.id);
+                } else {
+                    console.warn(`Category '${filters.category}' unable to resolve to an ID.`);
+                    // Do NOT fall back to .ilike('category') as that column does not exist.
+                    // Instead, we unfortunately must return no results to be accurate, 
+                    // or we ignore the filter (which is confusing). 
+                    // Better to return empty than wrong data.
+                    // To force empty:
+                    query = query.eq('id', '00000000-0000-0000-0000-000000000000');
+                }
+            }
+        }
+
+        // If category_id is directly provided
+        if (filters.category_id) {
+            query = query.eq('category_id', filters.category_id);
+        }
+
+        // Filter by user_id if provided
+        if (filters.user_id) {
+            query = query.eq('user_id', filters.user_id);
+        }
+
+        // Filter by status - default to 'approved' or 'active' for public pages
+        // Admin pages should explicitly pass status: 'all' or specific status
+        if (filters.status) {
+            if (filters.status !== 'all') {
+                query = query.eq('status', filters.status);
+            }
+        } else {
+            // DEBUG: Show 'pending' as well locally so user can see their own new posts immediately
+            // In production this should be strictly ['active', 'approved']
+            query = query.in('status', ['active', 'approved', 'pending']);
+        }
+
+        // Filter by type (For Sale, For Rent, etc.)
+        if (filters.type) {
+            query = query.eq('type', filters.type);
+        }
+
+        // Search by title or description
+        if (filters.search) {
+            query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
+        }
+
+        // Timeout protection for public query (Increased to 30s)
+        const { data, error } = await Promise.race([
+            query,
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Public listings query timeout')), 30000))
+        ]);
+
+        if (error) {
+            console.error('Supabase query error:', error);
+            return { success: false, error: error.message, listings: [] };
+        }
+
+        if (!data || data.length === 0) {
+            console.warn(`getListings returned 0 results. Filter used:`, filters);
+        }
+
+        const formattedListings = (data || []).map(l => ({
+            ...l,
+            is_premium: l.is_premium || l.custom_fields?.is_premium || false
+        }));
+
+        return { success: true, listings: formattedListings };
+    },
+
     async getListingById(id) {
         try {
-            const result = await listingsAPI.getListing(id);
+            // Fetch listing with seller profile
+            const { data, error } = await supabase
+                .from('listings')
+                .select('*')
+                .eq('id', id)
+                .single();
 
-            if (!result.success || !result.listing) {
-                throw new Error('Listing not found');
-            }
+            if (error) throw error;
 
-            const listing = result.listing;
-
-            // Fetch seller profile from Supabase
+            // Fetch seller profile separately
             let sellerProfile = null;
-            if (listing.user_id) {
+            if (data.user_id) {
                 const { data: profile } = await supabase
                     .from('profiles')
                     .select('*')
-                    .eq('id', listing.user_id)
+                    .eq('id', data.user_id)
                     .single();
                 sellerProfile = profile;
             }
@@ -142,9 +232,9 @@ const listingService = {
                 isFavorited = !!favorite;
             }
 
-            // Format the response
+            // Format the response to match what the UI expects
             const formattedListing = {
-                ...listing,
+                ...data,
                 seller: sellerProfile ? {
                     id: sellerProfile.id,
                     name: sellerProfile.full_name || 'Unknown Seller',
@@ -156,7 +246,7 @@ const listingService = {
                     phone: sellerProfile.phone
                 } : null,
                 is_favorited: isFavorited,
-                author_id: listing.user_id
+                author_id: data.user_id
             };
 
             return { success: true, listing: formattedListing };
@@ -166,55 +256,6 @@ const listingService = {
         }
     },
 
-    /**
-     * Get user's listings - Uses Node.js backend
-     */
-    async getUserListings() {
-        try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error('User not authenticated');
-
-            const result = await listingsAPI.getListings({ user_id: user.id, status: 'all', limit: 100 });
-
-            return {
-                success: result.success,
-                listings: result.listings || []
-            };
-        } catch (error) {
-            console.error('Error fetching user listings:', error);
-            return { success: false, listings: [] };
-        }
-    },
-
-    /**
-     * Update listing - Uses Node.js backend
-     */
-    async updateListing(id, updates, newImages = [], removeImages = []) {
-        try {
-            const result = await listingsAPI.updateListing(id, updates, newImages, removeImages);
-            return { success: result.success, listing: result.data };
-        } catch (error) {
-            console.error('Error updating listing:', error);
-            throw error;
-        }
-    },
-
-    /**
-     * Delete listing - Uses Node.js backend
-     */
-    async deleteListing(id) {
-        try {
-            const result = await listingsAPI.deleteListing(id);
-            return { success: result.success };
-        } catch (error) {
-            console.error('Error deleting listing:', error);
-            throw error;
-        }
-    },
-
-    /**
-     * Toggle favorite - Still uses Supabase
-     */
     async toggleFavorite(listingId) {
         try {
             const { data: { user } } = await supabase.auth.getUser();
@@ -250,9 +291,6 @@ const listingService = {
         }
     },
 
-    /**
-     * Get listing comments - Still uses Supabase
-     */
     async getListingComments(listingId) {
         try {
             const { data, error } = await supabase
@@ -269,9 +307,6 @@ const listingService = {
         }
     },
 
-    /**
-     * Add listing comment - Still uses Supabase
-     */
     async addListingComment(listingId, comment) {
         try {
             const { data: { user } } = await supabase.auth.getUser();
@@ -295,55 +330,63 @@ const listingService = {
         }
     },
 
-    /**
-     * Get dashboard stats
-     */
-    async getDashboardStats() {
-        try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return null;
 
-            // Fetch user's listings from Node.js backend
-            const { listings } = await this.getUserListings();
+    async getUserListings() {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('User not authenticated');
 
-            const stats = {
-                totalPosts: listings.length,
-                activePosts: listings.filter(l => l.status === 'active').length,
-                totalViews: listings.reduce((sum, l) => sum + (l.views || 0), 0),
-                responseRate: 100 // Placeholder
-            };
+        const { data, error } = await supabase
+            .from('listings')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
 
-            return { success: true, stats, listings };
-        } catch (error) {
-            console.error('Error fetching dashboard stats:', error);
-            return { success: false, stats: null, listings: [] };
-        }
+        if (error) throw error;
+        return { success: true, listings: data };
     },
 
-    /**
-     * Upload file - Still uses Supabase Storage (for non-listing files)
-     */
-    async uploadFile(file, bucket = 'listings') {
-        try {
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-            const filePath = `${fileName}`;
+    async deleteListing(id) {
+        const { error } = await supabase
+            .from('listings')
+            .delete()
+            .eq('id', id);
 
-            const { error: uploadError } = await supabase.storage
-                .from(bucket)
-                .upload(filePath, file);
+        if (error) throw error;
+        return { success: true };
+    },
 
-            if (uploadError) throw uploadError;
+    async updateListing(id, updates) {
+        const { data, error } = await supabase
+            .from('listings')
+            .update(updates)
+            .eq('id', id)
+            .select()
+            .single();
 
-            const { data: { publicUrl } } = supabase.storage
-                .from(bucket)
-                .getPublicUrl(filePath);
+        if (error) throw error;
+        return { success: true, listing: data };
+    },
 
-            return { success: true, url: publicUrl };
-        } catch (error) {
-            console.error('Error uploading file:', error);
-            return { success: false, error: error.message };
-        }
+    async getDashboardStats() {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return null;
+
+        // Fetch user's listings to calculate stats
+        const { data: listings, error } = await supabase
+            .from('listings')
+            .select('id, status, views, favorites_count') // Assuming views/favorites_count exist
+            .eq('user_id', user.id);
+
+        if (error) throw error;
+
+        const stats = {
+            totalPosts: listings.length,
+            activePosts: listings.filter(l => l.status === 'approved' || l.status === 'active').length,
+            totalViews: listings.reduce((sum, l) => sum + (l.views || 0), 0),
+            responseRate: 100 // Placeholder
+        };
+
+        return { success: true, stats, listings };
     }
 };
 
