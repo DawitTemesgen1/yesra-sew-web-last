@@ -33,12 +33,12 @@ const OptimizedImage = ({
     const optimizedSrc = getOptimizedUrl(src, targetWidth);
 
     // If we've already tried the optimized source and it failed, try the original src
-    const [currentSrc, setCurrentSrc] = useState(optimizedSrc);
+    const [activeSrc, setActiveSrc] = useState(optimizedSrc);
 
     // Watch for src prop changes and reset
     React.useEffect(() => {
         const newSrc = getOptimizedUrl(src, targetWidth);
-        setCurrentSrc(newSrc);
+        setActiveSrc(newSrc);
         setLoading(true);
         setError(false);
     }, [src, targetWidth]);
@@ -49,9 +49,9 @@ const OptimizedImage = ({
 
     const handleError = () => {
         // If the optimized URL failed, try the original raw URL as a fallback
-        if (currentSrc === optimizedSrc && src !== optimizedSrc) {
+        if (activeSrc === optimizedSrc && src !== optimizedSrc) {
             console.warn("Optimized image failed, retrying original:", src);
-            setCurrentSrc(src);
+            setActiveSrc(src);
         } else {
             // Both failed
             setLoading(false);
@@ -81,7 +81,7 @@ const OptimizedImage = ({
                 />
             )}
             <img
-                src={error ? (fallbackSrc || '/assets/placeholder-image.png') : currentSrc}
+                src={error ? (fallbackSrc || '/assets/placeholder-image.png') : activeSrc}
                 alt={alt}
                 loading="lazy"
                 onLoad={handleLoad}
