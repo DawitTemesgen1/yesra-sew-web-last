@@ -137,7 +137,7 @@ const HomesPage = () => {
     ['homes', searchQuery],
     async () => {
       const params = {
-        category: 'home', // Changed from 'homes' to 'home' to match standard singular slug
+        category: 'homes', // Reverted to plural 'homes' to match database slug
         search: searchQuery || undefined
       };
       const response = await apiService.getListings(params);

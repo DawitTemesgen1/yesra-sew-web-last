@@ -160,7 +160,7 @@ const JobsPage = () => {
     ['jobs', selectedFilter, searchQuery],
     async () => {
       const params = {
-        category: 'job', // Changed from 'jobs' to 'job'
+        category: 'jobs', // Reverted to plural 'jobs' to match database slug
         type: selectedFilter !== 'All Jobs' ? selectedFilter : undefined,
         search: searchQuery || undefined
       };

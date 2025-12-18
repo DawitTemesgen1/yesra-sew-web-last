@@ -139,7 +139,7 @@ const CarsPage = () => {
     ['cars', selectedBrand, searchQuery],
     async () => {
       const params = {
-        category: 'car', // Changed from 'cars' to 'car'
+        category: 'cars', // Reverted to plural 'cars' to match database slug
         brand: selectedBrand !== 'ALL' ? selectedBrand : undefined,
         search: searchQuery || undefined
       };

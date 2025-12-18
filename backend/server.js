@@ -93,6 +93,35 @@ async function getTemplateFields(categoryId) {
     }
 }
 
+// Helper to resolve category slug to ID
+const categoryCache = new Map();
+async function resolveCategoryId(input) {
+    if (!input) return null;
+
+    // Check if input is UUID
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9-a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(input);
+    if (isUUID) return input;
+
+    if (categoryCache.has(input)) return categoryCache.get(input);
+
+    try {
+        const { data } = await supabase
+            .from('categories')
+            .select('id')
+            .eq('slug', input)
+            .single();
+
+        if (data?.id) {
+            categoryCache.set(input, data.id);
+            return data.id;
+        }
+    } catch (e) {
+        console.error('Category resolve error:', e);
+    }
+
+    return input;
+}
+
 // ==================== LISTINGS ROUTES ====================
 
 // Get all listings with filters and pagination
@@ -144,8 +173,9 @@ app.get('/api/listings', async (req, res) => {
         }
 
         if (category) {
+            const resolvedCategory = await resolveCategoryId(category);
             query += ' AND l.category = ?';
-            params.push(category);
+            params.push(resolvedCategory);
         }
 
         if (search) {
