@@ -6,10 +6,10 @@ const RouteLoader = () => (
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        height: 'calc(100vh - 200px)', // Occupy space but don't force full viewport height aggressively
-        width: '100%'
+        width: '100%',
+        py: 10 // Comfortable padding instead of fixed height
     }}>
-        <CircularProgress size={40} thickness={4} sx={{ color: 'primary.main' }} />
+        <CircularProgress size={32} thickness={5} sx={{ color: 'primary.main', opacity: 0.8 }} />
     </Box>
 );
 
