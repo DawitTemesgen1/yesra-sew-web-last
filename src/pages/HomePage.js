@@ -353,33 +353,39 @@ const HomePage = () => {
           content: '""',
           position: 'absolute',
           top: 0, left: 0, right: 0, bottom: 0,
-          background: 'linear-gradient(to bottom, rgba(0,0,0,0.6), transparent, rgba(0,0,0,0.8))',
+          background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 60%, transparent 100%)',
         }
       }}>
         <Container maxWidth="lg">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-            <Typography variant={isMobile ? "h3" : "h1"} sx={{
+            <Typography variant={isMobile ? "h2" : "h1"} sx={{
               fontFamily: 'Playfair Display, serif',
-              fontWeight: 700,
-              mb: 1,
-              color: theme.palette.secondary.main
+              fontWeight: 800,
+              letterSpacing: '-0.02em',
+              mb: 1.5,
+              color: '#FFFFFF',
+              textShadow: '0 4px 12px rgba(0,0,0,0.5)'
             }}>
               {t.landing.hero.subtitle}
             </Typography>
-            <Typography variant={isMobile ? "h5" : "h4"} sx={{
+            <Typography variant={isMobile ? "h4" : "h3"} sx={{
               fontFamily: 'Playfair Display, serif',
               fontStyle: 'italic',
+              color: '#FFD700',
               mb: 3,
-              opacity: 0.9
+              fontWeight: 500,
+              textShadow: '0 2px 8px rgba(0,0,0,0.4)'
             }}>
               {t.landing.hero.description}
             </Typography>
-            <Typography variant={isMobile ? "h6" : "h3"} sx={{
-              fontWeight: 600,
-              mb: 4,
+            <Typography variant={isMobile ? "body1" : "h6"} sx={{
+              fontWeight: 400,
+              mb: 5,
               maxWidth: 800,
               mx: 'auto',
-              lineHeight: 1.2
+              lineHeight: 1.6,
+              color: 'rgba(255,255,255,0.95)',
+              textShadow: '0 1px 4px rgba(0,0,0,0.5)'
             }}>
               {t.landing.hero.browseListings}
             </Typography>

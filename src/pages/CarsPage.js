@@ -188,25 +188,29 @@ const CarsPage = () => {
           content: '""',
           position: 'absolute',
           top: 0, left: 0, right: 0, bottom: 0,
-          background: 'linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0.4), transparent)',
+          background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.3) 100%)',
         }
       }}>
         <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
             <Typography variant={isMobile ? "h2" : "h1"} sx={{
               fontFamily: 'Playfair Display, serif',
-              fontWeight: 700,
+              fontWeight: 800,
               mb: 1,
-              color: theme.palette.secondary.main,
-              fontSize: isMobile ? '3.25rem' : '4.5rem'
+              color: '#FFFFFF',
+              fontSize: isMobile ? '3.5rem' : '5rem',
+              textShadow: '0 4px 16px rgba(0,0,0,0.6)',
+              letterSpacing: '-0.02em'
             }}>
               {t.pageTitle}
             </Typography>
-            <Typography variant={isMobile ? "h5" : "h4"} sx={{
+            <Typography variant={isMobile ? "h4" : "h3"} sx={{
               fontFamily: 'Playfair Display, serif',
               fontStyle: 'italic',
               mb: 3,
-              opacity: 0.7
+              color: '#FFD700',
+              textShadow: '0 2px 10px rgba(0,0,0,0.5)',
+              fontWeight: 500
             }}>
               {t.heroSubtitle}
             </Typography>
@@ -214,8 +218,10 @@ const CarsPage = () => {
               mb: 4,
               maxWidth: 600,
               mx: 'auto',
-              opacity: 0.8,
-              lineHeight: 1.6
+              color: 'rgba(255,255,255,0.95)',
+              lineHeight: 1.6,
+              textShadow: '0 1px 4px rgba(0,0,0,0.5)',
+              fontWeight: 400
             }}>
               {t.heroDescription}
             </Typography>

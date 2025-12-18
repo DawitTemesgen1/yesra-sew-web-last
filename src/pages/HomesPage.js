@@ -188,7 +188,7 @@ const HomesPage = () => {
           left: 0,
           right: 0,
           bottom: 0,
-          background: 'linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0.4), transparent)',
+          background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.3) 100%)',
         }
       }}>
         <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
@@ -201,9 +201,12 @@ const HomesPage = () => {
               variant={isMobile ? "h2" : "h1"}
               sx={{
                 fontFamily: 'Playfair Display, serif',
-                fontWeight: 700,
+                fontWeight: 800,
                 mb: 1,
-                color: theme.palette.secondary.main
+                color: '#FFFFFF',
+                textShadow: '0 4px 16px rgba(0,0,0,0.6)',
+                letterSpacing: '-0.02em',
+                fontSize: isMobile ? '3.5rem' : '5rem'
               }}
             >
               {t.heroTitle}
@@ -214,7 +217,9 @@ const HomesPage = () => {
                 fontFamily: 'Playfair Display, serif',
                 fontStyle: 'italic',
                 mb: 3,
-                opacity: 0.9
+                color: '#FFD700',
+                textShadow: '0 2px 10px rgba(0,0,0,0.5)',
+                fontWeight: 500
               }}
             >
               {t.heroSubtitle}
