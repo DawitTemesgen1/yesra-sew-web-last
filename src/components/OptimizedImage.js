@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Skeleton } from '@mui/material';
+import { Box, Skeleton, Typography } from '@mui/material';
 
 /**
  * OptimizedImage - Performance-optimized image component with lazy loading
