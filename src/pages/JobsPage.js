@@ -321,23 +321,23 @@ const JobsPage = () => {
                   </Stack>
 
                   {premiumJobs.length > 0 ? (
-                    <Stack spacing={2} component={motion.div} initial="hidden" animate="visible" variants={{
-                      visible: { transition: { staggerChildren: 0.05 } }
+                    <Grid container spacing={3} component={motion.div} initial="hidden" animate="visible" variants={{
+                      visible: { transition: { staggerChildren: 0.1 } }
                     }}>
                       {premiumJobs.map((job) => (
-                        <motion.div key={job.id} variants={{
-                          hidden: { opacity: 0, x: -20 },
-                          visible: { opacity: 1, x: 0 }
+                        <Grid item xs={12} md={6} lg={4} key={job.id} component={motion.div} variants={{
+                          hidden: { opacity: 0, y: 30 },
+                          visible: { opacity: 1, y: 0 }
                         }}>
                           <DynamicListingCard
                             listing={job}
                             templateFields={templateFields}
-                            viewMode="list" // Jobs usually better as list
+                            viewMode="grid"
                             isLocked={isListingLocked(job)}
                           />
-                        </motion.div>
+                        </Grid>
                       ))}
-                    </Stack>
+                    </Grid>
                   ) : (
                     <PremiumUpsellBanner category="jobs" />
                   )}
@@ -352,14 +352,14 @@ const JobsPage = () => {
                     </Typography>
                   </Stack>
 
-                  <Stack spacing={2}>
+                  <Grid container spacing={3}>
                     {regularJobs.length > 0 ? (
                       regularJobs.map((job) => (
-                        <Grid item xs={12} key={job.id}>
+                        <Grid item xs={12} md={6} lg={4} key={job.id}>
                           <DynamicListingCard
                             listing={job}
                             templateFields={templateFields}
-                            viewMode="list"
+                            viewMode="grid"
                             isLocked={false}
                           />
                         </Grid>
@@ -371,7 +371,7 @@ const JobsPage = () => {
                         </Typography>
                       </Grid>
                     )}
-                  </Stack>
+                  </Grid>
                 </Box>
               </>
             );
