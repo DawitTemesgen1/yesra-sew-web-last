@@ -263,6 +263,22 @@ const DynamicListingCard = ({
         }
 
         // Generic Key-Value
+        // Check if the generic string value is actually an image URL
+        if (typeof value === 'string' && (value.includes('supabase') || value.match(/\.(jpeg|jpg|gif|png|webp)$/i))) {
+            return (
+                <Box key={field.id} sx={{ mt: 1, borderRadius: 1, overflow: 'hidden', width: '100%', height: 150 }}>
+                    <OptimizedImage
+                        src={value}
+                        alt={field.field_label}
+                        width="100%"
+                        height="100%"
+                        objectFit="cover"
+                        optimizationWidth={300}
+                    />
+                </Box>
+            );
+        }
+
         return (
             <Typography key={field.id} variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
                 <span style={{ fontWeight: 600, color: theme.palette.text.primary }}>{field.field_label}:</span> {value}
@@ -337,6 +353,24 @@ const DynamicListingCard = ({
                             if (imageField) {
                                 const val = coreData[imageField.field_name];
                                 src = Array.isArray(val) ? val[0] : val;
+                            }
+                        }
+
+                        // Priority 4 (Ultimate Fallback): Scan ALL data values for something that looks like an image URL
+                        if (!src) {
+                            const potentialKeys = Object.keys(coreData);
+                            for (const key of potentialKeys) {
+                                const val = coreData[key];
+                                // Check for string URL
+                                if (typeof val === 'string' && (val.includes('supabase') || val.match(/\.(jpeg|jpg|gif|png|webp)$/i))) {
+                                    src = val;
+                                    break;
+                                }
+                                // Check for array of URLs
+                                if (Array.isArray(val) && val.length > 0 && typeof val[0] === 'string' && (val[0].includes('supabase') || val[0].match(/\.(jpeg|jpg|gif|png|webp)$/i))) {
+                                    src = val[0];
+                                    break;
+                                }
                             }
                         }
 
