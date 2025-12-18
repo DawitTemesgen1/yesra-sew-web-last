@@ -260,34 +260,35 @@ const HomePage = () => {
   };
 
   // Static Categories
+  // Static Categories
   const categories = [
     {
       id: 1,
       name: t.landing.categories.jobs,
       icon: <Work fontSize="large" />,
       key: 'jobs',
-      bgImage: "url('https://images.unsplash.com/photo-1521737706095-211874c3c93b?auto=format&fit=crop&q=80')"
+      bgImage: "url('https://images.unsplash.com/photo-1542744173-8e7e53415bb0?q=80&w=800&auto=format&fit=crop')"
     },
     {
       id: 2,
       name: t.landing.categories.homes,
       icon: <Apartment fontSize="large" />,
       key: 'homes',
-      bgImage: "url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80')"
+      bgImage: "url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800&auto=format&fit=crop')"
     },
     {
       id: 3,
       name: t.landing.categories.cars,
       icon: <DirectionsCar fontSize="large" />,
       key: 'cars',
-      bgImage: "url('https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&q=80')"
+      bgImage: "url('https://images.unsplash.com/photo-1617788138017-80ad40651399?q=80&w=800&auto=format&fit=crop')"
     },
     {
       id: 4,
       name: t.landing.categories.tenders,
       icon: <Gavel fontSize="large" />,
       key: 'tenders',
-      bgImage: "url('https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&q=80')"
+      bgImage: "url('https://images.unsplash.com/photo-1504307651254-35680f356dfd?q=80&w=800&auto=format&fit=crop')"
     }
   ];
 
@@ -403,21 +404,22 @@ const HomePage = () => {
       </Box>
 
       {/* Popular Categories */}
-      <Container maxWidth="lg" sx={{ py: 6 }}>
+      {/* Popular Categories */}
+      <Container maxWidth="lg" sx={{ py: 6, minHeight: 400 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
           <Typography variant={isMobile ? "h5" : "h4"} fontWeight="bold">
             {t.landing.categories.title}
           </Typography>
         </Box>
 
-        <Grid container spacing={3}>
+        <Grid container spacing={3} component={motion.div} initial="hidden" whileInView="visible" viewport={{ once: true }}>
           {categories.map((cat, i) => (
             <Grid item xs={6} md={3} key={cat.id}>
               <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ delay: i * 0.1 }}
-                viewport={{ once: true }}
+                variants={{
+                  hidden: { opacity: 0, y: 20 },
+                  visible: { opacity: 1, y: 0, transition: { delay: i * 0.1, duration: 0.5 } }
+                }}
               >
                 <Card
                   onClick={() => navigate(`/${cat.key}`)}
@@ -429,9 +431,9 @@ const HomePage = () => {
                     overflow: 'hidden',
                     '&:hover': {
                       transform: 'translateY(-5px)',
-                      boxShadow: 8
+                      boxShadow: '0 12px 24px rgba(0,0,0,0.15)'
                     },
-                    transition: '0.3s'
+                    transition: 'all 0.3s ease-in-out'
                   }}
                 >
                   <Box sx={{
@@ -439,12 +441,14 @@ const HomePage = () => {
                     top: 0, left: 0, right: 0, bottom: 0,
                     backgroundImage: cat.bgImage,
                     backgroundSize: 'cover',
-                    backgroundPosition: 'center'
+                    backgroundPosition: 'center',
+                    transition: 'transform 0.5s',
+                    '&:hover': { transform: 'scale(1.1)' }
                   }} />
                   <Box sx={{
                     position: 'absolute',
                     top: 0, left: 0, right: 0, bottom: 0,
-                    bgcolor: 'rgba(0,0,0,0.4)', // Darker overlay for text legibility
+                    backgroundImage: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)',
                     p: 2,
                     display: 'flex',
                     flexDirection: 'column',
@@ -452,8 +456,17 @@ const HomePage = () => {
                     justifyContent: 'center',
                     color: 'white'
                   }}>
-                    <Box sx={{ color: '#FFD700', mb: 1 }}>{cat.icon}</Box>
-                    <Typography variant="h6" fontWeight="bold">
+                    <Box sx={{
+                      color: '#FFD700',
+                      mb: 1,
+                      p: 1.5,
+                      borderRadius: '50%',
+                      bgcolor: 'rgba(255,255,255,0.1)',
+                      backdropFilter: 'blur(4px)'
+                    }}>
+                      {cat.icon}
+                    </Box>
+                    <Typography variant="h6" fontWeight="bold" sx={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
                       {cat.name}
                     </Typography>
                   </Box>
@@ -546,7 +559,7 @@ const HomePage = () => {
 
 
       {/* Latest Posts (Regular) */}
-      <Container maxWidth="lg" sx={{ py: 6 }}>
+      <Container maxWidth="lg" sx={{ py: 6, minHeight: 400 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
           <Typography variant={isMobile ? "h5" : "h4"} fontWeight="bold">
             {t.listings.recentlyAdded}
@@ -558,12 +571,12 @@ const HomePage = () => {
           <Box sx={{ display: 'flex', overflowX: 'auto', pb: 2, gap: 3, '&::-webkit-scrollbar': { display: 'none' } }}>
             {[1, 2, 3, 4].map((i) => (
               <Box key={i} sx={{ minWidth: 280, maxWidth: 280 }}>
-                <Card sx={{ borderRadius: 4, height: 320 }}>
-                  <Skeleton variant="rectangular" height={180} />
-                  <CardContent>
+                <Card sx={{ borderRadius: 4, height: 320, border: 'none', boxShadow: 'none', bgcolor: 'transparent' }}>
+                  <Skeleton variant="rectangular" height={180} sx={{ borderRadius: 4 }} />
+                  <Box sx={{ pt: 1 }}>
                     <Skeleton width="80%" height={28} sx={{ mb: 1 }} />
                     <Skeleton width="60%" height={20} />
-                  </CardContent>
+                  </Box>
                 </Card>
               </Box>
             ))}
