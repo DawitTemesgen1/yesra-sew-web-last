@@ -149,7 +149,7 @@ const listingService = {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error('User not authenticated');
 
-            const result = await listingsAPI.getListings({ user_id: user.id, limit: 100 });
+            const result = await listingsAPI.getListings({ user_id: user.id, status: 'all', limit: 100 });
 
             return {
                 success: result.success,

@@ -9,7 +9,7 @@ const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
@@ -105,6 +105,8 @@ app.get('/api/listings', async (req, res) => {
             min_price,
             max_price,
             location,
+            status, // Add status to destructuring
+            user_id, // Add user_id
             page = 1,
             limit = 12,
             sort = 'created_at',
@@ -117,10 +119,29 @@ app.get('/api/listings', async (req, res) => {
                 GROUP_CONCAT(DISTINCT li.image_url ORDER BY li.display_order) as images
             FROM listings l
             LEFT JOIN listing_images li ON l.id = li.listing_id
-            WHERE l.status = 'active'
+            WHERE 1=1
         `;
 
         const params = [];
+
+        // Filter by status (default to active if not specified)
+        if (status && status !== 'all') {
+            // Map 'approved' to 'active' to match DB schema
+            const dbStatus = status === 'approved' ? 'active' : status;
+            query += ' AND l.status = ?';
+            params.push(dbStatus);
+        } else if (!status) {
+            // If user_id is provided, and no status specified, default to active
+            // Note: Profile usually fetches with user_id + status (if implemented)
+            // but we keep default active for consistency.
+            query += " AND l.status = 'active'";
+        }
+        // If status === 'all', we don't add any AND clause for status
+
+        if (user_id) {
+            query += ' AND l.user_id = ?';
+            params.push(user_id);
+        }
 
         if (category) {
             query += ' AND l.category = ?';
@@ -152,6 +173,36 @@ app.get('/api/listings', async (req, res) => {
             params.push(`%${location}%`);
         }
 
+        // Construct specific query for count to avoid GROUP BY issues
+        let countQuery = `
+            SELECT COUNT(DISTINCT l.id) as total
+            FROM listings l
+            LEFT JOIN listing_images li ON l.id = li.listing_id
+            WHERE 1=1
+        `;
+
+        // Add same filters to countQuery
+        if (status && status !== 'all') {
+            countQuery += ' AND l.status = ?';
+        } else if (!status) {
+            countQuery += " AND l.status = 'active'";
+        }
+
+        if (user_id) countQuery += ' AND l.user_id = ?';
+
+        if (category) countQuery += ' AND l.category = ?';
+        if (search) countQuery += ' AND (l.title LIKE ? OR l.description LIKE ?)';
+        if (brand) countQuery += ' AND JSON_EXTRACT(l.custom_fields, "$.brand") = ?';
+        if (min_price) countQuery += ' AND l.price >= ?';
+        if (max_price) countQuery += ' AND l.price <= ?';
+        if (location) countQuery += ' AND l.location LIKE ?';
+
+        // Count query uses same params!
+        const [countResult] = await pool.query(countQuery, params);
+        const total = countResult[0] ? countResult[0].total : 0;
+
+
+        // Finalize base query with GROUP BY and ORDER BY
         query += ' GROUP BY l.id';
 
         // Validate sort field to prevent SQL injection
@@ -160,13 +211,6 @@ app.get('/api/listings', async (req, res) => {
         const sortOrder = order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
         query += ` ORDER BY l.${sortField} ${sortOrder}`;
-
-        // Get total count
-        const [countResult] = await pool.query(
-            query.replace('l.*, GROUP_CONCAT(DISTINCT li.image_url ORDER BY li.display_order) as images', 'COUNT(DISTINCT l.id) as total'),
-            params
-        );
-        const total = countResult[0].total;
 
         // Add pagination
         const offset = (page - 1) * limit;
@@ -271,7 +315,8 @@ app.post('/api/listings', upload.array('images', 5), async (req, res) => {
             location,
             user_id,
             category_id, // For fetching template
-            custom_fields
+            custom_fields,
+            status // Add status
         } = req.body;
 
         // Parse custom_fields if it's a string
@@ -291,20 +336,29 @@ app.post('/api/listings', upload.array('images', 5), async (req, res) => {
             }
         }
 
+        // Determine status (map approved -> active)
+        let dbStatus = status || 'pending';
+        if (dbStatus === 'approved') dbStatus = 'active';
+
+        // Use category_id as category if category is not provided explicitly
+        // This ensures compatibility with frontend which sends category_id
+        const categoryValue = category || category_id;
+
         // Insert listing
         const [result] = await connection.query(`
             INSERT INTO listings (
                 title, description, price, category, location, 
                 user_id, custom_fields, status, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, 'active', NOW())
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
         `, [
             title,
             description,
             price || 0,
-            category,
+            categoryValue,
             location,
             user_id,
-            JSON.stringify(parsedCustomFields)
+            JSON.stringify(parsedCustomFields),
+            dbStatus
         ]);
 
         const listingId = result.insertId;
@@ -354,6 +408,7 @@ app.put('/api/listings/:id', upload.array('images', 5), async (req, res) => {
             price,
             location,
             custom_fields,
+            status, // Add status
             remove_images
         } = req.body;
 
@@ -381,6 +436,11 @@ app.put('/api/listings/:id', upload.array('images', 5), async (req, res) => {
         if (location !== undefined) {
             updates.push('location = ?');
             values.push(location);
+        }
+        if (status !== undefined) {
+            const dbStatus = status === 'approved' ? 'active' : status;
+            updates.push('status = ?');
+            values.push(dbStatus);
         }
         if (parsedCustomFields !== undefined) {
             updates.push('custom_fields = ?');

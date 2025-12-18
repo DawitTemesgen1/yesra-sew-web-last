@@ -1,4 +1,4 @@
 # Add this to your existing .env file
 
 # Listings API Backend (Node.js/MySQL)
-REACT_APP_LISTINGS_API=http://localhost:5001/api
+REACT_APP_LISTINGS_API=http://localhost:5000/api
