@@ -89,30 +89,20 @@ const adminService = {
                     return data || [];
                 };
 
-                const listingsAPI = (await import('./listingsAPI')).default;
-
                 // Batch 1: Key Counts (Parallel)
-                // Fetch listing stats from Node.js backend
-                const [backendStats, totalUsers] = await Promise.all([
-                    listingsAPI.getStats(),
+                const [totalListings, pendingReview, approvedListings, rejectedListings, totalUsers] = await Promise.all([
+                    getCount(supabase.from('listings').select('*', { count: 'exact', head: true })),
+                    getCount(supabase.from('listings').select('*', { count: 'exact', head: true }).eq('status', 'pending')),
+                    getCount(supabase.from('listings').select('*', { count: 'exact', head: true }).in('status', ['active', 'approved'])),
+                    getCount(supabase.from('listings').select('*', { count: 'exact', head: true }).eq('status', 'rejected')),
                     getCount(supabase.from('profiles').select('*', { count: 'exact', head: true }))
                 ]);
 
-                // Destructure stats from backend
-                const stats = backendStats.success ? backendStats.stats : { total: 0, pending: 0, active: 0, rejected: 0 };
-                const totalListings = stats.total;
-                const pendingReview = stats.pending;
-                const approvedListings = stats.active;
-                const rejectedListings = stats.rejected;
-
                 // Batch 2: Lists (Parallel)
-                // Fetch recent listings from Node.js backend
-                const [recentListingsData, recentUsers] = await Promise.all([
-                    listingsAPI.getListings({ limit: 10, sort: 'created_at', order: 'DESC' }),
+                const [recentListings, recentUsers] = await Promise.all([
+                    getData(supabase.from('listings').select('id, title, status, created_at, category_id').order('created_at', { ascending: false }).limit(10)),
                     getData(supabase.from('profiles').select('id, full_name, email, created_at, account_type').order('created_at', { ascending: false }).limit(10))
                 ]);
-
-                const recentListings = recentListingsData.success ? recentListingsData.listings : [];
 
                 // Batch 3: Financials & Settings (Sequential to reduce load)
                 const { data: transactions } = await supabase
@@ -177,54 +167,113 @@ const adminService = {
     },
 
 
-
-    // --- Listings Management (Now uses Node.js Backend) ---
+    // --- Listings Management ---
     async getListings(filters = {}) {
         try {
-            const listingsAPI = (await import('./listingsAPI')).default;
+            // OPTIMIZED: Select only needed columns for list view to drastically reduce payload size
+            let query = supabase
+                .from('listings')
+                .select('id, title, status, price, category_id, created_at, user_id, views, is_premium, images, location')
+                .order('created_at', { ascending: false });
 
-            // Map admin filters to backend params
-            const params = {
-                category: filters.category,
-                search: filters.search,
-                status: filters.status, // Pass "all" explicitly so backend knows not to default to "active"
-                page: filters.page || 1,
-                limit: filters.limit || 50,
-                sort: 'created_at',
-                order: 'DESC'
-            };
+            if (filters.status && filters.status !== 'all') {
+                query = query.eq('status', filters.status);
+            }
+            if (filters.category) {
+                // Check if it's a UUID
+                const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(filters.category);
 
-            // Remove undefined values
-            Object.keys(params).forEach(key =>
-                params[key] === undefined && delete params[key]
-            );
+                if (isUuid) {
+                    query = query.eq('category_id', filters.category);
+                } else {
+                    // It's a slug or name. Lookup ID.
+                    const { data: catData } = await supabase
+                        .from('categories')
+                        .select('id')
+                        .or(`slug.eq.${filters.category},name.ilike.${filters.category},slug.ilike.${filters.category}`) // Try exact slug, then fuzzy name/slug
+                        .maybeSingle(); // Use maybeSingle to avoid error if not found
 
-            const result = await listingsAPI.getListings(params);
+                    if (catData && catData.id) {
+                        query = query.eq('category_id', catData.id);
+                    } else {
+                        // Category not found
+                        console.warn(`Admin getListings: Category '${filters.category}' not found, returning empty.`);
+                        return [];
+                    }
+                }
+            }
+            if (filters.search) {
+                query = query.ilike('title', `%${filters.search}%`);
+            }
+
+            // Perfromance: Default limit to 50
+            const limit = filters.limit || 50;
+            query = query.limit(limit);
+
+            // Timeout protection
+            const { data, error } = await Promise.race([
+                query,
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Query timeout')), 8000))
+            ]);
+
+            if (error) throw error;
 
             // Clear cache when fetching fresh data
             cache.clear('dashboard_stats');
-
-            return result.listings || [];
+            return data || [];
         } catch (error) {
             console.error('Error fetching listings:', error);
+            // Return empty array instead of throwing to prevent UI crash
             return [];
         }
     },
 
     async updateListingStatus(id, status, isPremium = null) {
         try {
-            const listingsAPI = (await import('./listingsAPI')).default;
-
             const updates = { status };
+            // We'll try to update the column directly first
             if (isPremium !== null) {
-                updates.custom_fields = { is_premium: isPremium };
+                updates.is_premium = isPremium;
             }
 
-            await listingsAPI.updateListing(id, updates);
+            // Remove .single() to avoid 406 errors on empty results/schema mismatches
+            const { data, error } = await supabase
+                .from('listings')
+                .update(updates)
+                .eq('id', id)
+                .select();
+
+            if (error) {
+                // FALLBACK: If 'is_premium' column doesn't exist, Supabase might throw an error.
+                // We'll try to store it in 'custom_fields' instead.
+                if (isPremium !== null) {
+                    console.warn("Standard update failed, trying custom_fields fallback for premium status...");
+
+                    // First fetch current custom_fields
+                    const { data: current } = await supabase.from('listings').select('custom_fields').eq('id', id).single();
+                    const existingFields = current?.custom_fields || {};
+
+                    const { data: fallbackData, error: fallbackError } = await supabase
+                        .from('listings')
+                        .update({
+                            status,
+                            custom_fields: { ...existingFields, is_premium: isPremium }
+                        })
+                        .eq('id', id)
+                        .select();
+
+                    if (fallbackError) throw fallbackError;
+
+                    cache.clear('dashboard_stats');
+                    cache.clear('listings');
+                    return fallbackData?.[0];
+                }
+                throw error;
+            }
 
             cache.clear('dashboard_stats');
             cache.clear('listings');
-            return { success: true };
+            return data?.[0];
         } catch (error) {
             console.error('Error updating listing status:', error);
             throw error;
@@ -233,14 +282,18 @@ const adminService = {
 
     async toggleListingPremium(id, isPremium) {
         try {
-            const listingsAPI = (await import('./listingsAPI')).default;
+            // Update only is_premium flag
+            const { data, error } = await supabase
+                .from('listings')
+                .update({ is_premium: isPremium })
+                .eq('id', id)
+                .select()
+                .single();
 
-            await listingsAPI.updateListing(id, {
-                custom_fields: { is_premium: isPremium }
-            });
+            if (error) throw error;
 
             cache.clear('listings');
-            return { success: true };
+            return data;
         } catch (error) {
             console.error('Error toggling premium status:', error);
             throw error;
@@ -249,9 +302,12 @@ const adminService = {
 
     async deleteListing(id) {
         try {
-            const listingsAPI = (await import('./listingsAPI')).default;
-            await listingsAPI.deleteListing(id);
+            const { error } = await supabase
+                .from('listings')
+                .delete()
+                .eq('id', id);
 
+            if (error) throw error;
             cache.clear('dashboard_stats');
             cache.clear('listings');
             return true;
@@ -712,85 +768,52 @@ const adminService = {
 
             if (error) throw error;
 
-            // Default permissions for non-subscribers
+            // Default permissions for non-subscribers (Free tier)
+            // Jobs/Tenders require subscription, Homes/Cars are open
             const permissions = {
                 can_post: { jobs: 0, tenders: 0, homes: 0, cars: 0 },
-                can_view: { jobs: 0, tenders: 0, homes: -1, cars: -1 }, // -1 = unlimited by default? Or 0?
-                active_plans: [],
-                is_premium: false
+                can_view: { jobs: 0, tenders: 0, homes: -1, cars: -1 }, // -1 = unlimited for free categories
+                is_premium: false,
+                active_plans: []
             };
 
             if (subs && subs.length > 0) {
                 permissions.is_premium = true;
-
-                // --- 1. Fetch Real Usage (Row Count) ---
-                const { data: usageStats, error: usageError } = await supabase.rpc('get_user_subscription_stats', { p_user_id: userId });
-                const realPostUsage = usageStats?.post_usage || {};
-                const realViewUsage = usageStats?.view_usage || {};
-
-                // --- 2. Calculate Total Limits (Sum of all active plans) ---
-                const totalPostLimits = {};
-                const totalViewLimits = {};
-
                 subs.forEach(sub => {
                     const plan = sub.membership_plans;
                     if (!plan) return;
+
                     permissions.active_plans.push(plan.name);
 
-                    // View Limits Summation
-                    const viewLimits = plan.permissions?.view_access || {};
-                    Object.entries(viewLimits).forEach(([cat, rawLimit]) => {
-                        let limit = rawLimit;
-                        if (rawLimit === true) limit = -1;
-                        if (rawLimit === false) limit = 0;
-                        if (typeof rawLimit === 'string') limit = parseInt(rawLimit);
+                    // Aggregate View Access (Sum logic similar to posting)
+                    const viewAccess = plan.permissions?.view_access || {};
+                    Object.entries(viewAccess).forEach(([cat, val]) => {
+                        // Handle legacy boolean true -> -1 (unlimited)
+                        let limit = val;
+                        if (val === true) limit = -1;
+                        if (val === false) limit = 0;
 
-                        // -1 Dominates (Unlimited)
-                        if (totalViewLimits[cat] === -1 || limit === -1) {
-                            totalViewLimits[cat] = -1;
+                        // Default current to 0 (unless we define free tier defaults above)
+                        const current = permissions.can_view[cat] === true ? -1 : (typeof permissions.can_view[cat] === 'number' ? permissions.can_view[cat] : 0);
+
+                        if (current === -1 || limit === -1) {
+                            permissions.can_view[cat] = -1;
                         } else {
-                            totalViewLimits[cat] = (totalViewLimits[cat] || 0) + limit;
+                            permissions.can_view[cat] = current + limit;
                         }
                     });
 
-                    // Post Limits Summation
-                    const postLimits = plan.category_limits || {};
-                    Object.entries(postLimits).forEach(([cat, rawLimit]) => {
-                        let limit = parseInt(rawLimit);
-                        if (isNaN(limit)) limit = 0;
-
-                        if (totalPostLimits[cat] === -1 || limit === -1) {
-                            totalPostLimits[cat] = -1; // Assuming -1 logic exists for posts too? Usually explicit number
+                    // Aggregate Posting Limits (Sum logic: add limits from multiple plans)
+                    // If any plan has -1 (unlimited), result is -1
+                    const limits = plan.category_limits || {};
+                    Object.entries(limits).forEach(([cat, limit]) => {
+                        const current = permissions.can_post[cat] ?? 0;
+                        if (current === -1 || limit === -1) {
+                            permissions.can_post[cat] = -1;
                         } else {
-                            totalPostLimits[cat] = (totalPostLimits[cat] || 0) + limit;
+                            permissions.can_post[cat] = current + limit;
                         }
                     });
-                });
-
-                // --- 3. Calculate Permissions (Limit - RealUsage) ---
-
-                // Views
-                Object.keys(totalViewLimits).forEach(cat => {
-                    const limit = totalViewLimits[cat];
-                    if (limit === -1) {
-                        permissions.can_view[cat] = -1;
-                    } else {
-                        // Normalize keys? DB usually returns lowercase 'jobs'. If plan has 'Jobs', keys mismatch.
-                        // We try both.
-                        const used = realViewUsage[cat] || realViewUsage[cat.toLowerCase()] || 0;
-                        permissions.can_view[cat] = Math.max(0, limit - used);
-                    }
-                });
-
-                // Posts
-                Object.keys(totalPostLimits).forEach(cat => {
-                    const limit = totalPostLimits[cat];
-                    if (limit === -1) {
-                        permissions.can_post[cat] = -1;
-                    } else {
-                        const used = realPostUsage[cat] || realPostUsage[cat.toLowerCase()] || 0;
-                        permissions.can_post[cat] = Math.max(0, limit - used);
-                    }
                 });
             }
 
