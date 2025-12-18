@@ -197,14 +197,28 @@ const DynamicListingCard = ({
                 const imgSrc = Array.isArray(value) ? value[0] : value;
                 return (
                     <Box key={field.id} sx={{ mt: 1, borderRadius: 1, overflow: 'hidden', width: '100%', height: 150 }}>
-                        <OptimizedImage src={imgSrc} alt={field.field_label} width="100%" height="100%" objectFit="cover" />
+                        <OptimizedImage
+                            src={imgSrc}
+                            alt={field.field_label}
+                            width="100%"
+                            height="100%"
+                            objectFit="cover"
+                            optimizationWidth={300} // Request thumbnail size
+                        />
                     </Box>
                 );
             case 'images': // Handle known array type if distinct
                 if (Array.isArray(value) && value.length > 0) {
                     return (
                         <Box key={field.id} sx={{ mt: 1, borderRadius: 1, overflow: 'hidden', width: '100%', height: 150 }}>
-                            <OptimizedImage src={value[0]} alt={field.field_label} width="100%" height="100%" objectFit="cover" />
+                            <OptimizedImage
+                                src={value[0]}
+                                alt={field.field_label}
+                                width="100%"
+                                height="100%"
+                                objectFit="cover"
+                                optimizationWidth={300} // Request thumbnail size
+                            />
                         </Box>
                     );
                 }
@@ -327,7 +341,15 @@ const DynamicListingCard = ({
                         }
 
                         return src ? (
-                            <OptimizedImage src={src} alt={listing.title} width="100%" height="100%" objectFit="cover" className="card-image" />
+                            <OptimizedImage
+                                src={src}
+                                alt={listing.title}
+                                width="100%"
+                                height="100%"
+                                objectFit="cover"
+                                className="card-image"
+                                optimizationWidth={500} // Request medium size for card cover
+                            />
                         ) : (
                             <Box sx={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'text.disabled' }}>
                                 <Typography variant="caption" fontWeight="bold">NO IMAGE</Typography>
