@@ -68,7 +68,7 @@ const PostTemplateScreen = () => {
     const [stepForm, setStepForm] = useState({ title: '', description: '', icon: '', is_required: true });
     const [fieldForm, setFieldForm] = useState({
         field_name: '', field_label: '', field_type: 'text', placeholder: '', help_text: '',
-        is_required: false, is_visible: true, width: 'full', section: 'main',
+        is_required: false, is_visible: true, width: 12, section: 'main',
         options: [], allow_multiple: false
     });
 
@@ -191,7 +191,7 @@ const PostTemplateScreen = () => {
         setEditingField(null);
         setFieldForm({
             field_name: '', field_label: '', field_type: 'text', placeholder: '', help_text: '',
-            is_required: false, is_visible: true, width: 'full', section: 'main',
+            is_required: false, is_visible: true, width: 12, section: 'main',
             options: [], allow_multiple: false
         });
         setFieldDialogOpen(true);
@@ -208,7 +208,7 @@ const PostTemplateScreen = () => {
             help_text: field.help_text || '',
             is_required: field.is_required,
             is_visible: field.is_visible,
-            width: field.width || 'full',
+            width: field.width || 12,
             section: field.section || 'main',
             options: field.options || [],
             allow_multiple: field.allow_multiple || false
