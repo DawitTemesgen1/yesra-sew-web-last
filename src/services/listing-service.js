@@ -14,8 +14,30 @@ const listingService = {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error('User not authenticated');
 
-            // Extract images from listingData
-            const images = listingData.images || [];
+            // Extract images from various possible locations
+            let images = [];
+
+            // Priority 1: Direct images array
+            if (listingData.images && Array.isArray(listingData.images)) {
+                images = listingData.images;
+            }
+            // Priority 2: Images in custom_fields
+            else if (listingData.custom_fields?.images) {
+                const customImages = listingData.custom_fields.images;
+                images = Array.isArray(customImages) ? customImages : [customImages];
+            }
+            // Priority 3: Scan custom_fields for any image-like fields
+            else if (listingData.custom_fields) {
+                Object.keys(listingData.custom_fields).forEach(key => {
+                    const value = listingData.custom_fields[key];
+                    // Check if it's an image URL or array of image URLs
+                    if (typeof value === 'string' && (value.includes('supabase') || value.match(/\.(jpeg|jpg|gif|png|webp)$/i))) {
+                        images.push(value);
+                    } else if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'string' && (value[0].includes('supabase') || value[0].match(/\.(jpeg|jpg|gif|png|webp)$/i))) {
+                        images = [...images, ...value];
+                    }
+                });
+            }
 
             // Prepare listing data for backend
             const backendData = {
@@ -30,7 +52,7 @@ const listingService = {
                 custom_fields: listingData.custom_fields || {}
             };
 
-            // Call Node.js backend
+            // Call Node.js backend with extracted images
             const result = await listingsAPI.createListing(backendData, images);
 
             return {
