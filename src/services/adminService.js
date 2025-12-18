@@ -167,113 +167,54 @@ const adminService = {
     },
 
 
-    // --- Listings Management ---
+
+    // --- Listings Management (Now uses Node.js Backend) ---
     async getListings(filters = {}) {
         try {
-            // OPTIMIZED: Select only needed columns for list view to drastically reduce payload size
-            let query = supabase
-                .from('listings')
-                .select('id, title, status, price, category_id, created_at, user_id, views, is_premium, images, location')
-                .order('created_at', { ascending: false });
+            const listingsAPI = (await import('./listingsAPI')).default;
 
-            if (filters.status && filters.status !== 'all') {
-                query = query.eq('status', filters.status);
-            }
-            if (filters.category) {
-                // Check if it's a UUID
-                const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(filters.category);
+            // Map admin filters to backend params
+            const params = {
+                category: filters.category,
+                search: filters.search,
+                status: filters.status === 'all' ? undefined : filters.status,
+                page: filters.page || 1,
+                limit: filters.limit || 50,
+                sort: 'created_at',
+                order: 'DESC'
+            };
 
-                if (isUuid) {
-                    query = query.eq('category_id', filters.category);
-                } else {
-                    // It's a slug or name. Lookup ID.
-                    const { data: catData } = await supabase
-                        .from('categories')
-                        .select('id')
-                        .or(`slug.eq.${filters.category},name.ilike.${filters.category},slug.ilike.${filters.category}`) // Try exact slug, then fuzzy name/slug
-                        .maybeSingle(); // Use maybeSingle to avoid error if not found
+            // Remove undefined values
+            Object.keys(params).forEach(key =>
+                params[key] === undefined && delete params[key]
+            );
 
-                    if (catData && catData.id) {
-                        query = query.eq('category_id', catData.id);
-                    } else {
-                        // Category not found
-                        console.warn(`Admin getListings: Category '${filters.category}' not found, returning empty.`);
-                        return [];
-                    }
-                }
-            }
-            if (filters.search) {
-                query = query.ilike('title', `%${filters.search}%`);
-            }
-
-            // Perfromance: Default limit to 50
-            const limit = filters.limit || 50;
-            query = query.limit(limit);
-
-            // Timeout protection
-            const { data, error } = await Promise.race([
-                query,
-                new Promise((_, reject) => setTimeout(() => reject(new Error('Query timeout')), 8000))
-            ]);
-
-            if (error) throw error;
+            const result = await listingsAPI.getListings(params);
 
             // Clear cache when fetching fresh data
             cache.clear('dashboard_stats');
-            return data || [];
+
+            return result.listings || [];
         } catch (error) {
             console.error('Error fetching listings:', error);
-            // Return empty array instead of throwing to prevent UI crash
             return [];
         }
     },
 
     async updateListingStatus(id, status, isPremium = null) {
         try {
+            const listingsAPI = (await import('./listingsAPI')).default;
+
             const updates = { status };
-            // We'll try to update the column directly first
             if (isPremium !== null) {
-                updates.is_premium = isPremium;
+                updates.custom_fields = { is_premium: isPremium };
             }
 
-            // Remove .single() to avoid 406 errors on empty results/schema mismatches
-            const { data, error } = await supabase
-                .from('listings')
-                .update(updates)
-                .eq('id', id)
-                .select();
-
-            if (error) {
-                // FALLBACK: If 'is_premium' column doesn't exist, Supabase might throw an error.
-                // We'll try to store it in 'custom_fields' instead.
-                if (isPremium !== null) {
-                    console.warn("Standard update failed, trying custom_fields fallback for premium status...");
-
-                    // First fetch current custom_fields
-                    const { data: current } = await supabase.from('listings').select('custom_fields').eq('id', id).single();
-                    const existingFields = current?.custom_fields || {};
-
-                    const { data: fallbackData, error: fallbackError } = await supabase
-                        .from('listings')
-                        .update({
-                            status,
-                            custom_fields: { ...existingFields, is_premium: isPremium }
-                        })
-                        .eq('id', id)
-                        .select();
-
-                    if (fallbackError) throw fallbackError;
-
-                    cache.clear('dashboard_stats');
-                    cache.clear('listings');
-                    return fallbackData?.[0];
-                }
-                throw error;
-            }
+            await listingsAPI.updateListing(id, updates);
 
             cache.clear('dashboard_stats');
             cache.clear('listings');
-            return data?.[0];
+            return { success: true };
         } catch (error) {
             console.error('Error updating listing status:', error);
             throw error;
@@ -282,18 +223,14 @@ const adminService = {
 
     async toggleListingPremium(id, isPremium) {
         try {
-            // Update only is_premium flag
-            const { data, error } = await supabase
-                .from('listings')
-                .update({ is_premium: isPremium })
-                .eq('id', id)
-                .select()
-                .single();
+            const listingsAPI = (await import('./listingsAPI')).default;
 
-            if (error) throw error;
+            await listingsAPI.updateListing(id, {
+                custom_fields: { is_premium: isPremium }
+            });
 
             cache.clear('listings');
-            return data;
+            return { success: true };
         } catch (error) {
             console.error('Error toggling premium status:', error);
             throw error;
@@ -302,12 +239,9 @@ const adminService = {
 
     async deleteListing(id) {
         try {
-            const { error } = await supabase
-                .from('listings')
-                .delete()
-                .eq('id', id);
+            const listingsAPI = (await import('./listingsAPI')).default;
+            await listingsAPI.deleteListing(id);
 
-            if (error) throw error;
             cache.clear('dashboard_stats');
             cache.clear('listings');
             return true;
