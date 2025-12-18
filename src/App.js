@@ -20,21 +20,22 @@ import { HelmetProvider } from 'react-helmet-async';
 import { QueryClientProvider } from 'react-query';
 import { queryClient } from './lib/react-query';
 
-// Direct Imports for Core Pages (Critical for "Instant" Navigation)
+// Direct Imports for Core Pages (HomePage kept for fast LCP)
 import HomePage from './pages/HomePage';
-import ListingsPage from './pages/ListingsPage';
-import ListingDetailPage from './pages/ListingDetailPage';
-import PostAdPage from './pages/PostAdPage';
-import ProfilePage from './pages/ProfilePage';
-import UpgradePlanPage from './pages/UpgradePlanPage';
-import TendersPage from './pages/TendersPage';
-import JobsPage from './pages/JobsPage';
-import HomesPage from './pages/HomesPage';
-import CarsPage from './pages/CarsPage';
+
+// Lazy Load Content Pages (Split Bundles)
+const ListingsPage = React.lazy(() => import('./pages/ListingsPage'));
+const ListingDetailPage = React.lazy(() => import('./pages/ListingDetailPage'));
+const PostAdPage = React.lazy(() => import('./pages/PostAdPage'));
+const ProfilePage = React.lazy(() => import('./pages/ProfilePage'));
+const UpgradePlanPage = React.lazy(() => import('./pages/UpgradePlanPage'));
+const TendersPage = React.lazy(() => import('./pages/TendersPage'));
+const JobsPage = React.lazy(() => import('./pages/JobsPage'));
+const HomesPage = React.lazy(() => import('./pages/HomesPage'));
+const CarsPage = React.lazy(() => import('./pages/CarsPage'));
 
 // Lazy Load Secondary Pages
 const EnhancedAuthPage = React.lazy(() => import('./pages/EnhancedAuthPage'));
-const DashboardPage = React.lazy(() => import('./pages/DashboardPage'));
 const ChatPage = React.lazy(() => import('./pages/ChatPage'));
 const AdminLoginPage = React.lazy(() => import('./pages/AdminLoginPage'));
 const AdminDashboard = React.lazy(() => import('./admin/AdminDashboard'));
@@ -97,7 +98,8 @@ function App() {
                                                     <Route path="/login" element={<EnhancedAuthPage />} />
                                                     <Route path="/register" element={<EnhancedAuthPage />} />
                                                     <Route path="/auth" element={<EnhancedAuthPage />} />
-                                                    <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+                                                    {/* Redirect /dashboard to /profile */}
+                                                    <Route path="/dashboard" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
                                                     <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
                                                     <Route path="/post-ad" element={<ProtectedRoute><PostAdPage /></ProtectedRoute>} />
                                                     <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
