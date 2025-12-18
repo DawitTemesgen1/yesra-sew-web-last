@@ -105,9 +105,21 @@ const DynamicListingCard = ({
         category: listing.category,
         created_at: listing.created_at,
         views: listing.views,
-        images: listing.images, // Add core images array explicitly
+        images: listing.images || listing.custom_fields?.images || [], // Add core images array explicitly with fallback
         ...listing.custom_fields
     };
+
+    // Debug: Log image data for cars
+    if (listing.category === 'car' || listing.category === 'cars') {
+        console.log('Car listing image debug:', {
+            id: listing.id,
+            title: listing.title,
+            images: listing.images,
+            custom_fields_images: listing.custom_fields?.images,
+            coreData_images: coreData.images,
+            all_custom_fields: listing.custom_fields
+        });
+    }
 
     // If no template fields provided, create a default set to ensure the card isn't empty
     const activeFields = templateFields.length > 0 ? templateFields.filter(f => f.is_card_visible) : [
