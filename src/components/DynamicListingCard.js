@@ -192,6 +192,23 @@ const DynamicListingCard = ({
                         </Typography>
                     </Box>
                 );
+            case 'image':
+                // If an image field is placed in body/footer, render a small preview/thumbnail
+                const imgSrc = Array.isArray(value) ? value[0] : value;
+                return (
+                    <Box key={field.id} sx={{ mt: 1, borderRadius: 1, overflow: 'hidden', width: '100%', height: 150 }}>
+                        <OptimizedImage src={imgSrc} alt={field.field_label} width="100%" height="100%" objectFit="cover" />
+                    </Box>
+                );
+            case 'images': // Handle known array type if distinct
+                if (Array.isArray(value) && value.length > 0) {
+                    return (
+                        <Box key={field.id} sx={{ mt: 1, borderRadius: 1, overflow: 'hidden', width: '100%', height: 150 }}>
+                            <OptimizedImage src={value[0]} alt={field.field_label} width="100%" height="100%" objectFit="cover" />
+                        </Box>
+                    );
+                }
+                break;
             case 'date':
                 value = new Date(value).toLocaleDateString();
                 break;
