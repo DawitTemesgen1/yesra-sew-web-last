@@ -12,7 +12,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminProtectedRoute from './components/AdminProtectedRoute';
-import LoadingScreen from './components/LoadingScreen';
+import RouteLoader from './components/RouteLoader';
 import ScrollToTop from './components/ScrollToTop';
 import './i18n/config';
 import { HelmetProvider } from 'react-helmet-async';
@@ -86,7 +86,7 @@ function App() {
                                     <Router>
                                         <Layout>
                                             <ScrollToTop />
-                                            <Suspense fallback={<LoadingScreen />}>
+                                            <Suspense fallback={<RouteLoader />}>
                                                 <Routes>
                                                     <Route path="/" element={<HomePage />} />
                                                     <Route path="/tenders" element={<TendersPage />} />
@@ -143,4 +143,3 @@ function App() {
 }
 
 export default App;
-
