@@ -232,7 +232,7 @@ const CarsPage = () => {
       </Box>
 
       {/* Brand Filters */}
-      <Box sx={{ bgcolor: 'background.default', pt: 3, pb: 1 }}>
+      < Box sx={{ bgcolor: 'background.default', pt: 3, pb: 1 }}>
         <Box sx={{
           overflowX: 'auto',
           px: 3,
@@ -265,7 +265,7 @@ const CarsPage = () => {
             })}
           </Stack>
         </Box>
-      </Box>
+      </Box >
 
       {/* Cars Grid */}
       {/* Cars Grid */}

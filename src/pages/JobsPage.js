@@ -49,10 +49,6 @@ const translations = {
     heroDescription: "በኢትዮጵያ እያደገ ባለው የስራ ገበያ ውስጥ የሕልምዎን ስራ ያግኙ። ከላቀ ቀጣሪዎች ጋር ይገናኙ።",
     searchPlaceholder: "ስራዎችን ይፈልጉ...",
     freeListings: "ነፃ ዝርዝሮች",
-    heroTitle: "ስራዎች",
-    heroSubtitle: "የስራ እድሎች",
-    heroDescription: "በኢትዮጵያ እያደገ ባለው የስራ ገበያ ህልምዎን ስራ ያግኙ። ከዋና አሰሪዎች ጋር ይገናኙ።",
-    searchPlaceholder: "ስራዎችን ይፈልጉ...",
     filters: {
       all: "ሁሉም ስራዎች",
       fullTime: "ሙሉ ጊዜ",

@@ -233,96 +233,98 @@ const HomesPage = () => {
       </Box>
 
       {/* Properties Grid */}
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      < Container maxWidth="lg" sx={{ py: 4 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
           <Typography variant="body2" color="text.secondary">
             {t.propertiesFound.replace('{count}', properties.length)}
           </Typography>
         </Box>
 
-        {isLoading ? (
-          // Loading Skeletons
-          <Grid container spacing={{ xs: 2, md: 3 }}>
-            {[...Array(6)].map((_, i) => (
-              <Grid item xs={12} md={6} key={i}>
-                <Card sx={{ borderRadius: 4, height: 320 }}>
-                  <Skeleton variant="rectangular" height={200} />
-                  <CardContent>
-                    <Skeleton width="60%" height={30} sx={{ mb: 1 }} />
-                    <Skeleton width="40%" height={20} />
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-        ) : (
-          (() => {
-            const premiumProperties = properties.filter(p => p.is_premium);
-            const regularProperties = properties.filter(p => !p.is_premium);
+        {
+          isLoading ? (
+            // Loading Skeletons
+            <Grid container spacing={{ xs: 2, md: 3 }}>
+              {[...Array(6)].map((_, i) => (
+                <Grid item xs={12} md={6} key={i}>
+                  <Card sx={{ borderRadius: 4, height: 320 }}>
+                    <Skeleton variant="rectangular" height={200} />
+                    <CardContent>
+                      <Skeleton width="60%" height={30} sx={{ mb: 1 }} />
+                      <Skeleton width="40%" height={20} />
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          ) : (
+            (() => {
+              const premiumProperties = properties.filter(p => p.is_premium);
+              const regularProperties = properties.filter(p => !p.is_premium);
 
-            return (
-              <>
-                {/* --- PREMIUM HOMES SECTION --- */}
-                <Box sx={{ mb: 6 }}>
+              return (
+                <>
+                  {/* --- PREMIUM HOMES SECTION --- */}
+                  <Box sx={{ mb: 6 }}>
+                    <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 3 }}>
+                      <WorkspacePremium sx={{ color: '#FFD700', fontSize: 28 }} />
+                      <Typography variant="h5" fontWeight="bold" sx={{ color: 'text.primary' }}>
+                        Premium Homes
+                      </Typography>
+                    </Stack>
+
+                    {premiumProperties.length > 0 ? (
+                      <Grid container spacing={{ xs: 2, md: 3 }}>
+                        {premiumProperties.map((property) => (
+                          <Grid item xs={12} md={6} key={property.id}>
+                            <DynamicListingCard
+                              listing={property}
+                              templateFields={templateFields}
+                              viewMode="grid"
+                              isLocked={isListingLocked(property)}
+                            />
+                          </Grid>
+                        ))}
+                      </Grid>
+                    ) : (
+                      /* Upsell Banner when no premium properties */
+                      <PremiumUpsellBanner category="homes" />
+                    )}
+                  </Box>
+
+                  {/* --- STANDARD HOMES SECTION --- */}
                   <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 3 }}>
-                    <WorkspacePremium sx={{ color: '#FFD700', fontSize: 28 }} />
-                    <Typography variant="h5" fontWeight="bold" sx={{ color: 'text.primary' }}>
-                      Premium Homes
+                    <Bed sx={{ color: 'text.secondary', fontSize: 26 }} />
+                    <Typography variant="h5" fontWeight="bold" sx={{ color: 'text.secondary' }}>
+                      {t.freeListings}
                     </Typography>
                   </Stack>
-
-                  {premiumProperties.length > 0 ? (
-                    <Grid container spacing={{ xs: 2, md: 3 }}>
-                      {premiumProperties.map((property) => (
+                  <Grid container spacing={{ xs: 2, md: 3 }}>
+                    {regularProperties.length > 0 ? (
+                      regularProperties.map((property) => (
                         <Grid item xs={12} md={6} key={property.id}>
                           <DynamicListingCard
                             listing={property}
                             templateFields={templateFields}
                             viewMode="grid"
-                            isLocked={isListingLocked(property)}
+                            isLocked={false}
                           />
                         </Grid>
-                      ))}
-                    </Grid>
-                  ) : (
-                    /* Upsell Banner when no premium properties */
-                    <PremiumUpsellBanner category="homes" />
-                  )}
-                </Box>
-
-                {/* --- STANDARD HOMES SECTION --- */}
-                <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 3 }}>
-                  <Bed sx={{ color: 'text.secondary', fontSize: 26 }} />
-                  <Typography variant="h5" fontWeight="bold" sx={{ color: 'text.secondary' }}>
-                    {t.freeListings}
-                  </Typography>
-                </Stack>
-                <Grid container spacing={{ xs: 2, md: 3 }}>
-                  {regularProperties.length > 0 ? (
-                    regularProperties.map((property) => (
-                      <Grid item xs={12} md={6} key={property.id}>
-                        <DynamicListingCard
-                          listing={property}
-                          templateFields={templateFields}
-                          viewMode="grid"
-                          isLocked={false}
-                        />
+                      ))
+                    ) : (
+                      <Grid item xs={12}>
+                        <Typography variant="body1" color="text.secondary" textAlign="center" sx={{ py: 4 }}>
+                          {t.noProperties}
+                        </Typography>
                       </Grid>
-                    ))
-                  ) : (
-                    <Grid item xs={12}>
-                      <Typography variant="body1" color="text.secondary" textAlign="center" sx={{ py: 4 }}>
-                        {t.noProperties}
-                      </Typography>
-                    </Grid>
-                  )}
-                </Grid>
-              </>
-            );
-          })()
-        )}
-      </Container>
-    </Box>
+                    )}
+                  </Grid>
+                </>
+              );
+            })()
+          )
+        }
+      </Container >
+    </Box >
   );
 };
 

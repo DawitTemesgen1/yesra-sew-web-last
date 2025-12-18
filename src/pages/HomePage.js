@@ -14,6 +14,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { alpha } from '@mui/material/styles';
 import { useQuery } from 'react-query';
+import toast from 'react-hot-toast';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import SmartSearch from '../components/SmartSearch';
@@ -242,6 +243,21 @@ const HomePage = () => {
   // Access Control for mixed content (Home Page)
   // We don't pass a specific category slug, so it defaults to generic checks combined with dynamic item category check
   const { isListingLocked } = useListingAccess();
+  const [favorites, setFavorites] = useState([]);
+
+  const toggleFavorite = async (listingId) => {
+    try {
+      await apiService.toggleFavorite(listingId);
+      setFavorites(prev =>
+        prev.includes(listingId)
+          ? prev.filter(id => id !== listingId)
+          : [...prev, listingId]
+      );
+      toast.success(favorites.includes(listingId) ? 'Removed from favorites' : 'Added to favorites');
+    } catch (error) {
+      toast.error('Failed to update favorite');
+    }
+  };
 
   // Static Categories
   const categories = [
@@ -250,28 +266,28 @@ const HomePage = () => {
       name: t.landing.categories.jobs,
       icon: <Work fontSize="large" />,
       key: 'jobs',
-      bgImage: 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?q=80&w=1080'
+      bgImage: "url('https://images.unsplash.com/photo-1521737706095-211874c3c93b?auto=format&fit=crop&q=80')"
     },
     {
       id: 2,
       name: t.landing.categories.homes,
       icon: <Apartment fontSize="large" />,
       key: 'homes',
-      bgImage: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?q=80&w=1080'
+      bgImage: "url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80')"
     },
     {
       id: 3,
       name: t.landing.categories.cars,
       icon: <DirectionsCar fontSize="large" />,
       key: 'cars',
-      bgImage: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=1080'
+      bgImage: "url('https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&q=80')"
     },
     {
       id: 4,
       name: t.landing.categories.tenders,
       icon: <Gavel fontSize="large" />,
       key: 'tenders',
-      bgImage: 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?q=80&w=1080'
+      bgImage: "url('https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&q=80')"
     }
   ];
 
@@ -323,7 +339,7 @@ const HomePage = () => {
 
       {/* Hero Section */}
       <Box sx={{
-        height: { xs: 600, md: 650 },
+        height: { xs: 600, md: 700 },
         position: 'relative',
         backgroundImage: 'url(https://images.unsplash.com/photo-1556740738-b6a63e27c4df?q=80&w=1080)',
         backgroundSize: 'cover',
@@ -332,14 +348,15 @@ const HomePage = () => {
         alignItems: 'center',
         justifyContent: 'center',
         color: 'white',
+        textAlign: 'center',
         '&::before': {
           content: '""',
           position: 'absolute',
           top: 0, left: 0, right: 0, bottom: 0,
-          background: 'linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0.4), transparent)',
+          background: 'linear-gradient(to bottom, rgba(0,0,0,0.6), transparent, rgba(0,0,0,0.8))',
         }
       }}>
-        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
+        <Container maxWidth="lg">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
             <Typography variant={isMobile ? "h3" : "h1"} sx={{
               fontFamily: 'Playfair Display, serif',
@@ -367,7 +384,8 @@ const HomePage = () => {
               {t.landing.hero.browseListings}
             </Typography>
 
-            <Box sx={{ maxWidth: 600, mx: 'auto' }}>
+
+            <Box sx={{ maxWidth: 650, mx: 'auto', mb: 4 }}>
               <SmartSearch
                 enableNavigation={true}
                 category="all"
@@ -413,21 +431,22 @@ const HomePage = () => {
                   <Box sx={{
                     position: 'absolute',
                     top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundImage: `url(${cat.bgImage || 'https://images.unsplash.com/photo-1556740738-b6a63e27c4df?q=80&w=1080'})`,
+                    backgroundImage: cat.bgImage,
                     backgroundSize: 'cover',
-                    backgroundPosition: 'center',
+                    backgroundPosition: 'center'
                   }} />
                   <Box sx={{
                     position: 'absolute',
                     top: 0, left: 0, right: 0, bottom: 0,
-                    bgcolor: 'rgba(0,0,0,0.5)',
+                    bgcolor: 'rgba(0,0,0,0.4)', // Darker overlay for text legibility
+                    p: 2,
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
                     color: 'white'
                   }}>
-                    {cat.icon}
+                    <Box sx={{ color: '#FFD700', mb: 1 }}>{cat.icon}</Box>
                     <Typography variant="h6" fontWeight="bold">
                       {cat.name}
                     </Typography>
@@ -508,6 +527,8 @@ const HomePage = () => {
                       listing={listing}
                       viewMode="grid"
                       isLocked={isListingLocked(listing)}
+                      onToggleFavorite={toggleFavorite}
+                      isFavorite={favorites.includes(listing.id) || listing.is_favorited}
                     />
                   </Box>
                 ))}
@@ -563,6 +584,8 @@ const HomePage = () => {
                     listing={listing}
                     viewMode="grid"
                     isLocked={isListingLocked(listing)}
+                    onToggleFavorite={toggleFavorite}
+                    isFavorite={favorites.includes(listing.id) || listing.is_favorited}
                   />
                 </motion.div>
               </Box>
