@@ -332,22 +332,24 @@ const DynamicListingCard = ({
                     {(() => {
                         let src = null;
 
-                        // Priority 1: Field explicitly assigned to 'cover' section
-                        const coverField = sections.cover[0];
-                        if (coverField) {
-                            const val = coreData[coverField.field_name];
-                            src = Array.isArray(val) ? val[0] : val;
-                        }
-
-                        // Priority 2: Explicit 'images' field in coreData (standard array)
-                        if (!src && coreData.images && coreData.images.length > 0) {
+                        // Priority 1: Standard 'images' array (most common)
+                        if (coreData.images && Array.isArray(coreData.images) && coreData.images.length > 0) {
                             src = coreData.images[0];
                         }
 
-                        // Priority 3: Any field named 'images', 'photos', 'image', 'photo'
+                        // Priority 2: Field explicitly assigned to 'cover' section in template
+                        if (!src) {
+                            const coverField = sections.cover[0];
+                            if (coverField) {
+                                const val = coreData[coverField.field_name];
+                                src = Array.isArray(val) ? val[0] : val;
+                            }
+                        }
+
+                        // Priority 3: Scan for any image-like field
                         if (!src) {
                             const imageField = sortedFields.find(f =>
-                                ['images', 'photos', 'image', 'picture'].includes(f.field_name.toLowerCase()) ||
+                                ['images', 'photos', 'image', 'picture', 'cover_image'].includes(f.field_name.toLowerCase()) ||
                                 f.field_type === 'image'
                             );
                             if (imageField) {

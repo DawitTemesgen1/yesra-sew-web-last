@@ -14,6 +14,48 @@ const ImageUploader = ({ value, onChange, maxSize = 50, multiple = false }) => {
     const [previewUrls, setPreviewUrls] = useState(initialPreviews);
     const fileInputRef = useRef(null);
 
+    const compressImage = async (file) => {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+
+                    // Calculate new dimensions (max 1200px width for listings)
+                    let width = img.width;
+                    let height = img.height;
+                    const maxWidth = 1200;
+
+                    if (width > maxWidth) {
+                        height = (height * maxWidth) / width;
+                        width = maxWidth;
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    // Draw and compress
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    canvas.toBlob(
+                        (blob) => {
+                            resolve(new File([blob], file.name, {
+                                type: 'image/jpeg',
+                                lastModified: Date.now(),
+                            }));
+                        },
+                        'image/jpeg',
+                        0.85 // 85% quality - good balance between size and quality
+                    );
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    };
+
     const handleFileSelect = async (event) => {
         const files = Array.from(event.target.files);
         if (files.length === 0) return;
@@ -49,12 +91,15 @@ const ImageUploader = ({ value, onChange, maxSize = 50, multiple = false }) => {
             let completed = 0;
 
             for (const file of filesToUpload) {
+                // Compress image before upload
+                const compressedFile = await compressImage(file);
+
                 const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}-${file.name.replace(/[^a-zA-Z0-9.]/g, '')}`;
                 const filePath = `images/${fileName}`;
 
                 const { error } = await supabase.storage
                     .from('listing-images')
-                    .upload(filePath, file, {
+                    .upload(filePath, compressedFile, {
                         cacheControl: '3600',
                         upsert: false
                     });
