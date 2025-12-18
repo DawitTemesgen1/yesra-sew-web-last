@@ -356,7 +356,7 @@ const HomePage = () => {
           background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 60%, transparent 100%)',
         }
       }}>
-        <Container maxWidth="lg">
+        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
             <Typography variant={isMobile ? "h2" : "h1"} sx={{
               fontFamily: 'Playfair Display, serif',
