@@ -218,10 +218,19 @@ const PostTemplateScreen = () => {
 
     const handleSaveField = async () => {
         try {
+            // Convert width from UI format to database format
+            const widthMap = {
+                'full': 12,
+                'half': 6,
+                'third': 4,
+                'quarter': 3
+            };
+
             const fieldData = {
                 ...fieldForm,
                 field_name: fieldForm.field_name || fieldForm.field_label.toLowerCase().replace(/\s+/g, '_'),
                 step_id: currentStepId,
+                width: typeof fieldForm.width === 'string' ? (widthMap[fieldForm.width] || 12) : fieldForm.width,
                 display_order: editingField ? editingField.display_order : (steps.find(s => s.id === currentStepId)?.fields.length || 0) + 1
             };
 
@@ -235,6 +244,7 @@ const PostTemplateScreen = () => {
             setFieldDialogOpen(false);
             loadTemplate();
         } catch (error) {
+            console.error('Save field error:', error);
             toast.error('Failed to save field');
         }
     };
