@@ -1,10 +1,15 @@
 import React from 'react';
-import { Card, Box, Typography, Stack, Chip, Divider, IconButton, useTheme, alpha } from '@mui/material';
-import { LocationOn, CalendarToday, Speed, LocalGasStation, Bed, Bathtub, SquareFoot, Favorite, FavoriteBorder, Lock, AutoAwesome } from '@mui/icons-material';
+import { Card, Box, Typography, Stack, Chip, Divider, IconButton, useTheme, alpha, Tooltip } from '@mui/material';
+import {
+    LocationOn, CalendarToday, Speed, LocalGasStation, Bed, Bathtub,
+    SquareFoot, Favorite, FavoriteBorder, Lock, AutoAwesome, Edit,
+    Delete, Share, Visibility
+} from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import LiveActivityIndicators from './LiveActivityIndicators';
+import OptimizedImage from './OptimizedImage';
 
 const translations = {
     en: {
@@ -14,7 +19,11 @@ const translations = {
         subscribeToView: "Subscribe to view",
         unlockNow: "Unlock Now",
         viewFullDetails: "Subscribe to view full details and contact info.",
-        content: "Content"
+        content: "Content",
+        edit: "Edit",
+        delete: "Delete",
+        share: "Share",
+        views: "views"
     },
     am: {
         premium: "ፕሪሚየም",
@@ -23,7 +32,11 @@ const translations = {
         subscribeToView: "ለማየት ይመዝገቡ",
         unlockNow: "አሁኑኑ ይክፈቱ",
         viewFullDetails: "ሙሉ ዝርዝሮችን ለማየት ይመዝገቡ",
-        content: "ይዞታ"
+        content: "ይዞታ",
+        edit: "አርትዕ",
+        delete: "ሰርዝ",
+        share: "አጋራ",
+        views: "እይታዎች"
     },
     om: {
         premium: "Olaanaa",
@@ -32,7 +45,11 @@ const translations = {
         subscribeToView: "Ilaaluuf Galmaa'aa",
         unlockNow: "Amma Banaa",
         viewFullDetails: "Odeeffannoo guutuu arguuf galmaa'aa",
-        content: "Qabiyyee"
+        content: "Qabiyyee",
+        edit: "Gulaali",
+        delete: "Haqui",
+        share: "Qoodi",
+        views: "daawwannaa"
     },
     ti: {
         premium: "ፕሪሚየም",
@@ -41,7 +58,11 @@ const translations = {
         subscribeToView: "ንምርኣይ ተመዝገቡ",
         unlockNow: "ሕጂ ይክፈቱ",
         viewFullDetails: "ሙሉእ ሓበሬታ ንምርኣይ ተመዝገቡ",
-        content: "ትሕዝቶ"
+        content: "ትሕዝቶ",
+        edit: "ኣርትዕ",
+        delete: "ደምስስ",
+        share: "ኣካፍል",
+        views: "ትርኢታት"
     }
 };
 
@@ -51,40 +72,63 @@ const DynamicListingCard = ({
     onToggleFavorite,
     isFavorite,
     viewMode = 'grid',
-    isLocked = false // New prop to control access
+    isLocked = false,
+    onEdit,
+    onDelete,
+    onShare,
+    showActions = false
 }) => {
     const theme = useTheme();
     const navigate = useNavigate();
     const { language } = useLanguage();
     const t = translations[language] || translations.en;
 
-    // Check for premium status in column OR custom_fields (fallback)
     const isPremium = listing.is_premium || listing.custom_fields?.is_premium;
 
-    // If locked, we redirect to upgrade page on click
     const handleCardClick = () => {
         if (isLocked) {
-            navigate('/pricing'); // Redirect to general pricing page
+            navigate('/pricing');
         } else {
             navigate(`/listings/${listing.id}`);
         }
     };
 
+    // --- 1. PREPARE DATA ---
+    // Merge core fields into the fields lookup so they can be controlled by the template too
+    const coreData = {
+        title: listing.title,
+        price: listing.price,
+        description: listing.description,
+        location: listing.location,
+        category: listing.category,
+        created_at: listing.created_at,
+        views: listing.views,
+        ...listing.custom_fields
+    };
 
-    // 1. Filter and Sort Fields for Card
-    const cardFields = templateFields.filter(f => f.is_card_visible);
-    const sortedFields = [...cardFields].sort((a, b) => (a.card_order || 0) - (b.card_order || 0));
+    // If no template fields provided, create a default set to ensure the card isn't empty
+    const activeFields = templateFields.length > 0 ? templateFields.filter(f => f.is_card_visible) : [
+        { field_name: 'category', card_section: 'header_top_left', card_order: 1 },
+        { field_name: 'title', card_section: 'body', card_order: 1 },
+        { field_name: 'price', card_section: 'footer', card_order: 1 },
+        { field_name: 'location', card_section: 'body', card_order: 2 }
+    ];
 
-    // 2. Section Grouping
-    // 2. Section Grouping
-    const headerFields = sortedFields.filter(f => f.card_section === 'image_overlay'); // Bottom Left Overlay
-    const topLeftFields = sortedFields.filter(f => f.card_section === 'header_top_left');
-    const topRightFields = sortedFields.filter(f => f.card_section === 'header_top_right');
-    const bodyFields = sortedFields.filter(f => !f.card_section || f.card_section === 'body');
-    const footerFields = sortedFields.filter(f => f.card_section === 'footer'); // New section for footer items
+    const sortedFields = [...activeFields].sort((a, b) => (a.card_order || 0) - (b.card_order || 0));
 
-    // Helper to get relative time
+    // Group by Sections
+    const sections = {
+        cover: sortedFields.filter(f => f.card_section === 'cover'),
+        overlay_top_left: sortedFields.filter(f => f.card_section === 'header_top_left'),
+        overlay_top_right: sortedFields.filter(f => f.card_section === 'header_top_right'),
+        overlay_bottom: sortedFields.filter(f => f.card_section === 'image_overlay'),
+        body: sortedFields.filter(f => !f.card_section || f.card_section === 'body'),
+        footer: sortedFields.filter(f => f.card_section === 'footer'),
+    };
+
+    // --- 2. RENDERERS ---
     const getDaysAgo = (dateString) => {
+        if (!dateString) return "Recently";
         const date = new Date(dateString);
         const diff = Math.floor((new Date() - date) / (1000 * 60 * 60 * 24));
         if (diff === 0) return "Today";
@@ -92,25 +136,34 @@ const DynamicListingCard = ({
         return `${diff} days ago`;
     };
 
-    // Helper to render field value
-    const renderFieldValue = (field) => {
-        const value = listing.custom_fields?.[field.field_name] || listing[field.field_name];
-        if (!value) return null;
+    const renderGenericField = (field, context = 'body') => {
+        let value = coreData[field.field_name];
+        if (value === undefined || value === null || value === '') return null;
 
-        // Special Formatting
-        if (field.field_name === 'price') return `ETB ${Number(value).toLocaleString()}`;
-        if (field.field_type === 'date') return new Date(value).toLocaleDateString();
-        return String(value);
-    };
+        // Special Styling for Core Fields
+        if (field.field_name === 'title') {
+            return (
+                <Typography key={field.id} variant="h6" fontWeight={800} noWrap sx={{
+                    fontSize: '1.05rem', lineHeight: 1.3, mb: 0.5,
+                    color: 'text.primary',
+                    display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', whiteSpace: 'normal'
+                }}>
+                    {value}
+                </Typography>
+            );
+        }
 
-    // Helper to render field with icon (Smart Icon Detection)
-    const renderFieldWithIcon = (field) => {
-        const value = renderFieldValue(field);
-        if (!value) return null;
+        if (field.field_name === 'price') {
+            return (
+                <Typography key={field.id} variant="h6" color="primary.main" fontWeight={900} sx={{ fontSize: '1.15rem' }}>
+                    {typeof value === 'number' ? `ETB ${value.toLocaleString()}` : value}
+                </Typography>
+            );
+        }
 
+        // Icon Logic
         let Icon = null;
         const lowerName = field.field_name.toLowerCase();
-
         if (lowerName.includes('bed')) Icon = Bed;
         else if (lowerName.includes('bath')) Icon = Bathtub;
         else if (lowerName.includes('area') || lowerName.includes('sqft')) Icon = SquareFoot;
@@ -119,23 +172,73 @@ const DynamicListingCard = ({
         else if (lowerName.includes('fuel')) Icon = LocalGasStation;
         else if (lowerName.includes('location')) Icon = LocationOn;
 
+        // Type-Based Rendering
+        switch (field.field_type) {
+            case 'file':
+                // Display file as a downloadable/viewable link
+                const fileUrl = Array.isArray(value) ? value[0] : value;
+                return (
+                    <Box key={field.id} onClick={(e) => { e.stopPropagation(); window.open(fileUrl, '_blank'); }} sx={{
+                        display: 'flex', alignItems: 'center', gap: 0.5, p: 0.5, px: 1,
+                        bgcolor: alpha(theme.palette.primary.main, 0.1), borderRadius: 1, cursor: 'pointer',
+                        maxWidth: 'fit-content', mt: 0.5
+                    }}>
+                        <AutoAwesome sx={{ fontSize: 14, color: 'primary.main' }} />
+                        <Typography variant="caption" color="primary.main" fontWeight={600}>
+                            {field.field_label || 'View File'}
+                        </Typography>
+                    </Box>
+                );
+            case 'date':
+                value = new Date(value).toLocaleDateString();
+                break;
+            case 'boolean':
+                value = value ? 'Yes' : 'No';
+                break;
+            case 'number':
+                value = Number(value).toLocaleString();
+                break;
+            default:
+                break;
+        }
+
+        // Context-Based Styling
+        if (context === 'overlay') {
+            return (
+                <Chip key={field.id} label={value} size="small"
+                    icon={Icon ? <Icon sx={{ fontSize: '12px !important', color: 'inherit' }} /> : null}
+                    sx={{
+                        bgcolor: alpha('#000', 0.5), color: 'white',
+                        backdropFilter: 'blur(4px)', height: 22, fontSize: '0.7rem',
+                        border: `1px solid ${alpha('#fff', 0.2)}`
+                    }}
+                />
+            );
+        }
+
+        // Default Body Styling
         if (Icon) {
             return (
                 <Stack direction="row" spacing={0.5} alignItems="center" key={field.id} title={field.field_label}>
-                    <Icon sx={{ fontSize: 14, color: 'text.secondary' }} />
-                    <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ fontSize: '0.75rem' }}>
+                    <Icon sx={{ fontSize: 16, color: theme.palette.text.secondary }} />
+                    <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ fontSize: '0.85rem' }}>
                         {value} {field.field_name.includes('area') ? 'sqft' : ''}
                     </Typography>
                 </Stack>
             );
         }
 
+        // Generic Key-Value
         return (
-            <Typography key={field.id} variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-                <span style={{ fontWeight: 600 }}>{field.field_label}:</span> {value}
+            <Typography key={field.id} variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
+                <span style={{ fontWeight: 600, color: theme.palette.text.primary }}>{field.field_label}:</span> {value}
             </Typography>
         );
     };
+
+    // Responsive sizing logic
+    const imgWidth = viewMode === 'list' ? { xs: '100%', sm: 260, md: 300 } : '100%';
+    const imgHeight = viewMode === 'list' ? { xs: 200, sm: '100%' } : 240;
 
     return (
         <motion.div
@@ -143,366 +246,149 @@ const DynamicListingCard = ({
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
             viewport={{ once: true }}
+            style={{ height: '100%' }}
         >
             <Card
-                onClick={handleCardClick}
                 sx={{
-                    borderRadius: 4,
+                    borderRadius: 3,
                     overflow: 'hidden',
                     cursor: 'pointer',
                     transition: 'all 0.3s ease',
                     display: 'flex',
-                    flexDirection: viewMode === 'list' ? 'row' : 'column',
-                    height: viewMode === 'list' ? 'auto' : '100%',
-                    position: 'relative', // For Premium Badge
-                    border: isPremium ? '2px solid #FFD700' : 'none', // Gold Border for Premium
-                    boxShadow: isPremium ? '0 4px 20px rgba(255, 215, 0, 0.2)' : 'none',
+                    flexDirection: viewMode === 'list' ? { xs: 'column', sm: 'row' } : 'column',
+                    height: '100%',
+                    position: 'relative',
+                    border: '1px solid',
+                    borderColor: isPremium ? '#FFD700' : 'divider',
+                    bgcolor: 'background.paper',
                     '&:hover': {
                         transform: 'translateY(-4px)',
-                        boxShadow: isPremium ? '0 8px 30px rgba(255, 215, 0, 0.4)' : 4
+                        boxShadow: isPremium ? '0 8px 24px rgba(255, 215, 0, 0.15)' : theme.shadows[4],
+                        borderColor: isPremium ? '#FFD700' : 'primary.main',
                     }
                 }}
             >
-                {/* Premium Badge */}
-                {isPremium && (
-                    <Box sx={{
-                        position: 'absolute',
-                        top: 12,
-                        right: viewMode === 'list' ? 12 : 'auto',
-                        left: viewMode === 'list' ? 'auto' : 12,
-                        zIndex: 10,
-                        background: 'linear-gradient(45deg, #FFD700, #FFA500)',
-                        color: 'white',
-                        px: 1.5,
-                        py: 0.5,
-                        borderRadius: '20px',
-                        fontWeight: 'bold',
-                        fontSize: '0.75rem',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 0.5
-                    }}>
-                        {isLocked ? <FavoriteBorder sx={{ fontSize: 12 }} /> : <Favorite sx={{ fontSize: 12 }} />}
-                        {isLocked ? t.premiumOnly : t.premium}
-                    </Box>
-                )}
-
-                {/* --- IMAGE / MEDIA COVER SECTION --- */}
-                <Box sx={{
+                {/* --- 3. IMAGE SECTION --- */}
+                <Box onClick={handleCardClick} sx={{
                     position: 'relative',
-                    width: viewMode === 'list' ? 300 : '100%',
-                    height: viewMode === 'list' ? 200 : 220,
+                    width: imgWidth,
+                    height: imgHeight,
+                    minHeight: viewMode === 'list' ? { sm: 200 } : 'auto',
                     flexShrink: 0,
-                    bgcolor: 'grey.100',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    overflow: 'hidden'
+                    overflow: 'hidden',
+                    bgcolor: 'action.hover'
                 }}>
-                    {/* Image with blur if locked */}
-                    <Box sx={{
-                        width: '100%',
-                        height: '100%',
-                        filter: isLocked ? 'blur(8px) brightness(0.7)' : 'none',
-                        transition: 'filter 0.3s'
-                    }}>
-                        {(() => {
-                            const coverField = sortedFields.find(f => f.card_section === 'cover');
+                    {/* Render Cover Image */}
+                    {(() => {
+                        const coverField = sections.cover[0];
+                        let src = null;
+                        if (coverField) {
+                            const val = coreData[coverField.field_name];
+                            src = Array.isArray(val) ? val[0] : val;
+                        }
+                        // Default fallback if no cover field defined or empty
+                        if (!src && coreData.images && coreData.images.length > 0) src = coreData.images[0];
 
-                            if (coverField) {
-                                const value = listing.custom_fields?.[coverField.field_name] || listing[coverField.field_name];
+                        return src ? (
+                            <OptimizedImage src={src} alt={listing.title} width="100%" height="100%" objectFit="cover" className="card-image" />
+                        ) : (
+                            <Box sx={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'text.disabled' }}>
+                                <Typography variant="caption" fontWeight="bold">NO IMAGE</Typography>
+                            </Box>
+                        );
+                    })()}
 
-                                // If it's a file/image field (or the system 'images' field)
-                                if (coverField.field_type === 'image' || coverField.field_type === 'file' || coverField.field_name === 'images') {
-                                    // Value might be array or string
-                                    const src = Array.isArray(value) ? value[0] : value;
-                                    return (
-                                        <Box
-                                            component="img"
-                                            src={src || 'https://via.placeholder.com/400x300'}
-                                            alt={listing.title}
-                                            sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                        />
-                                    );
-                                }
-
-                                // If user explicitly mapped a text field as cover (e.g. for Jobs company logo or just text)
-                                return (
-                                    <Box sx={{ p: 3, textAlign: 'center', width: '100%' }}>
-                                        <Typography variant="h4" fontWeight="bold" color="text.secondary">
-                                            {value || ''}
-                                        </Typography>
-                                    </Box>
-                                );
-                            } else {
-                                // Default Fallback: Standard Listing Image
-                                const defaultImage = (() => {
-                                    if (listing.image_url) return listing.image_url;
-                                    if (listing.image) return listing.image; // May be null if using new schema
-                                    // Check media_urls
-                                    if (Array.isArray(listing.media_urls)) {
-                                        const img = listing.media_urls.find(m => m.type === 'image');
-                                        if (img) return img.url;
-                                    }
-                                    // Check custom_fields for legacy structure or mis-assigned data
-                                    if (listing.custom_fields?.images && Array.isArray(listing.custom_fields.images) && listing.custom_fields.images.length > 0) {
-                                        return listing.custom_fields.images[0];
-                                    }
-                                    return 'https://via.placeholder.com/400x300';
-                                })();
-
-                                return (
-                                    <Box
-                                        component="img"
-                                        src={defaultImage}
-                                        alt={listing.title}
-                                        sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                    />
-                                );
-                            }
-                        })()}
-                    </Box>
-
-                    {/* Lock Overlay for Premium Content */}
-                    {isLocked && (
+                    {/* Premium Badge */}
+                    {isPremium && (
                         <Box sx={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            background: 'rgba(0, 0, 0, 0.4)',
-                            zIndex: 5
+                            position: 'absolute', top: 12, left: 12, zIndex: 2,
+                            background: 'linear-gradient(45deg, #FFD700, #FFA500)',
+                            color: 'black', px: 1.5, py: 0.5, borderRadius: 10,
+                            fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
                         }}>
-                            <Lock sx={{ fontSize: 48, color: '#FFD700', mb: 1 }} />
-                            <Typography variant="h6" fontWeight="bold" color="white" textAlign="center">
-                                {t.premiumContent}
-                            </Typography>
-                            <Typography variant="caption" color="white" textAlign="center" sx={{ mt: 0.5 }}>
-                                {t.subscribeToView}
-                            </Typography>
+                            {isLocked ? t.premiumOnly : t.premium}
                         </Box>
                     )}
 
-                    {/* --- TOP LEFT OVERLAY --- */}
-                    <Box sx={{ position: 'absolute', top: 12, left: 12, display: 'flex', gap: 0.5, flexWrap: 'wrap', maxWidth: '45%' }}>
-                        {topLeftFields.length > 0 ? (
-                            topLeftFields.map(field => (
-                                <Chip
-                                    key={field.id}
-                                    label={renderFieldValue(field)}
-                                    size="small"
-                                    sx={{
-                                        bgcolor: alpha(theme.palette.background.paper, 0.95),
-                                        fontWeight: 600,
-                                        fontSize: '0.6875rem'
-                                    }}
-                                />
-                            ))
-                        ) : (
-                            /* Default: Category */
-                            <Chip
-                                label={listing.category_name || listing.category}
-                                size="small"
-                                sx={{
-                                    bgcolor: alpha(theme.palette.background.paper, 0.95),
-                                    fontWeight: 600,
-                                    fontSize: '0.6875rem'
-                                }}
-                            />
+                    {/* Top Right Actions (Fav) */}
+                    <Box sx={{ position: 'absolute', top: 12, right: 12, zIndex: 2 }}>
+                        {!showActions && (
+                            <IconButton onClick={(e) => { e.stopPropagation(); onToggleFavorite && onToggleFavorite(listing.id); }}
+                                sx={{ bgcolor: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(4px)', width: 32, height: 32, '&:hover': { bgcolor: 'white' } }}>
+                                {isFavorite ? <Favorite color="error" sx={{ fontSize: 18 }} /> : <FavoriteBorder sx={{ fontSize: 18 }} />}
+                            </IconButton>
                         )}
                     </Box>
 
-                    {/* --- TOP RIGHT OVERLAY (Hidden if locked to reduce clutter) --- */}
-                    {!isLocked && (
-                        <Box sx={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: 0.5, flexWrap: 'wrap', maxWidth: '45%', justifyContent: 'flex-end' }}>
-                            {topRightFields.length > 0 ? (
-                                topRightFields.map(field => (
-                                    <Chip
-                                        key={field.id}
-                                        label={renderFieldValue(field)}
-                                        size="small"
-                                        sx={{
-                                            bgcolor: alpha('#000', 0.7),
-                                            color: 'white',
-                                            fontWeight: 600,
-                                            fontSize: '0.625rem'
-                                        }}
-                                    />
-                                ))
-                            ) : (
-                                /* Default: Date */
-                                <Chip
-                                    label={getDaysAgo(listing.created_at)}
-                                    size="small"
-                                    sx={{
-                                        bgcolor: alpha('#000', 0.7),
-                                        color: 'white',
-                                        fontWeight: 600,
-                                        fontSize: '0.625rem'
-                                    }}
-                                />
-                            )}
-                        </Box>
+                    {/* Template Overlays */}
+                    {sections.overlay_top_left.length > 0 && (
+                        <Stack spacing={0.5} sx={{ position: 'absolute', top: 45, left: 12, zIndex: 1 }}>
+                            {sections.overlay_top_left.map(f => renderGenericField(f, 'overlay'))}
+                        </Stack>
                     )}
-
-                    {/* Dynamic Header Overlay Fields (Overlaid on Image if configured) */}
-                    <Box sx={{ position: 'absolute', bottom: 40, left: 12, display: 'flex', gap: 1 }}>
-                        {headerFields.map(field => (
-                            <Chip
-                                key={field.id}
-                                label={renderFieldValue(field)}
-                                size="small"
-                                sx={{ bgcolor: alpha(theme.palette.common.black, 0.6), color: 'white', border: 'none' }}
-                            />
-                        ))}
-                    </Box>
-
-                    {/* Favorite Button */}
-                    <IconButton
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onToggleFavorite && onToggleFavorite(listing.id);
-                        }}
-                        sx={{
-                            position: 'absolute',
-                            bottom: 12,
-                            left: 12,
-                            bgcolor: alpha('#fff', 0.9),
-                            '&:hover': { bgcolor: 'white' }
-                        }}
-                    >
-                        {isFavorite ? <Favorite color="error" /> : <FavoriteBorder />}
-                    </IconButton>
-                </Box>
-
-                {/* --- BODY SECTION --- */}
-                <Box sx={{
-                    p: 2.5,
-                    flex: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    minHeight: viewMode === 'grid' ? { xs: 260, sm: 210 } : 'auto',
-                    position: 'relative', // For Blur Overlay
-                }}>
-
-                    {/* LOCKED CONTENT OVERLAY */}
-                    {/* LOCKED CONTENT OVERLAY */}
-                    {isLocked && (
-                        <Box sx={{
-                            position: 'absolute',
-                            top: 0, left: 0, right: 0, bottom: 0,
-                            backdropFilter: 'blur(10px)',
-                            background: theme.palette.mode === 'dark'
-                                ? 'linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.9))'
-                                : 'linear-gradient(to bottom, rgba(255,255,255,0.4), rgba(255,255,255,0.95))',
-                            zIndex: 20,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            p: 3,
-                            textAlign: 'center',
-                            transition: 'all 0.3s'
-                        }}>
-                            <Box
-                                component={motion.div}
-                                animate={{ scale: [1, 1.1, 1] }}
-                                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                                sx={{
-                                    mb: 2,
-                                    p: 1.5,
-                                    borderRadius: '50%',
-                                    bgcolor: alpha('#FFD700', 0.2),
-                                    color: '#FFD700'
-                                }}
-                            >
-                                <Lock sx={{ fontSize: 32 }} />
-                            </Box>
-
-                            <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ color: 'text.primary', opacity: 1, letterSpacing: 0.5 }}>
-                                {t.premium} {listing.category || t.content}
-                            </Typography>
-
-                            <Typography variant="body2" sx={{ mb: 2.5, opacity: 0.8, maxWidth: '80%' }}>
-                                {t.viewFullDetails}
-                            </Typography>
-
-                            <Chip
-                                label={t.unlockNow}
-                                icon={<AutoAwesome sx={{ fontSize: '16px !important', color: 'black !important' }} />}
-                                clickable
-                                sx={{
-                                    fontWeight: 'bold',
-                                    bgcolor: '#FFD700',
-                                    color: 'black',
-                                    px: 1,
-                                    height: 36,
-                                    fontSize: '0.85rem',
-                                    '&:hover': { bgcolor: '#FFC107', transform: 'scale(1.05)' },
-                                    transition: 'all 0.2s',
-                                    boxShadow: '0 4px 12px rgba(255, 215, 0, 0.4)'
-                                }}
-                            />
-                        </Box>
-                    )}
-
-                    {/* Default Title/Location if visible in body */}
-                    {bodyFields.length === 0 ? (
-                        /* Fallback Layout if no dynamic fields configured yet */
-                        <>
-                            <Typography variant="h6" fontWeight="bold" noWrap gutterBottom>{listing.title}</Typography>
-                            <Stack direction="row" spacing={0.5} alignItems="center" color="text.secondary" mb={1}>
-                                <LocationOn sx={{ fontSize: 16 }} />
-                                <Typography variant="body2">{listing.location || 'No Location'}</Typography>
-                            </Stack>
-                            <Box sx={{ mt: 'auto' }}>
-                                <Typography variant="h6" color="primary" fontWeight="bold">ETB {listing.price?.toLocaleString()}</Typography>
-                            </Box>
-                        </>
-                    ) : (
-                        <Stack spacing={1} sx={{ height: '100%' }}>
-                            {bodyFields.map(field => {
-                                // Special Rendering for Title
-                                if (field.field_name === 'title') {
-                                    return (
-                                        <Typography key={field.id} variant="h6" fontWeight="bold" sx={{ lineHeight: 1.3, mb: 0.5 }} noWrap>
-                                            {renderFieldValue(field)}
-                                        </Typography>
-                                    );
-                                }
-                                // Special Rendering for Price (usually prominent)
-                                if (field.field_name === 'price') {
-                                    return (
-                                        <Typography key={field.id} variant="h6" color="primary.main" fontWeight="bold">
-                                            {renderFieldValue(field)}
-                                        </Typography>
-                                    );
-                                }
-                                return renderFieldWithIcon(field);
-                            })}
+                    {sections.overlay_top_right.length > 0 && (
+                        <Stack spacing={0.5} sx={{ position: 'absolute', top: 50, right: 12, zIndex: 1, alignItems: 'flex-end' }}>
+                            {sections.overlay_top_right.map(f => renderGenericField(f, 'overlay'))}
                         </Stack>
                     )}
 
-                    {/* Footer Section */}
-                    {footerFields.length > 0 && (
-                        <>
-                            <Divider sx={{ my: 1.5 }} />
-                            <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
-                                {footerFields.map(field => renderFieldWithIcon(field))}
-                            </Stack>
-                        </>
-                    )}
-
-                    {/* Live Activity (Always at bottom right) */}
-                    <Box sx={{ alignSelf: 'flex-end', mt: 'auto', pt: 1 }}>
-                        <LiveActivityIndicators listing={listing} compact />
+                    {/* Bottom Gradient Overlay */}
+                    <Box sx={{
+                        position: 'absolute', bottom: 0, left: 0, right: 0,
+                        background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)',
+                        pt: 6, pb: 1.5, px: 1.5,
+                        display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between'
+                    }}>
+                        <Stack direction="row" spacing={1} flexWrap="wrap">
+                            {sections.overlay_bottom.map(f => renderGenericField(f, 'overlay'))}
+                            {!sections.overlay_bottom.length && (
+                                // Default fallback if no bottom overlay fields
+                                <Typography variant="caption" sx={{ color: 'white', fontWeight: 600 }}>{getDaysAgo(listing.created_at)}</Typography>
+                            )}
+                        </Stack>
                     </Box>
+
+                    {/* Lock Overlay */}
+                    {isLocked && (
+                        <Box sx={{ position: 'absolute', inset: 0, bgcolor: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(3px)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', color: 'white' }}>
+                            <Lock sx={{ fontSize: 40, mb: 1, color: '#FFD700' }} />
+                            <Typography variant="button" fontWeight="bold">{t.unlockNow}</Typography>
+                        </Box>
+                    )}
+                </Box>
+
+                {/* --- 4. CONTENT BODY --- */}
+                <Box sx={{ p: 2, flex: 1, display: 'flex', flexDirection: 'column' }} onClick={handleCardClick}>
+                    {/* Body Fields */}
+                    <Stack spacing={1} sx={{ mb: 2, flex: 1 }}>
+                        {sections.body.map(f => renderGenericField(f, 'body'))}
+                    </Stack>
+
+                    <Divider sx={{ my: 1, opacity: 0.5 }} />
+
+                    {/* Footer Fields */}
+                    <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mt: 'auto' }}>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                            {sections.footer.map(f => renderGenericField(f, 'footer'))}
+                        </Stack>
+
+                        {/* Owner/Admin Actions */}
+                        {showActions ? (
+                            <Stack direction="row" spacing={0}>
+                                <IconButton size="small" onClick={(e) => { e.stopPropagation(); onEdit?.(listing); }} color="primary"><Edit fontSize="small" /></IconButton>
+                                <IconButton size="small" onClick={(e) => { e.stopPropagation(); onDelete?.(listing.id); }} color="error"><Delete fontSize="small" /></IconButton>
+                            </Stack>
+                        ) : (
+                            // View Count Fallback if no specific footer actions defined
+                            sections.footer.length === 0 && (
+                                <Stack direction="row" spacing={0.5} alignItems="center" color="text.disabled">
+                                    <Visibility sx={{ fontSize: 14 }} />
+                                    <Typography variant="caption">{listing.views || 0}</Typography>
+                                </Stack>
+                            )
+                        )}
+                    </Stack>
                 </Box>
             </Card>
         </motion.div>
