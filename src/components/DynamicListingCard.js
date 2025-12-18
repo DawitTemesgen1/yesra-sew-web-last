@@ -95,6 +95,8 @@ const DynamicListingCard = ({
 
     // --- 1. PREPARE DATA ---
     // Merge core fields into the fields lookup so they can be controlled by the template too
+    // --- 1. PREPARE DATA ---
+    // Merge core fields into the fields lookup so they can be controlled by the template too
     const coreData = {
         title: listing.title,
         price: listing.price,
@@ -103,6 +105,7 @@ const DynamicListingCard = ({
         category: listing.category,
         created_at: listing.created_at,
         views: listing.views,
+        images: listing.images, // Add core images array explicitly
         ...listing.custom_fields
     };
 
@@ -280,14 +283,31 @@ const DynamicListingCard = ({
                 }}>
                     {/* Render Cover Image */}
                     {(() => {
-                        const coverField = sections.cover[0];
                         let src = null;
+
+                        // Priority 1: Field explicitly assigned to 'cover' section
+                        const coverField = sections.cover[0];
                         if (coverField) {
                             const val = coreData[coverField.field_name];
                             src = Array.isArray(val) ? val[0] : val;
                         }
-                        // Default fallback if no cover field defined or empty
-                        if (!src && coreData.images && coreData.images.length > 0) src = coreData.images[0];
+
+                        // Priority 2: Explicit 'images' field in coreData (standard array)
+                        if (!src && coreData.images && coreData.images.length > 0) {
+                            src = coreData.images[0];
+                        }
+
+                        // Priority 3: Any field named 'images', 'photos', 'image', 'photo'
+                        if (!src) {
+                            const imageField = sortedFields.find(f =>
+                                ['images', 'photos', 'image', 'picture'].includes(f.field_name.toLowerCase()) ||
+                                f.field_type === 'image'
+                            );
+                            if (imageField) {
+                                const val = coreData[imageField.field_name];
+                                src = Array.isArray(val) ? val[0] : val;
+                            }
+                        }
 
                         return src ? (
                             <OptimizedImage src={src} alt={listing.title} width="100%" height="100%" objectFit="cover" className="card-image" />
