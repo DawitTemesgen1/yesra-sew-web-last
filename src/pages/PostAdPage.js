@@ -503,34 +503,27 @@ const PostAdPage = () => {
       }
       */
 
-      // Insert or Update into Supabase
+      // Insert or Update using listingService (Node.js Backend)
       let result;
       if (editListingId) {
         // Update
-        // Optionally preserve status or set to 'approved' if you trust the edit?
-        // For safety, let's keep it 'pending' or whatever logic you prefer. 
-        // If we want to keep status: 
-        delete dbData.status;
-        delete dbData.created_at; // Don't change creation date
+        // Remove fields that shouldn't be updated or cause issues
+        const updateData = { ...dbData };
+        delete updateData.status;
+        delete updateData.created_at;
+        delete updateData.user_id; // Usually don't update user_id
 
-        result = await supabase
-          .from('listings')
-          .update(dbData)
-          .eq('id', editListingId)
-          .select()
-          .single();
+        const listingService = (await import('../services/listing-service')).default;
+        result = await listingService.updateListing(editListingId, updateData);
       } else {
         // Insert
-        result = await supabase
-          .from('listings')
-          .insert([dbData])
-          .select()
-          .single();
+        const listingService = (await import('../services/listing-service')).default;
+        result = await listingService.createListing(dbData);
       }
 
-      const { data, error } = result;
-
-      if (error) throw error;
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to save listing');
+      }
 
       toast.success(editListingId ? "Listing updated successfully!" : t.adPostedSuccessfully);
 
@@ -539,12 +532,6 @@ const PostAdPage = () => {
       // So we don't need to manually increment usage. The new row in 'listings' counts as usage automatically.
 
       // Navigate based on previous location or default to profile
-      if (editListingId) {
-        toast.success("Listing updated successfully!");
-      } else {
-        toast.success("Listing posted successfully!");
-      }
-
       const from = location.state?.from || '/profile';
       navigate(from);
     } catch (error) {

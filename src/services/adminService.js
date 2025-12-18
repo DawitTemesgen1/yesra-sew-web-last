@@ -89,20 +89,30 @@ const adminService = {
                     return data || [];
                 };
 
+                const listingsAPI = (await import('./listingsAPI')).default;
+
                 // Batch 1: Key Counts (Parallel)
-                const [totalListings, pendingReview, approvedListings, rejectedListings, totalUsers] = await Promise.all([
-                    getCount(supabase.from('listings').select('*', { count: 'exact', head: true })),
-                    getCount(supabase.from('listings').select('*', { count: 'exact', head: true }).eq('status', 'pending')),
-                    getCount(supabase.from('listings').select('*', { count: 'exact', head: true }).in('status', ['active', 'approved'])),
-                    getCount(supabase.from('listings').select('*', { count: 'exact', head: true }).eq('status', 'rejected')),
+                // Fetch listing stats from Node.js backend
+                const [backendStats, totalUsers] = await Promise.all([
+                    listingsAPI.getStats(),
                     getCount(supabase.from('profiles').select('*', { count: 'exact', head: true }))
                 ]);
 
+                // Destructure stats from backend
+                const stats = backendStats.success ? backendStats.stats : { total: 0, pending: 0, active: 0, rejected: 0 };
+                const totalListings = stats.total;
+                const pendingReview = stats.pending;
+                const approvedListings = stats.active;
+                const rejectedListings = stats.rejected;
+
                 // Batch 2: Lists (Parallel)
-                const [recentListings, recentUsers] = await Promise.all([
-                    getData(supabase.from('listings').select('id, title, status, created_at, category_id').order('created_at', { ascending: false }).limit(10)),
+                // Fetch recent listings from Node.js backend
+                const [recentListingsData, recentUsers] = await Promise.all([
+                    listingsAPI.getListings({ limit: 10, sort: 'created_at', order: 'DESC' }),
                     getData(supabase.from('profiles').select('id, full_name, email, created_at, account_type').order('created_at', { ascending: false }).limit(10))
                 ]);
+
+                const recentListings = recentListingsData.success ? recentListingsData.listings : [];
 
                 // Batch 3: Financials & Settings (Sequential to reduce load)
                 const { data: transactions } = await supabase

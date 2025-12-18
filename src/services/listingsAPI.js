@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.REACT_APP_LISTINGS_API || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.REACT_APP_LISTINGS_API || 'http://localhost:5001/api';
 
 class ListingsAPIService {
     /**
@@ -137,6 +137,25 @@ class ListingsAPIService {
         } catch (error) {
             console.error('Error updating listing:', error);
             throw error;
+        }
+    }
+
+    /**
+     * Get dashboard stats (total, active, pending, etc.)
+     * @returns {Promise<{success: boolean, stats: Object}>}
+     */
+    async getStats() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/stats`);
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch stats');
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching stats:', error);
+            return { success: false, stats: { total: 0, active: 0, pending: 0, rejected: 0 } };
         }
     }
 

@@ -9,7 +9,7 @@ const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 // Middleware
 app.use(cors());
@@ -194,6 +194,29 @@ app.get('/api/listings', async (req, res) => {
         });
     } catch (error) {
         console.error('Error fetching listings:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Get dashboard stats
+app.get('/api/stats', async (req, res) => {
+    try {
+        const [stats] = await pool.query(`
+            SELECT 
+                COUNT(*) as total,
+                SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active,
+                SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+                SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected
+            FROM listings
+            WHERE status != 'deleted'
+        `);
+
+        res.json({
+            success: true,
+            stats: stats[0]
+        });
+    } catch (error) {
+        console.error('Error fetching stats:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
