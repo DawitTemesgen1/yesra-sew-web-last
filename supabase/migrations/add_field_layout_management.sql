@@ -3,17 +3,59 @@
 -- Allows admins to control field positioning and display
 -- ============================================
 
--- Add layout columns to template_fields
+-- First, check if width column exists and what type it is
+-- If it's INTEGER, we'll keep it and add a new width_type column
+-- If it doesn't exist, we'll create it as TEXT
+
+DO $$
+BEGIN
+    -- Check if width column exists
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' 
+        AND table_name = 'template_fields' 
+        AND column_name = 'width'
+    ) THEN
+        -- Width exists, check if it's INTEGER
+        IF EXISTS (
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'public' 
+            AND table_name = 'template_fields' 
+            AND column_name = 'width'
+            AND data_type = 'integer'
+        ) THEN
+            -- It's INTEGER, rename it to width_legacy and create new TEXT column
+            ALTER TABLE public.template_fields RENAME COLUMN width TO width_legacy;
+            ALTER TABLE public.template_fields ADD COLUMN width TEXT DEFAULT 'full' CHECK (width IN ('full', 'half', 'third', 'quarter'));
+            
+            -- Migrate old integer values to new text values
+            UPDATE public.template_fields SET width = CASE
+                WHEN width_legacy = 12 THEN 'full'
+                WHEN width_legacy = 6 THEN 'half'
+                WHEN width_legacy = 4 THEN 'third'
+                WHEN width_legacy = 3 THEN 'quarter'
+                ELSE 'full'
+            END;
+            
+            -- Drop the legacy column
+            ALTER TABLE public.template_fields DROP COLUMN width_legacy;
+        END IF;
+    ELSE
+        -- Width doesn't exist, create it as TEXT
+        ALTER TABLE public.template_fields ADD COLUMN width TEXT DEFAULT 'full' CHECK (width IN ('full', 'half', 'third', 'quarter'));
+    END IF;
+END $$;
+
+-- Add other layout columns
 ALTER TABLE public.template_fields 
 ADD COLUMN IF NOT EXISTS section TEXT DEFAULT 'main' CHECK (section IN ('header', 'main', 'sidebar')),
-ADD COLUMN IF NOT EXISTS width TEXT DEFAULT 'full' CHECK (width IN ('full', 'half', 'third', 'quarter')),
 ADD COLUMN IF NOT EXISTS display_in_card BOOLEAN DEFAULT false,
 ADD COLUMN IF NOT EXISTS display_in_detail BOOLEAN DEFAULT true,
 ADD COLUMN IF NOT EXISTS card_priority INTEGER DEFAULT 0,
 ADD COLUMN IF NOT EXISTS is_cover_image BOOLEAN DEFAULT false,
 ADD COLUMN IF NOT EXISTS allow_multiple BOOLEAN DEFAULT false;
 
--- Add comment for documentation
+-- Add comments for documentation
 COMMENT ON COLUMN public.template_fields.section IS 'Layout section for detail page: header (top banner), main (primary content), sidebar (secondary info)';
 COMMENT ON COLUMN public.template_fields.width IS 'Field width in responsive grid: full (100%), half (50%), third (33%), quarter (25%)';
 COMMENT ON COLUMN public.template_fields.display_in_card IS 'Show this field in listing card preview';
@@ -31,7 +73,7 @@ CREATE INDEX IF NOT EXISTS idx_template_fields_card ON public.template_fields(di
 
 -- Function to add image field to existing templates
 CREATE OR REPLACE FUNCTION add_image_field_to_templates()
-RETURNS void AS $$
+RETURNS void AS $func$
 DECLARE
   template_rec RECORD;
   first_step_id UUID;
@@ -82,23 +124,23 @@ BEGIN
           'image',
           'Upload images (first image will be the cover)',
           'Upload up to 10 images. The first image will be used as the cover photo.',
-          '{"maxFiles": 10, "maxSize": 10485760, "accept": "image/*"}',
-          0, -- First field
-          true, -- Required
-          true, -- Visible
-          'header', -- Show in header section
-          'full', -- Full width
-          true, -- Show in card
-          true, -- Show in detail
-          1, -- High priority in card
-          true, -- Is cover image
-          true -- Allow multiple
+          '{"maxFiles": 10, "maxSize": 10485760, "accept": "image/*"}'::jsonb,
+          0,
+          true,
+          true,
+          'header',
+          'full',
+          true,
+          true,
+          1,
+          true,
+          true
         );
       END IF;
     END IF;
   END LOOP;
 END;
-$$ LANGUAGE plpgsql;
+$func$ LANGUAGE plpgsql;
 
 -- Execute the function to add image fields
 SELECT add_image_field_to_templates();
