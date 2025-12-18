@@ -9,7 +9,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import LiveActivityIndicators from './LiveActivityIndicators';
-import OptimizedImage from './OptimizedImage';
+import UltraOptimizedImage from './UltraOptimizedImage';
 
 const translations = {
     en: {
@@ -209,13 +209,13 @@ const DynamicListingCard = ({
                 const imgSrc = Array.isArray(value) ? value[0] : value;
                 return (
                     <Box key={field.id} sx={{ mt: 1, borderRadius: 1, overflow: 'hidden', width: '100%', height: 150 }}>
-                        <OptimizedImage
+                        <UltraOptimizedImage
                             src={imgSrc}
                             alt={field.field_label}
                             width="100%"
                             height="100%"
                             objectFit="cover"
-                            optimizationWidth={300} // Request thumbnail size
+                            aspectRatio={16 / 9}
                         />
                     </Box>
                 );
@@ -223,13 +223,13 @@ const DynamicListingCard = ({
                 if (Array.isArray(value) && value.length > 0) {
                     return (
                         <Box key={field.id} sx={{ mt: 1, borderRadius: 1, overflow: 'hidden', width: '100%', height: 150 }}>
-                            <OptimizedImage
+                            <UltraOptimizedImage
                                 src={value[0]}
                                 alt={field.field_label}
                                 width="100%"
                                 height="100%"
                                 objectFit="cover"
-                                optimizationWidth={300} // Request thumbnail size
+                                aspectRatio={16 / 9}
                             />
                         </Box>
                     );
@@ -279,13 +279,13 @@ const DynamicListingCard = ({
         if (typeof value === 'string' && (value.includes('supabase') || value.match(/\.(jpeg|jpg|gif|png|webp)$/i))) {
             return (
                 <Box key={field.id} sx={{ mt: 1, borderRadius: 1, overflow: 'hidden', width: '100%', height: 150 }}>
-                    <OptimizedImage
+                    <UltraOptimizedImage
                         src={value}
                         alt={field.field_label}
                         width="100%"
                         height="100%"
                         objectFit="cover"
-                        optimizationWidth={300}
+                        aspectRatio={16 / 9}
                     />
                 </Box>
             );
@@ -389,14 +389,15 @@ const DynamicListingCard = ({
                         }
 
                         return src ? (
-                            <OptimizedImage
+                            <UltraOptimizedImage
                                 src={src}
                                 alt={listing.title}
                                 width="100%"
                                 height="100%"
                                 objectFit="cover"
                                 className="card-image"
-                                optimizationWidth={500} // Request medium size for card cover
+                                aspectRatio={16 / 9}
+                                priority={false}
                             />
                         ) : (
                             <Box sx={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'text.disabled' }}>

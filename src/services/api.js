@@ -554,11 +554,12 @@ class ApiService {
     };
   }
 
-  // --- Wrapper for public listing fetch ---
+  // --- Wrapper for public listing fetch (OPTIMIZED) ---
   async getListings(params) {
     try {
-      const listingService = (await import('./listing-service')).default;
-      return await listingService.getListings(params);
+      const optimizedListingService = (await import('./optimized-listing-service')).default;
+      const result = await optimizedListingService.getListings(params);
+      return result.listings ? result : { listings: result };
     } catch (error) {
       console.error('ApiService getListings error:', error);
       return { listings: [] };
