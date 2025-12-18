@@ -68,8 +68,9 @@ const PostTemplateScreen = () => {
     const [stepForm, setStepForm] = useState({ title: '', description: '', icon: '', is_required: true });
     const [fieldForm, setFieldForm] = useState({
         field_name: '', field_label: '', field_type: 'text', placeholder: '', help_text: '',
-        is_required: false, is_visible: true, width: 12, section: 'main',
-        options: [], allow_multiple: false
+        is_required: false, is_visible: true, width: 'full', section: 'main',
+        options: [], allow_multiple: false,
+        display_in_card: false, display_in_detail: true, card_priority: 0, is_cover_image: false
     });
 
     useEffect(() => {
@@ -208,10 +209,14 @@ const PostTemplateScreen = () => {
             help_text: field.help_text || '',
             is_required: field.is_required,
             is_visible: field.is_visible,
-            width: field.width || 12,
+            width: field.width || 'full',
             section: field.section || 'main',
             options: field.options || [],
-            allow_multiple: field.allow_multiple || false
+            allow_multiple: field.allow_multiple || false,
+            display_in_card: field.display_in_card || false,
+            display_in_detail: field.display_in_detail !== false, // Default true
+            card_priority: field.card_priority || 0,
+            is_cover_image: field.is_cover_image || false
         });
         setFieldDialogOpen(true);
     };
@@ -1317,6 +1322,95 @@ const PostTemplateScreen = () => {
                                             const opts = e.target.value.split(',').map(o => o.trim()).filter(Boolean);
                                             setFieldForm({ ...fieldForm, options: opts });
                                         }}
+                                    />
+                                </Grid>
+                            )}
+
+                            {/* Layout Management Section */}
+                            <Grid item xs={12}>
+                                <Typography variant="subtitle2" sx={{ mt: 2, mb: 1, fontWeight: 600 }}>
+                                    Layout & Display Settings
+                                </Typography>
+                            </Grid>
+
+                            <Grid item xs={12} sm={6}>
+                                <FormControl fullWidth>
+                                    <InputLabel>Section (Detail Page)</InputLabel>
+                                    <Select
+                                        value={fieldForm.section}
+                                        onChange={(e) => setFieldForm({ ...fieldForm, section: e.target.value })}
+                                        label="Section (Detail Page)"
+                                    >
+                                        <MenuItem value="header">Header (Top Banner)</MenuItem>
+                                        <MenuItem value="main">Main Content</MenuItem>
+                                        <MenuItem value="sidebar">Sidebar</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+
+                            <Grid item xs={12} sm={6}>
+                                <FormControl fullWidth>
+                                    <InputLabel>Width</InputLabel>
+                                    <Select
+                                        value={fieldForm.width}
+                                        onChange={(e) => setFieldForm({ ...fieldForm, width: e.target.value })}
+                                        label="Width"
+                                    >
+                                        <MenuItem value="full">Full Width (100%)</MenuItem>
+                                        <MenuItem value="half">Half Width (50%)</MenuItem>
+                                        <MenuItem value="third">Third Width (33%)</MenuItem>
+                                        <MenuItem value="quarter">Quarter Width (25%)</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+
+                            <Grid item xs={12} sm={6}>
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={fieldForm.display_in_card}
+                                            onChange={(e) => setFieldForm({ ...fieldForm, display_in_card: e.target.checked })}
+                                        />
+                                    }
+                                    label="Show in Listing Card"
+                                />
+                            </Grid>
+
+                            <Grid item xs={12} sm={6}>
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={fieldForm.display_in_detail}
+                                            onChange={(e) => setFieldForm({ ...fieldForm, display_in_detail: e.target.checked })}
+                                        />
+                                    }
+                                    label="Show in Detail Page"
+                                />
+                            </Grid>
+
+                            {fieldForm.display_in_card && (
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        fullWidth
+                                        type="number"
+                                        label="Card Display Priority"
+                                        value={fieldForm.card_priority}
+                                        onChange={(e) => setFieldForm({ ...fieldForm, card_priority: parseInt(e.target.value) || 0 })}
+                                        helperText="Lower number = higher priority"
+                                    />
+                                </Grid>
+                            )}
+
+                            {fieldForm.field_type === 'image' && (
+                                <Grid item xs={12} sm={6}>
+                                    <FormControlLabel
+                                        control={
+                                            <Checkbox
+                                                checked={fieldForm.is_cover_image}
+                                                onChange={(e) => setFieldForm({ ...fieldForm, is_cover_image: e.target.checked })}
+                                            />
+                                        }
+                                        label="Use as Cover Image"
                                     />
                                 </Grid>
                             )}
