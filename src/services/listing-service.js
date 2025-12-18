@@ -55,6 +55,8 @@ const listingService = {
                 min_price: filters.min_price,
                 max_price: filters.max_price,
                 location: filters.location,
+                user_id: filters.user_id, // Add user_id
+                status: filters.status,   // Add status
                 page: filters.page || 1,
                 limit: filters.limit || 12,
                 sort: filters.sort || 'created_at',

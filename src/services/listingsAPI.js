@@ -61,16 +61,45 @@ class ListingsAPIService {
         try {
             const formData = new FormData();
 
-            // Add listing fields
-            Object.keys(listingData).forEach(key => {
+            // 1. Normalize Category
+            // Ensure we strictly send the UUID as 'category' because that's what Admin filters by.
+            const categoryValue = listingData.category_id || listingData.category;
+            if (!categoryValue || categoryValue === 'undefined') {
+                console.warn('Listing missing category ID, might be invisible in Admin');
+            }
+
+            // 2. Normalize Status
+            // Map 'approved' -> 'active' here on client side to match DB
+            let statusValue = listingData.status || 'pending';
+            if (statusValue === 'approved') statusValue = 'active';
+
+            // 3. Construct Payload Object
+            const payload = {
+                ...listingData,
+                category: categoryValue, // Force category to be the ID
+                status: statusValue
+            };
+
+            // 4. Append to FormData (excluding images and undefineds)
+            Object.keys(payload).forEach(key => {
+                const value = payload[key];
+
+                // Skip images array handled separately
+                if (key === 'images') return;
+
+                // Handle Custom Fields (JSON)
                 if (key === 'custom_fields') {
-                    formData.append(key, JSON.stringify(listingData[key]));
-                } else {
-                    formData.append(key, listingData[key]);
+                    formData.append(key, typeof value === 'string' ? value : JSON.stringify(value));
+                    return;
                 }
+
+                // Skip undefined/null to avoid "undefined" string
+                if (value === undefined || value === null || value === 'undefined') return;
+
+                formData.append(key, value);
             });
 
-            // Add images
+            // 5. Add Images
             images.forEach((image) => {
                 formData.append('images', image);
             });

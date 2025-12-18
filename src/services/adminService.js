@@ -187,7 +187,7 @@ const adminService = {
             const params = {
                 category: filters.category,
                 search: filters.search,
-                status: filters.status === 'all' ? undefined : filters.status,
+                status: filters.status, // Pass "all" explicitly so backend knows not to default to "active"
                 page: filters.page || 1,
                 limit: filters.limit || 50,
                 sort: 'created_at',
