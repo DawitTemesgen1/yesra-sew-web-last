@@ -155,6 +155,12 @@ const DynamicListingCard = ({
         let value = coreData[field.field_name];
         if (value === undefined || value === null || value === '') return null;
 
+        // SAFETY: Prevent stringified data objects from being rendered
+        // This catches cases where "name: ..., seller: ..." leaks into a field
+        if (typeof value === 'string' && (value.includes('name:') || value.includes('seller:')) && value.includes(',')) {
+            return null;
+        }
+
         // Special Styling for Core Fields
         if (field.field_name === 'title') {
             return (
@@ -497,6 +503,53 @@ const DynamicListingCard = ({
     const imgWidth = viewMode === 'list' ? { xs: '100%', sm: 260, md: 300 } : '100%';
     const imgHeight = viewMode === 'list' ? { xs: 200, sm: '100%' } : 240;
 
+    // ==========================================
+    // 🖼️ ROBUST IMAGE RESOLUTION SYSTEM
+    // ==========================================
+    const cardImage = (() => {
+        const data = { ...listing, ...coreData };
+
+        // Helper to validate if a value is a REAL image URL
+        const isValidImage = (val) => {
+            if (!val) return false;
+            if (typeof val !== 'string') return false;
+            // Must contain path indicators
+            if (!val.includes('/') && !val.startsWith('http')) return false;
+            // Must NOT contain spaces (filters out data dumps)
+            if (val.includes(' ')) return false;
+            // Must look like an image or supabase URL
+            return val.includes('supabase') || val.match(/\.(jpeg|jpg|gif|png|webp|bmp|svg)$/i);
+        };
+
+        // 1. Check Standard 'images' Array (Supabase Default)
+        if (Array.isArray(data.images) && data.images.length > 0) {
+            const first = data.images[0];
+            if (isValidImage(first)) return first;
+            if (typeof first === 'object' && isValidImage(first.url)) return first.url;
+        }
+
+        // 2. Check Standard 'images' String
+        if (isValidImage(data.images)) return data.images;
+
+        // 3. Check Legacy 'image' Field
+        if (isValidImage(data.image)) return data.image;
+
+        // 4. Check Common Alternative Names
+        if (isValidImage(data.picture)) return data.picture;
+        if (isValidImage(data.photo)) return data.photo;
+        if (isValidImage(data.thumbnail)) return data.thumbnail;
+        if (isValidImage(data.cover)) return data.cover;
+
+        // 5. Check Custom Fields
+        if (data.custom_fields && typeof data.custom_fields === 'object') {
+            const cf = data.custom_fields;
+            if (Array.isArray(cf.images) && cf.images.length > 0 && isValidImage(cf.images[0])) return cf.images[0];
+            if (isValidImage(cf.image)) return cf.image;
+        }
+
+        return null; // No valid image found
+    })();
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -536,86 +589,22 @@ const DynamicListingCard = ({
                     bgcolor: 'action.hover'
                 }}>
                     {/* Render Cover Image */}
-                    {(() => {
-                        let src = null;
-
-                        // Priority 1: Standard 'images' array (most common)
-                        if (coreData.images && Array.isArray(coreData.images) && coreData.images.length > 0) {
-                            src = coreData.images[0];
-                        }
-
-                        // Priority 2: Field explicitly assigned to 'cover' section in template
-                        if (!src) {
-                            const coverField = sections.cover[0];
-                            if (coverField) {
-                                const val = coreData[coverField.field_name];
-                                src = Array.isArray(val) ? val[0] : val;
-                            }
-                        }
-
-                        // Priority 3: Scan for any image-like field
-                        if (!src) {
-                            const imageField = sortedFields.find(f =>
-                                ['images', 'photos', 'image', 'picture', 'cover_image'].includes(f.field_name.toLowerCase()) ||
-                                f.field_type === 'image'
-                            );
-                            if (imageField) {
-                                const val = coreData[imageField.field_name];
-                                src = Array.isArray(val) ? val[0] : val;
-                            }
-                        }
-
-                        // Priority 4 (Ultimate Fallback): Scan ALL data values for something that looks like an REAL image URL
-                        if (!src) {
-                            const potentialKeys = Object.keys(coreData);
-                            for (const key of potentialKeys) {
-                                const val = coreData[key];
-
-                                // STRICT URL CHECK:
-                                // 1. Must be a string
-                                // 2. Must start with http, https, or / (relative)
-                                // 3. Must NOT contain spaces (this eliminates sentences or stringified objects)
-                                // 4. Must contain 'supabase' OR end with an image extension
-                                if (typeof val === 'string' &&
-                                    (val.startsWith('http') || val.startsWith('/')) &&
-                                    !val.includes(' ') &&
-                                    (val.includes('supabase') || val.match(/\.(jpeg|jpg|gif|png|webp)$/i))) {
-
-                                    src = val;
-                                    break;
-                                }
-
-                                // Check for array of strings
-                                if (Array.isArray(val) && val.length > 0) {
-                                    const firstVal = val[0];
-                                    if (typeof firstVal === 'string' &&
-                                        (firstVal.startsWith('http') || firstVal.startsWith('/')) &&
-                                        !firstVal.includes(' ') &&
-                                        (firstVal.includes('supabase') || firstVal.match(/\.(jpeg|jpg|gif|png|webp)$/i))) {
-                                        src = firstVal;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-
-                        return src ? (
-                            <UltraOptimizedImage
-                                src={src}
-                                alt={listing.title}
-                                width="100%"
-                                height="100%"
-                                objectFit="cover"
-                                className="card-image"
-                                aspectRatio={16 / 9}
-                                priority={false}
-                            />
-                        ) : (
-                            <Box sx={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'text.disabled' }}>
-                                <Typography variant="caption" fontWeight="bold">NO IMAGE</Typography>
-                            </Box>
-                        );
-                    })()}
+                    {cardImage ? (
+                        <UltraOptimizedImage
+                            src={cardImage}
+                            alt={listing.title}
+                            width="100%"
+                            height="100%"
+                            objectFit="cover"
+                            className="card-image"
+                            aspectRatio={16 / 9}
+                            priority={false}
+                        />
+                    ) : (
+                        <Box sx={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'text.disabled' }}>
+                            <Typography variant="caption" fontWeight="bold">NO IMAGE</Typography>
+                        </Box>
+                    )}
 
                     {/* Premium Badge */}
                     {isPremium && (
