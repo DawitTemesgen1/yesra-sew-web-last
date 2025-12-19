@@ -127,24 +127,36 @@ const getSummaryFields = (template, listing) => {
     // Flatten fields from all steps
     const allFields = template.steps.flatMap(s => s.fields || []);
 
-    // Filter
-    const summaryFields = allFields.filter(f => {
-        // 1. Must be visible
-        if (f.is_visible === false) return false;
+    // Check if template has explicit card configuration
+    const hasCardConfig = allFields.some(f => f.display_in_card === true);
 
-        // 2. Exclude complex/large types
-        if (['textarea', 'image', 'video', 'file', 'section_header'].includes(f.field_type)) return false;
+    let candidates = [];
 
-        // 3. Exclude core fields already shown elsewhere
-        if (['title', 'description', 'price', 'images', 'location'].includes(f.field_name)) return false;
+    if (hasCardConfig) {
+        // STRATEGY A: Use Explicit Card Configuration
+        candidates = allFields
+            .filter(f => f.display_in_card === true)
+            .sort((a, b) => (a.card_priority || 0) - (b.card_priority || 0));
+    } else {
+        // STRATEGY B: Fallback Heuristic (Automatic Selection)
+        candidates = allFields.filter(f => {
+            // Must be visible and simple
+            if (f.is_visible === false) return false;
+            if (['textarea', 'image', 'video', 'file', 'section_header'].includes(f.field_type)) return false;
+            // Exclude core fields already shown elsewhere
+            if (['title', 'description', 'price', 'images', 'location'].includes(f.field_name)) return false;
+            return true;
+        });
+    }
 
-        // 4. Must have a value
+    // Filter candidates that actually have data in the listing
+    const summaryFields = candidates.filter(f => {
         const val = listing.custom_fields?.[f.field_name] || listing[f.field_name];
         return val !== undefined && val !== null && val !== '';
     });
 
-    // Take top 4
-    return summaryFields.slice(0, 4);
+    // Limit to prevent layout breakage (max 6 fields for card)
+    return summaryFields.slice(0, 6);
 };
 
 /**
