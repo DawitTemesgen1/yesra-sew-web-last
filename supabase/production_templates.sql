@@ -1,10 +1,10 @@
 -- ============================================================================
--- PRODUCTION POST TEMPLATES SEED (Fixed: Multi-Step & Card Layout)
+-- PRODUCTION POST TEMPLATES SEED (Fixed Schema v4)
 -- ============================================================================
 -- Description: Creates standardized post templates with:
---              1. Multi-step wizard flow (Logical grouping)
---              2. Explicit Card Layout configuration (display_in_card, card_priority)
---              3. Professional field layouts (Main/Sidebar/Header)
+--              1. Multi-step wizard flow
+--              2. Explicit Card Layout configuration
+--              3. Explicit 'images' field configuration (Required for Cars, Homes, Tenders; Optional for Jobs)
 -- Usage:       Run in Supabase Query Editor.
 -- ============================================================================
 
@@ -33,10 +33,9 @@ BEGIN
     IF v_tenders_id IS NULL THEN RAISE NOTICE 'Warning: Tenders category not found'; END IF;
 
     ---------------------------------------------------------------------------
-    -- 1. CARS TEMPLATE (2 Steps)
+    -- 1. CARS TEMPLATE (2 Steps) | Image REQUIRED
     ---------------------------------------------------------------------------
     IF v_cars_id IS NOT NULL THEN
-        -- Upsert Template
         INSERT INTO post_templates (category_id, name, is_active, updated_at)
         VALUES (v_cars_id, 'Vehicle Sale Professional', true, NOW())
         ON CONFLICT (category_id) DO UPDATE SET name = 'Vehicle Sale Professional', is_active = true, updated_at = NOW()
@@ -50,6 +49,7 @@ BEGIN
         RETURNING id INTO v_step_id;
 
         INSERT INTO template_fields (step_id, field_name, field_label, field_type, is_required, display_order, options, section, width, display_in_card, card_priority) VALUES
+        (v_step_id, 'images', 'Vehicle Photos', 'image', true, 0, '{"maxFiles": 10, "maxSize": 10485760, "accept": "image/*"}', 'main', 'full', true, 0),
         (v_step_id, 'condition', 'Condition', 'select', true, 10, '["New", "Used", "Foreign Used"]', 'header', 'half', false, 0),
         (v_step_id, 'make', 'Make', 'select', true, 20, '["Toyota", "Hyundai", "Nissan", "Ford", "Honda", "Mercedes", "BMW", "Volkswagen", "Suzuki", "Isuzu", "Mitsubishi"]', 'header', 'half', true, 1),
         (v_step_id, 'model', 'Model', 'text', true, 30, NULL, 'main', 'half', true, 2),
@@ -69,7 +69,7 @@ BEGIN
     END IF;
 
     ---------------------------------------------------------------------------
-    -- 2. HOMES TEMPLATE (2 Steps)
+    -- 2. HOMES TEMPLATE (2 Steps) | Image REQUIRED
     ---------------------------------------------------------------------------
     IF v_homes_id IS NOT NULL THEN
         INSERT INTO post_templates (category_id, name, is_active, updated_at)
@@ -85,6 +85,7 @@ BEGIN
         RETURNING id INTO v_step_id;
 
         INSERT INTO template_fields (step_id, field_name, field_label, field_type, is_required, display_order, options, section, width, display_in_card, card_priority) VALUES
+        (v_step_id, 'images', 'Property Photos', 'image', true, 0, '{"maxFiles": 15, "maxSize": 10485760, "accept": "image/*"}', 'main', 'full', true, 0),
         (v_step_id, 'listing_purpose', 'Purpose', 'select', true, 10, '["For Sale", "For Rent"]', 'header', 'half', true, 1),
         (v_step_id, 'property_type', 'Property Type', 'select', true, 20, '["Apartment", "House", "Villa", "Condominium", "Land", "Commercial", "Office"]', 'header', 'half', false, 0);
         
@@ -103,7 +104,7 @@ BEGIN
     END IF;
 
     ---------------------------------------------------------------------------
-    -- 3. JOBS TEMPLATE (2 Steps)
+    -- 3. JOBS TEMPLATE (2 Steps) | Image OPTIONAL (Has Fallback)
     ---------------------------------------------------------------------------
     IF v_jobs_id IS NOT NULL THEN
         INSERT INTO post_templates (category_id, name, is_active, updated_at)
@@ -119,6 +120,7 @@ BEGIN
         RETURNING id INTO v_step_id;
 
         INSERT INTO template_fields (step_id, field_name, field_label, field_type, is_required, display_order, options, section, width, display_in_card, card_priority) VALUES
+        (v_step_id, 'images', 'Company Logo / Image', 'image', false, 0, '{"maxFiles": 1, "maxSize": 5242880, "accept": "image/*"}', 'sidebar', 'full', true, 0),
         (v_step_id, 'employment_type', 'Employment Type', 'select', true, 10, '["Full-time", "Part-time", "Contract", "Internship", "Remote"]', 'header', 'half', true, 1),
         (v_step_id, 'experience_level', 'Experience Level', 'select', true, 20, '["Entry Level", "Junior", "Mid Level", "Senior Level", "Executive"]', 'header', 'half', true, 3),
         (v_step_id, 'sector', 'Sector', 'select', true, 30, '["Technology", "Finance", "Healthcare", "Education", "Engineering", "Sales", "Management"]', 'main', 'full', false, 0);
@@ -136,7 +138,7 @@ BEGIN
     END IF;
 
     ---------------------------------------------------------------------------
-    -- 4. TENDERS TEMPLATE (2 Steps)
+    -- 4. TENDERS TEMPLATE (2 Steps) | Image REQUIRED
     ---------------------------------------------------------------------------
     IF v_tenders_id IS NOT NULL THEN
         INSERT INTO post_templates (category_id, name, is_active, updated_at)
@@ -152,6 +154,7 @@ BEGIN
         RETURNING id INTO v_step_id;
 
         INSERT INTO template_fields (step_id, field_name, field_label, field_type, is_required, display_order, options, section, width, display_in_card, card_priority) VALUES
+        (v_step_id, 'images', 'Proclamations / Docs', 'image', true, 0, '{"maxFiles": 5, "maxSize": 10485760, "accept": "image/*"}', 'main', 'full', true, 0),
         (v_step_id, 'tender_type', 'Tender Type', 'select', true, 10, '["Public", "Private", "International", "RFQ", "EOI"]', 'header', 'half', true, 1),
         (v_step_id, 'deadline', 'Closing Date', 'date', true, 20, NULL, 'header', 'half', true, 2),
         (v_step_id, 'sector', 'Sector', 'select', true, 30, '["Construction", "Supply", "Consultancy", "Service", "IT", "Transport"]', 'main', 'full', true, 3);
@@ -167,5 +170,5 @@ BEGIN
         (v_step_id, 'organization', 'Organization', 'text', true, 30, NULL, 'sidebar', 'full', false, 0);
     END IF;
 
-    RAISE NOTICE 'Seed completed with Multi-step and Card Layout support.';
+    RAISE NOTICE 'Seed completed. Images required for Cars/Homes/Tenders, Optional for Jobs.';
 END $$;

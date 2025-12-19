@@ -15,20 +15,14 @@ import { motion } from 'framer-motion';
 /**
  * Helper: robustly resolve the best image for the card
  */
-// --- FALLBACK IMAGES (Beautiful Placeholders) ---
-const FALLBACK_IMAGES = {
-    cars: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=800&q=80',
-    homes: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&q=80',
-    tenders: 'https://images.unsplash.com/photo-1628348068343-c6a848d2b6dd?auto=format&fit=crop&w=800&q=80',
-    jobs: [
-        'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&w=800&q=80',
-        'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=800&q=80',
-        'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
-        'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=800&q=80',
-        'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80'
-    ],
-    default: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80'
-};
+// --- FALLBACK IMAGES (Beautiful Placeholders for Jobs) ---
+const JOB_IMAGES = [
+    'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80'
+];
 
 /**
  * Helper: robustly resolve the best image for the card
@@ -86,29 +80,25 @@ const getCardImage = (listing) => {
         }
     }
 
-    // ❌ No user image found -> USE FALLBACK
+    // ❌ No user image found -> USE FALLBACK (ONLY for Jobs)
 
-    // Determine category slug
+    // Determine category slug to identify jobs
     let categorySlug = 'default';
     if (listing.category) {
-        if (typeof listing.category === 'string') categorySlug = listing.category.toLowerCase(); // if joined as 'Cars'
+        if (typeof listing.category === 'string') categorySlug = listing.category.toLowerCase();
         else if (listing.category.slug) categorySlug = listing.category.slug.toLowerCase();
         else if (listing.category.name) categorySlug = listing.category.name.toLowerCase();
     }
-    // Heuristic fallback if category object is missing but we know context (this is harder without context)
 
-    // Resolve Image
-    if (categorySlug.includes('car') || categorySlug.includes('vehicle')) return FALLBACK_IMAGES.cars;
-    if (categorySlug.includes('home') || categorySlug.includes('property') || categorySlug.includes('estate')) return FALLBACK_IMAGES.homes;
-    if (categorySlug.includes('tender')) return FALLBACK_IMAGES.tenders;
+    // Only apply fallback for Jobs
     if (categorySlug.includes('job') || categorySlug.includes('vacan')) {
         // Rotate 5 images deterministically based on ID or Title
         const hash = (listing.id || listing.title || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        const index = hash % FALLBACK_IMAGES.jobs.length;
-        return FALLBACK_IMAGES.jobs[index];
+        const index = hash % JOB_IMAGES.length;
+        return JOB_IMAGES[index];
     }
 
-    return FALLBACK_IMAGES.default;
+    return null;
 };
 
 /**
@@ -366,9 +356,15 @@ const DynamicListingCard = ({
                         {listing.title || 'Untitled Listing'}
                     </Typography>
 
-                    <Typography variant="h6" color="primary.main" fontWeight={800} sx={{ mb: 1.5 }}>
-                        {formatPrice(listing.price)}
-                    </Typography>
+                    {/* Price (Hidden for Jobs) */}
+                    {!(listing.category && (
+                        (typeof listing.category === 'string' && listing.category.toLowerCase().includes('job')) ||
+                        (listing.category.slug && listing.category.slug.includes('job'))
+                    )) && (
+                            <Typography variant="h6" color="primary.main" fontWeight={800} sx={{ mb: 1.5 }}>
+                                {formatPrice(listing.price)}
+                            </Typography>
+                        )}
 
                     <Divider sx={{ my: 1, borderStyle: 'dashed' }} />
 
