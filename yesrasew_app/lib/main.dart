@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-// Import for web support if needed, but usually handled by pubspec
-// import 'package:webview_flutter_web/webview_flutter_web.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+
+// Conditional import for web platform
+import 'package:webview_flutter_web/webview_flutter_web.dart'
+    if (dart.library.io) 'package:webview_flutter_android/webview_flutter_android.dart';
+import 'package:webview_flutter_platform_interface/webview_flutter_platform_interface.dart';
 
 void main() {
+  // Register web platform implementation
+  if (kIsWeb) {
+    WebViewPlatform.instance = WebWebViewPlatform();
+  }
   runApp(const MyApp());
 }
 
