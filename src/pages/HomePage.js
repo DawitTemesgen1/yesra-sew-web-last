@@ -366,65 +366,135 @@ const HomePage = () => {
 
       {/* Hero Section */}
       <Box sx={{
-        height: { xs: 600, md: 700 },
         position: 'relative',
-        backgroundImage: 'url(https://images.unsplash.com/photo-1556740738-b6a63e27c4df?q=60&w=1280&auto=format)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
+        minHeight: { xs: 600, md: 850 },
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        overflow: 'hidden',
         color: 'white',
-        textAlign: 'center',
-        '&::before': {
-          content: '""',
+      }}>
+        {/* Background Image */}
+        <Box
+          component={motion.div}
+          initial={{ scale: 1.1 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 10, repeat: Infinity, repeatType: "reverse" }}
+          sx={{
+            position: 'absolute',
+            top: 0, left: 0, right: 0, bottom: 0,
+            backgroundImage: 'url(https://images.unsplash.com/photo-1572360670003-88c9f5000578?q=80&w=2000&auto=format&fit=crop)', // High quality African/Modern City vibe
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            zIndex: 0,
+          }}
+        />
+
+        {/* Gradient Overlay - Modern Dark & Green Tint */}
+        <Box sx={{
           position: 'absolute',
           top: 0, left: 0, right: 0, bottom: 0,
-          background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 60%, transparent 100%)',
-        }
-      }}>
-        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-            <Typography variant={isMobile ? "h2" : "h1"} sx={{
+          background: 'linear-gradient(135deg, rgba(0, 30, 20, 0.92) 0%, rgba(0, 0, 0, 0.6) 100%)',
+          zIndex: 1
+        }} />
+
+        {/* Decorative Circles */}
+        <Box sx={{
+          position: 'absolute',
+          top: '-10%',
+          right: '-5%',
+          width: 400,
+          height: 400,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(0, 166, 81, 0.15) 0%, transparent 70%)',
+          zIndex: 1,
+          filter: 'blur(40px)',
+        }} />
+
+        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 2, textAlign: 'center' }}>
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          >
+            {/* Badge / Pill */}
+            <Box sx={{
+              display: 'inline-block',
+              px: 2, py: 0.5,
+              mb: 3,
+              borderRadius: 50,
+              bgcolor: 'rgba(255, 255, 255, 0.15)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)'
+            }}>
+              <Typography variant="subtitle2" sx={{ color: '#4caf50', fontWeight: 'bold', letterSpacing: 1 }}>
+                #1 MARKETPLACE IN ETHIOPIA
+              </Typography>
+            </Box>
+
+            <Typography variant={isMobile ? "h3" : "h1"} sx={{
               fontFamily: 'Playfair Display, serif',
               fontWeight: 800,
               letterSpacing: '-0.02em',
-              mb: 1.5,
+              mb: 2,
               color: '#FFFFFF',
-              textShadow: '0 4px 12px rgba(0,0,0,0.5)'
+              textShadow: '0 10px 30px rgba(0,0,0,0.3)',
+              lineHeight: 1.1
             }}>
-              {t.landing.hero.subtitle}
+              {t.landing.hero.title}
             </Typography>
-            <Typography variant={isMobile ? "h4" : "h3"} sx={{
-              fontFamily: 'Playfair Display, serif',
-              fontStyle: 'italic',
-              color: '#FFD700',
-              mb: 3,
-              fontWeight: 500,
-              textShadow: '0 2px 8px rgba(0,0,0,0.4)'
-            }}>
-              {t.landing.hero.description}
-            </Typography>
-            <Typography variant={isMobile ? "body1" : "h6"} sx={{
-              fontWeight: 400,
-              mb: 5,
+
+            <Typography variant={isMobile ? "h5" : "h4"} sx={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 300,
+              color: 'rgba(255, 255, 255, 0.9)',
+              mb: 6,
               maxWidth: 800,
               mx: 'auto',
-              lineHeight: 1.6,
-              color: 'rgba(255,255,255,0.95)',
-              textShadow: '0 1px 4px rgba(0,0,0,0.5)'
+              lineHeight: 1.5
             }}>
-              {t.landing.hero.browseListings}
+              {t.landing.hero.subtitle} <span style={{ color: '#4caf50', fontWeight: 600 }}>.</span>
             </Typography>
 
-
-            <Box sx={{ maxWidth: 650, mx: 'auto', mb: 4 }}>
+            {/* Smart Search Container with Glassmorphism */}
+            <Box sx={{
+              maxWidth: 750,
+              mx: 'auto',
+              p: { xs: 1, md: 1.5 },
+              borderRadius: 4,
+              bgcolor: 'rgba(255, 255, 255, 0.2)',
+              backdropFilter: 'blur(12px)',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.2)'
+            }}>
               <SmartSearch
                 enableNavigation={true}
                 category="all"
                 placeholder={t.common.search}
               />
             </Box>
+
+            {/* Quick Links / Tags Below Search */}
+            <Stack direction="row" spacing={2} justifyContent="center" sx={{ mt: 4, flexWrap: 'wrap', gap: 1 }}>
+              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', mt: 1 }}>
+                Popular:
+              </Typography>
+              {['Apartments', 'Toyota', 'Software Jobs', 'Government Tenders'].map((tag) => (
+                <Box key={tag} sx={{
+                  px: 1.5, py: 0.5,
+                  borderRadius: 2,
+                  bgcolor: 'rgba(255,255,255,0.1)',
+                  cursor: 'pointer',
+                  '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' },
+                  transition: 'all 0.2s',
+                  mt: 1
+                }} onClick={() => navigate(`/search?q=${tag}`)}>
+                  <Typography variant="caption" color="white">
+                    {tag}
+                  </Typography>
+                </Box>
+              ))}
+            </Stack>
           </motion.div>
         </Container>
       </Box>

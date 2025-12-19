@@ -294,14 +294,12 @@ const Navbar = ({ activeTab, setActiveTab }) => {
             top: 16,
             borderRadius: 4,
             backdropFilter: 'blur(12px)',
-            // Branding: deep blue background gradient with golden accents
+            // Branding: Deep Royal Blue background for BOTH light and dark modes (colored app bar)
             background: themeMode === 'dark'
               ? 'linear-gradient(135deg, rgba(10, 25, 41, 0.95) 0%, rgba(20, 40, 60, 0.95) 100%)'
-              : 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(245, 247, 250, 0.95) 100%)',
-            border: themeMode === 'dark' ? '1px solid rgba(212, 175, 55, 0.2)' : '1px solid rgba(212, 175, 55, 0.3)', // Golden subtle border
-            boxShadow: themeMode === 'dark'
-              ? '0 8px 32px rgba(0, 0, 0, 0.4)'
-              : '0 8px 32px rgba(30, 58, 138, 0.1)', // Blue-tinted shadow for light mode
+              : 'linear-gradient(135deg, #1E3A8A 0%, #0044CC 100%)', // Rich Blue Gradient
+            border: themeMode === 'dark' ? '1px solid rgba(212, 175, 55, 0.2)' : '1px solid rgba(255, 255, 255, 0.1)', // Subtle border
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)', // Stronger shadow for depth
           }}
         >
           <Toolbar sx={{
@@ -315,20 +313,18 @@ const Navbar = ({ activeTab, setActiveTab }) => {
                 <Typography variant="h4" sx={{
                   fontWeight: 900,
                   lineHeight: 1,
-                  background: themeMode === 'dark' ? '#fff' : 'linear-gradient(135deg, #1E3A8A 0%, #0055FF 50%, #D4AF37 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: themeMode === 'dark' ? '#fff' : 'transparent',
+                  // Text is always white/light on the colored background
+                  color: '#fff',
                   letterSpacing: '-0.5px'
                 }}>
                   Yesra Sew
                 </Typography>
                 <Typography variant="caption" sx={{
-                  color: themeMode === 'dark' ? '#D4AF37' : '#1E3A8A',
-                  letterSpacing: '2px',
-                  display: 'block',
-                  fontWeight: 700,
-                  mt: 0.5,
+                  color: '#D4AF37', // Always Golden subtitle
                   fontSize: '0.65rem',
+                  fontWeight: 700,
+                  letterSpacing: '2px',
+                  mt: 0.5,
                   textTransform: 'uppercase'
                 }}>
                   {t.navbar.logoSubtitle}
@@ -344,8 +340,8 @@ const Navbar = ({ activeTab, setActiveTab }) => {
                     position: 'relative',
                     color: currentTab === idx
                       ? '#D4AF37' // Active: Golden
-                      : themeMode === 'dark' ? '#cbd5e1' : '#1E3A8A', // Inactive: Slate (dark) or Deep Blue (light)
-                    fontWeight: currentTab === idx ? 800 : 600,
+                      : '#FFFFFF', // Inactive: Always White on Blue Background
+                    fontWeight: currentTab === idx ? 800 : 500,
                     px: 3,
                     py: 1,
                     borderRadius: 3,
@@ -374,17 +370,23 @@ const Navbar = ({ activeTab, setActiveTab }) => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
               {isAuthenticated ? (
                 <>
-                  <Tooltip title={t.tooltips.postAd}><Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/post-ad', { state: location.pathname.startsWith('/admin') ? { from: location.pathname } : undefined })} sx={{ borderRadius: 3, px: 3, py: 1.2, fontWeight: 600 }}>{t.navbar.postAd}</Button></Tooltip>
-                  <Box sx={{ borderLeft: `1px solid ${theme.palette.divider}`, height: 32, mx: 1 }} />
-                  <Tooltip title={t.tooltips.theme}><IconButton onClick={toggleTheme} sx={{ border: `1px solid ${theme.palette.divider}` }}>{themeMode === 'light' ? <DarkMode fontSize="small" /> : <LightMode fontSize="small" />}</IconButton></Tooltip>
-                  <Tooltip title={t.tooltips.changeLanguage}><IconButton onClick={handleLanguageMenuOpen} sx={{ border: `1px solid ${theme.palette.divider}` }}><Language fontSize="small" /></IconButton></Tooltip>
-                  <Tooltip title={t.tooltips.userMenu.replace('{name}', displayName)}><IconButton onClick={handleProfileMenuOpen} sx={{ p: 0.5, border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}` }}><Avatar sx={{ width: 40, height: 40, bgcolor: 'primary.main' }}>{displayName.charAt(0).toUpperCase()}</Avatar></IconButton></Tooltip>
+                  <Tooltip title={t.tooltips.postAd}><Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/post-ad', { state: location.pathname.startsWith('/admin') ? { from: location.pathname } : undefined })}
+                    sx={{
+                      borderRadius: 3, px: 3, py: 1.2, fontWeight: 700,
+                      bgcolor: '#D4AF37', color: '#000',
+                      '&:hover': { bgcolor: '#F6E05E' }
+                    }}
+                  >{t.navbar.postAd}</Button></Tooltip>
+                  <Box sx={{ borderLeft: `1px solid rgba(255,255,255,0.2)`, height: 32, mx: 1 }} />
+                  <Tooltip title={t.tooltips.theme}><IconButton onClick={toggleTheme} sx={{ color: '#fff', border: `1px solid rgba(255,255,255,0.2)` }}>{themeMode === 'light' ? <DarkMode fontSize="small" /> : <LightMode fontSize="small" />}</IconButton></Tooltip>
+                  <Tooltip title={t.tooltips.changeLanguage}><IconButton onClick={handleLanguageMenuOpen} sx={{ color: '#fff', border: `1px solid rgba(255,255,255,0.2)` }}><Language fontSize="small" /></IconButton></Tooltip>
+                  <Tooltip title={t.tooltips.userMenu.replace('{name}', displayName)}><IconButton onClick={handleProfileMenuOpen} sx={{ p: 0.5, border: `2px solid rgba(212, 175, 55, 0.5)` }}><Avatar sx={{ width: 40, height: 40, bgcolor: '#D4AF37', color: '#000', fontWeight: 'bold' }}>{displayName.charAt(0).toUpperCase()}</Avatar></IconButton></Tooltip>
                 </>
               ) : (
                 <>
-                  <Tooltip title={t.tooltips.theme}><IconButton onClick={toggleTheme} sx={{ border: `1px solid ${theme.palette.divider}` }}>{themeMode === 'light' ? <DarkMode fontSize="small" /> : <LightMode fontSize="small" />}</IconButton></Tooltip>
-                  <Tooltip title={t.tooltips.changeLanguage}><IconButton onClick={handleLanguageMenuOpen} sx={{ border: `1px solid ${theme.palette.divider}` }}><Language fontSize="small" /></IconButton></Tooltip>
-                  <Box sx={{ borderLeft: `1px solid ${theme.palette.divider}`, height: 32, mx: 1 }} />
+                  <Tooltip title={t.tooltips.theme}><IconButton onClick={toggleTheme} sx={{ color: '#fff', border: `1px solid rgba(255,255,255,0.2)` }}>{themeMode === 'light' ? <DarkMode fontSize="small" /> : <LightMode fontSize="small" />}</IconButton></Tooltip>
+                  <Tooltip title={t.tooltips.changeLanguage}><IconButton onClick={handleLanguageMenuOpen} sx={{ color: '#fff', border: `1px solid rgba(255,255,255,0.2)` }}><Language fontSize="small" /></IconButton></Tooltip>
+                  <Box sx={{ borderLeft: `1px solid rgba(255,255,255,0.2)`, height: 32, mx: 1 }} />
                   <Button
                     variant="outlined"
                     onClick={() => navigate('/auth')}
@@ -393,13 +395,14 @@ const Navbar = ({ activeTab, setActiveTab }) => {
                       px: 3,
                       py: 1.2,
                       fontWeight: 700,
-                      borderColor: '#1E3A8A',
-                      color: themeMode === 'dark' ? '#fff' : '#1E3A8A',
-                      borderWidth: 2,
+                      borderColor: '#fff',
+                      color: '#fff',
+                      borderWidth: 1,
                       '&:hover': {
-                        borderWidth: 2,
+                        borderWidth: 1,
                         borderColor: '#D4AF37',
-                        color: '#D4AF37'
+                        color: '#D4AF37',
+                        bgcolor: 'rgba(255,255,255,0.05)'
                       }
                     }}
                   >
@@ -414,12 +417,12 @@ const Navbar = ({ activeTab, setActiveTab }) => {
                       px: 3,
                       py: 1.2,
                       fontWeight: 700,
-                      background: 'linear-gradient(135deg, #1E3A8A 0%, #0055FF 100%)',
-                      boxShadow: '0 4px 14px 0 rgba(0, 85, 255, 0.39)',
+                      background: '#D4AF37', // Gold button
+                      color: '#000',
+                      boxShadow: '0 4px 14px 0 rgba(0,0,0,0.3)',
                       '&:hover': {
-                        background: 'linear-gradient(135deg, #D4AF37 0%, #F6E05E 100%)', // Golden hover
-                        boxShadow: '0 4px 14px 0 rgba(212, 175, 55, 0.39)',
-                        color: '#1E3A8A'
+                        background: '#F6E05E',
+                        color: '#000'
                       }
                     }}
                   >
@@ -440,23 +443,28 @@ const Navbar = ({ activeTab, setActiveTab }) => {
   // Mobile View
   return (
     <>
-      <AppBar position="fixed" elevation={0} sx={{ bgcolor: 'transparent', backdropFilter: 'blur(10px)', background: `linear-gradient(to bottom, ${alpha(theme.palette.background.default, 0.9)}, transparent)` }}>
-        <Toolbar sx={{ justifyContent: 'space-between', px: 1 }}>
+      <AppBar position="fixed" elevation={4} sx={{
+        bgcolor: 'transparent',
+        backdropFilter: 'blur(12px)',
+        background: themeMode === 'dark'
+          ? 'linear-gradient(135deg, rgba(10, 25, 41, 0.95) 0%, rgba(20, 40, 60, 0.95) 100%)'
+          : 'linear-gradient(135deg, #1E3A8A 0%, #0044CC 100%)',
+        borderBottom: themeMode === 'dark' ? '1px solid rgba(212, 175, 55, 0.2)' : '1px solid rgba(255, 255, 255, 0.1)'
+      }}>
+        <Toolbar sx={{ justifyContent: 'space-between', px: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Box component="img" src={logo} sx={{ width: 36, height: 36, mr: 1 }} alt="Logo" />
             <Box>
               <Typography variant="h6" sx={{
                 fontWeight: 900,
                 lineHeight: 1,
-                background: themeMode === 'dark' ? '#fff' : 'linear-gradient(135deg, #1E3A8A 0%, #0055FF 50%, #D4AF37 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: themeMode === 'dark' ? '#fff' : 'transparent',
+                color: '#fff', // White text on colored background
                 fontSize: '1.25rem'
               }}>
                 Yesra Sew
               </Typography>
               <Typography variant="caption" sx={{
-                color: themeMode === 'dark' ? '#D4AF37' : '#1E3A8A',
+                color: '#D4AF37', // Gold subtitle
                 fontSize: '0.6rem',
                 fontWeight: 700,
                 letterSpacing: '1px',
@@ -468,9 +476,9 @@ const Navbar = ({ activeTab, setActiveTab }) => {
             </Box>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <Tooltip title={t.tooltips.changeLanguage}><IconButton size="small" color="inherit" onClick={handleLanguageMenuOpen}><Language fontSize="small" /></IconButton></Tooltip>
-            <Tooltip title={t.tooltips.theme}><IconButton onClick={toggleTheme} sx={{ border: `1px solid ${theme.palette.divider}` }}>{themeMode === 'light' ? <DarkMode fontSize="small" /> : <LightMode fontSize="small" />}</IconButton></Tooltip>
-            <Tooltip title={t.tooltips.userMenu.replace('{name}', displayName)}><IconButton size="small" onClick={handleProfileMenuOpen} color="inherit">{isAuthenticated ? <Avatar sx={{ width: 24, height: 24, bgcolor: 'primary.main', fontSize: '0.7rem' }}>{displayName.charAt(0).toUpperCase()}</Avatar> : <AccountCircle fontSize="small" />}</IconButton></Tooltip>
+            <Tooltip title={t.tooltips.changeLanguage}><IconButton size="small" sx={{ color: '#fff' }} onClick={handleLanguageMenuOpen}><Language fontSize="small" /></IconButton></Tooltip>
+            <Tooltip title={t.tooltips.theme}><IconButton onClick={toggleTheme} sx={{ color: '#fff', border: `1px solid rgba(255,255,255,0.2)` }}>{themeMode === 'light' ? <DarkMode fontSize="small" /> : <LightMode fontSize="small" />}</IconButton></Tooltip>
+            <Tooltip title={t.tooltips.userMenu.replace('{name}', displayName)}><IconButton size="small" onClick={handleProfileMenuOpen} sx={{ color: '#fff' }}>{isAuthenticated ? <Avatar sx={{ width: 28, height: 28, bgcolor: '#D4AF37', color: '#000', fontSize: '0.8rem', fontWeight: 'bold' }}>{displayName.charAt(0).toUpperCase()}</Avatar> : <AccountCircle fontSize="medium" />}</IconButton></Tooltip>
           </Box>
         </Toolbar>
       </AppBar>
