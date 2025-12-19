@@ -479,7 +479,7 @@ const HomePage = () => {
           <Typography variant={isMobile ? "h5" : "h4"} fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <span role="img" aria-label="sparkles">✨</span> {t.listings.premiumProperties}
           </Typography>
-          <Button endIcon={<ArrowForward />} color="primary" onClick={() => navigate('/homes')}>{t.listings.viewAll}</Button>
+          <Button endIcon={<ArrowForward />} color="primary" onClick={() => navigate('/listings?premium=true')}>{t.listings.viewAll}</Button>
         </Box>
 
         {premiumLoading ? (

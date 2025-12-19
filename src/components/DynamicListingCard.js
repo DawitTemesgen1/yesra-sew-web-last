@@ -11,6 +11,8 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import useListingAccess from '../hooks/useListingAccess';
+import { Lock } from '@mui/icons-material';
 
 /**
  * Helper: robustly resolve the best image for the card
@@ -189,8 +191,16 @@ const DynamicListingCard = ({
     // Calculate Summary Fields (if template exists)
     const summaryFields = useMemo(() => getSummaryFields(template, listing), [template, listing]);
 
+    // --- Access Control ---
+    const { isListingLocked } = useListingAccess('all');
+    const locked = isListingLocked(listing);
+
     // --- Event Handlers ---
     const handleCardClick = () => {
+        if (locked) {
+            navigate('/upgrade');
+            return;
+        }
         navigate(`/listings/${listing.id}`);
     };
 
@@ -422,8 +432,43 @@ const DynamicListingCard = ({
                         )}
                     </Stack>
                 </CardContent>
+
+                {/* --- PREMIUM LOCK OVERLAY --- */}
+                {locked && (
+                    <Box sx={{
+                        position: 'absolute', inset: 0,
+                        backdropFilter: 'blur(6px)',
+                        bgcolor: 'rgba(255,255,255,0.4)',
+                        zIndex: 10,
+                        display: 'flex', flexDirection: 'column',
+                        alignItems: 'center', justifyContent: 'center',
+                        p: 2, textAlign: 'center',
+                        userSelect: 'none'
+                    }}>
+                        <Box sx={{
+                            bgcolor: 'rgba(0,0,0,0.8)',
+                            color: '#FFD700',
+                            p: 1.5, borderRadius: '50%', mb: 1.5,
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                        }}>
+                            <Lock sx={{ fontSize: 24 }} />
+                        </Box>
+                        <Typography variant="h6" fontWeight="bold" sx={{ color: 'black', textShadow: '0 2px 4px rgba(255,255,255,0.8)', mb: 0.5 }}>
+                            Premium Content
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: '#333', fontWeight: 600, mb: 2 }}>
+                            Subscribe to unlock details
+                        </Typography>
+                        <Chip
+                            label="Subscribe Now"
+                            color="secondary"
+                            sx={{ fontWeight: 'bold', cursor: 'pointer' }}
+                            onClick={(e) => { e.stopPropagation(); navigate('/upgrade'); }}
+                        />
+                    </Box>
+                )}
             </Card>
-        </motion.div>
+        </motion.div >
     );
 };
 
