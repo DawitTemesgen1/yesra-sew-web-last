@@ -1,6 +1,6 @@
 {
     "seo": {
-        "defaultTitle": "Yesira Sew - Purified Gold",
+        "defaultTitle": "Yesra Sew Solution - Connecting Technology and Careers",
         "defaultDescription": "Ethiopia's Premier Marketplace for Jobs, Tenders, Cars, and Real Estate. Find the best deals in Addis Ababa and beyond.",
         "defaultKeywords": "ethiopia, marketplace, jobs, tenders, cars, real estate, buy, sell, addis ababa, classifieds",
         "homeTitle": "Home",
@@ -55,7 +55,7 @@
     },
     "auth": {
         "welcomeBack": "Welcome Back!",
-        "signInToContinue": "Sign in to continue to YesraSew",
+        "signInToContinue": "Sign in to continue to Yesra Sew Solution",
         "dontHaveAccount": "Don't have an account?",
         "alreadyHaveAccount": "Already have an account?",
         "signUp": "Sign Up",
@@ -86,13 +86,13 @@
         "hero": {
             "title": "Ethiopia's Premier Marketplace",
             "subtitle": "Buy, Sell, and Discover Everything You Need",
-            "description": "Join thousands of Ethiopians buying and selling homes, cars, jobs, and more on YesraSew - Your trusted marketplace",
+            "description": "Join thousands of Ethiopians finding jobs, homes, cars, and tenders on Yesra Sew Solution - Your trusted technology and career platform",
             "getStarted": "Get Started",
             "learnMore": "Learn More",
             "browseListings": "Browse Listings"
         },
         "features": {
-            "title": "Why Choose YesraSew?",
+            "title": "Why Choose Yesra Sew Solution?",
             "subtitle": "The best platform for buying and selling in Ethiopia",
             "feature1": {
                 "title": "Verified Listings",
@@ -128,7 +128,7 @@
         },
         "cta": {
             "title": "Ready to Get Started?",
-            "subtitle": "Join thousands of satisfied users on YesraSew",
+            "subtitle": "Join thousands of satisfied users on Yesra Sew Solution",
             "postAd": "Post Your Ad",
             "signUpNow": "Sign Up Now"
         }
@@ -252,7 +252,7 @@
         "help": "Help Center",
         "followUs": "Follow Us",
         "downloadApp": "Download App",
-        "copyright": "© 2024 YesraSew. All rights reserved.",
+        "copyright": "© 2024 Yesra Sew Solution. All rights reserved.",
         "madeInEthiopia": "Made with ❤️ in Ethiopia"
     },
     "messages": {

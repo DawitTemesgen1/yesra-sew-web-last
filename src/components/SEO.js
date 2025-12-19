@@ -8,7 +8,7 @@ const SEO = ({ title, description, keywords, image, url }) => {
     // Default values based on language could be expanded here if needed, 
     // but usually passed from the page component which utilizes t() functions.
     // For now, English defaults are provided.
-    const siteTitle = t('seo.defaultTitle') || 'Yesira Sew - Purified Gold';
+    const siteTitle = t('seo.defaultTitle') || 'Yesra Sew Solution - Connecting Technology and Careers';
     const defaultDescription = t('seo.defaultDescription') || 'Ethiopia\'s Premier Marketplace for Jobs, Tenders, Cars, and Real Estate. Find the best deals in Addis Ababa and beyond.';
     const defaultKeywords = t('seo.defaultKeywords') || 'ethiopia, marketplace, jobs, tenders, cars, real estate, buy, sell, addis ababa, classifieds, jobs in ethiopia, cars in ethiopia';
 

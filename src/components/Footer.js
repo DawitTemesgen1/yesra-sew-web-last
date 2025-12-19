@@ -100,6 +100,18 @@ const Footer = () => {
       }
     };
     fetchSettings();
+
+    // Listen for settings updates
+    const handleSettingsUpdate = () => {
+      console.log('Footer: Settings updated, refetching...');
+      fetchSettings();
+    };
+
+    window.addEventListener('systemSettingsUpdated', handleSettingsUpdate);
+
+    return () => {
+      window.removeEventListener('systemSettingsUpdated', handleSettingsUpdate);
+    };
   }, []);
 
   const BRAND_COLORS = {
@@ -112,8 +124,8 @@ const Footer = () => {
       : 'linear-gradient(135deg, #1E3A8A 0%, #3B82F6 50%, #FFD700 100%)',
   };
 
-  const siteName = settings.site_name || 'YesraSew';
-  const siteDescription = settings.site_description || (language === 'am' ? 'የነጠረ ወርቅ። በማህበረሰብዎ ውስጥ አስደናቂ ቅናሾችን ለመግዛት፣ ለመሸጥ እና ለማግኘት የእርስዎ ታማኝ አጋር።' : 'Purified Gold. Your trusted partner for buying, selling, and discovering amazing deals in your community.');
+  const siteName = settings.site_name || 'Yesra Sew Solution';
+  const siteDescription = settings.site_description || (language === 'am' ? 'ቴክኖሎጂ እና ስራን ያገናኛል። ለስራ፣ ቤት፣ መኪና እና ጨረታዎች የእርስዎ ታማኝ መድረክ።' : 'Connecting Technology and Careers. Your trusted platform for jobs, homes, cars, and tenders.');
   const contactEmail = settings.contact_email || 'info@yesrasew.com';
   const phoneNumber = settings.phone_number || '+251 911 234 567';
 

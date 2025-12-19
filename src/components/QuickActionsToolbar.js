@@ -48,7 +48,7 @@ const QuickActionsToolbar = ({ listing, user, onAction }) => {
         if (navigator.share) {
           navigator.share({
             title: listing?.title || 'Check this out!',
-            text: listing?.description || 'Found this on YesraSew',
+            text: listing?.description || 'Found this on Yesra Sew Solution',
             url: window.location.href
           });
         } else {

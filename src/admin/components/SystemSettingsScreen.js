@@ -16,8 +16,8 @@ const SystemSettingsScreen = ({ t, systemSettings }) => {
     require_admin_approval: false,
     allow_featured_listings: true,
     max_listings_per_user: 10,
-    site_name: "YesraSew",
-    site_description: "Quality Gold Marketplace for Ethiopia",
+    site_name: "Yesra Sew Solution",
+    site_description: "Connecting Technology and Careers in Ethiopia",
     contact_email: "info@yesrasew.com",
     phone_number: "+251 911 234 567",
     enable_caching: true,
@@ -94,6 +94,10 @@ const SystemSettingsScreen = ({ t, systemSettings }) => {
 
       await Promise.all(updatePromises);
       setChangedKeys(new Set()); // Reset tracking after successful save
+
+      // Notify other components (like Footer) that settings have been updated
+      window.dispatchEvent(new CustomEvent('systemSettingsUpdated'));
+
       toast.success(t('settingsSaved') || 'Settings saved successfully');
     } catch (error) {
       console.error('Error saving settings:', error);

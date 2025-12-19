@@ -11,15 +11,15 @@ const translations = {
     en: {
         title: "Terms of Service",
         lastUpdated: "Last Updated: December 2024",
-        intro: "Welcome to YesraSew - Ethiopia's Premier Marketplace. By accessing or using our platform, you agree to be bound by these Terms of Service.",
+        intro: "Welcome to Yesra Sew Solution - Ethiopia's Premier Marketplace. By accessing or using our platform, you agree to be bound by these Terms of Service.",
         sections: {
             acceptance: {
                 title: "1. Acceptance of Terms",
-                content: "By creating an account or using YesraSew, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service and our Privacy Policy."
+                content: "By creating an account or using Yesra Sew Solution, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service and our Privacy Policy."
             },
             eligibility: {
                 title: "2. Eligibility",
-                content: "You must be at least 18 years old to use YesraSew. By using our services, you represent and warrant that you meet this age requirement and have the legal capacity to enter into these Terms."
+                content: "You must be at least 18 years old to use Yesra Sew Solution. By using our services, you represent and warrant that you meet this age requirement and have the legal capacity to enter into these Terms."
             },
             userAccounts: {
                 title: "3. User Accounts",
@@ -35,13 +35,13 @@ const translations = {
                 points: [
                     "All listings must be accurate, truthful, and not misleading",
                     "Prohibited items include illegal goods, weapons, drugs, and counterfeit products",
-                    "You retain ownership of your content but grant YesraSew a license to display it",
+                    "You retain ownership of your content but grant Yesra Sew Solution a license to display it",
                     "We reserve the right to remove any listing that violates our policies"
                 ]
             },
             transactions: {
                 title: "5. Transactions",
-                content: "YesraSew acts as a platform connecting buyers and sellers. We are not a party to transactions between users. All transactions are at your own risk, and we encourage you to exercise caution and due diligence."
+                content: "Yesra Sew Solution acts as a platform connecting buyers and sellers. We are not a party to transactions between users. All transactions are at your own risk, and we encourage you to exercise caution and due diligence."
             },
             fees: {
                 title: "6. Fees and Payments",
@@ -63,11 +63,11 @@ const translations = {
             },
             liability: {
                 title: "9. Limitation of Liability",
-                content: "YesraSew is provided 'as is' without warranties of any kind. We are not liable for any indirect, incidental, special, or consequential damages arising from your use of the platform."
+                content: "Yesra Sew Solution is provided 'as is' without warranties of any kind. We are not liable for any indirect, incidental, special, or consequential damages arising from your use of the platform."
             },
             changes: {
                 title: "10. Changes to Terms",
-                content: "We may update these Terms from time to time. Continued use of YesraSew after changes constitutes acceptance of the updated Terms."
+                content: "We may update these Terms from time to time. Continued use of Yesra Sew Solution after changes constitutes acceptance of the updated Terms."
             },
             contact: {
                 title: "11. Contact Information",
@@ -153,7 +153,7 @@ const TermsOfService = () => {
         <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: 8 }}>
             <SEO
                 title="Terms of Service"
-                description="YesraSew Terms of Service - Read our terms and conditions for using Ethiopia's premier marketplace platform"
+                description="Yesra Sew Solution Terms of Service - Read our terms and conditions for using Ethiopia's premier marketplace platform"
                 keywords="terms of service, user agreement, yesrasew terms, marketplace terms ethiopia"
             />
 

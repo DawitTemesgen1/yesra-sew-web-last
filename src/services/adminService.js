@@ -524,6 +524,7 @@ const adminService = {
             const { data, error } = await supabase
                 .from('system_settings')
                 .upsert({ key, value }, { onConflict: 'key' })
+                .select();
             if (error) throw error;
             cache.clear('system_settings');
             return data?.[0];

@@ -17,13 +17,13 @@ const translations = {
         hero: {
             title: "Ethiopia's Premier Marketplace",
             subtitle: "Buy, Sell, and Discover Everything You Need",
-            description: "Join thousands of Ethiopians buying and selling homes, cars, jobs, and more on YesraSew - Your trusted marketplace",
+            description: "Join thousands of Ethiopians finding jobs, homes, cars, and tenders on Yesra Sew Solution - Your trusted technology and career platform",
             getStarted: "Get Started",
             learnMore: "Learn More",
             browseListings: "Browse Listings"
         },
         features: {
-            title: "Why Choose YesraSew?",
+            title: "Why Choose Yesra Sew Solution?",
             subtitle: "The best platform for buying and selling in Ethiopia",
             feature1: {
                 title: "Verified Listings",
@@ -59,7 +59,7 @@ const translations = {
         },
         cta: {
             title: "Ready to Get Started?",
-            subtitle: "Join thousands of satisfied users on YesraSew",
+            subtitle: "Join thousands of satisfied users on Yesra Sew Solution",
             postAd: "Post Your Ad",
             signUpNow: "Sign Up Now"
         }
@@ -119,13 +119,13 @@ const translations = {
         hero: {
             title: "Gabaa Guddaa Itoophiyaa",
             subtitle: "Bitaa, Gurguraa fi Waan Barbaaddan Hunda Argadhaa",
-            description: "YesraSew irratti manneen, konkolaatota, hojiiwwan fi kan biroo bitan fi gurguratan Itoophiyoota kumaatamaan waliin makamaa - Gabaa amanamaa keessan",
+            description: "Yesra Sew Solution irratti hojiiwwan, manneen, konkolaatota fi caalbaasiiwwan argachuuf Itoophiyoota kumaatamaan waliin makamaa - Waltajjii teeknooloojii fi hojii amanamaa keessan",
             getStarted: "Jalqabi",
             learnMore: "Dabalataan Baraa",
             browseListings: "Tarreewwan Sakatta'aa"
         },
         features: {
-            title: "Maaliif YesraSew Filattan?",
+            title: "Maaliif Yesra Sew Solution Filattan?",
             subtitle: "Itoophiyaa keessatti bituuf fi gurguratuuf waltajjii gaarii",
             feature1: {
                 title: "Tarreewwan Mirkaneeffaman",
@@ -161,7 +161,7 @@ const translations = {
         },
         cta: {
             title: "Jalqabuuf Qophii Dha?",
-            subtitle: "YesraSew irratti fayyadamtoota gammadan kumaatamaan waliin makamaa",
+            subtitle: "Yesra Sew Solution irratti fayyadamtoota gammadan kumaatamaan waliin makamaa",
             postAd: "Beeksisa Keessan Maxxansaa",
             signUpNow: "Amma Galmaa'aa"
         }
@@ -349,7 +349,7 @@ const LandingPage = () => {
                                 }}
                             >
                                 <Typography variant="h3" sx={{ opacity: 0.5 }}>
-                                    YesraSew
+                                    Yesra Sew Solution
                                 </Typography>
                             </Box>
                         </Grid>

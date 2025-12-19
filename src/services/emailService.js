@@ -64,9 +64,9 @@ class EmailService {
     }
 
     const mailOptions = {
-      from: `"YesraSew" <${this.transporter.options.auth.user}>`,
+      from: `"Yesra Sew Solution" <${this.transporter.options.auth.user}>`,
       to: email,
-      subject: 'Welcome to YesraSew - Verify Your Email',
+      subject: 'Welcome to Yesra Sew Solution - Verify Your Email',
       html: `
         <!DOCTYPE html>
         <html>
@@ -84,23 +84,23 @@ class EmailService {
         <body>
           <div class="container">
             <div class="header">
-              <h1>Welcome to YesraSew!</h1>
+              <h1>Welcome to Yesra Sew Solution!</h1>
             </div>
             <div class="content">
               <p>Hello ${firstName || 'there'},</p>
-              <p>Thank you for registering with YesraSew. To complete your registration, please verify your email address using the OTP code below:</p>
+              <p>Thank you for registering with Yesra Sew Solution. To complete your registration, please verify your email address using the OTP code below:</p>
               
               <div class="otp-box">
                 <div class="otp-code">${otp}</div>
                 <p style="margin: 10px 0 0 0; color: #666;">This code expires in 10 minutes</p>
               </div>
               
-              <p>If you didn't create an account with YesraSew, please ignore this email.</p>
+              <p>If you didn't create an account with Yesra Sew Solution, please ignore this email.</p>
               
-              <p>Best regards,<br>The YesraSew Team</p>
+              <p>Best regards,<br>The Yesra Sew Solution Team</p>
             </div>
             <div class="footer">
-              <p>© ${new Date().getFullYear()} YesraSew. All rights reserved.</p>
+              <p>© ${new Date().getFullYear()} Yesra Sew Solution. All rights reserved.</p>
             </div>
           </div>
         </body>
@@ -130,9 +130,9 @@ class EmailService {
     }
 
     const mailOptions = {
-      from: `"YesraSew" <${this.transporter.options.auth.user}>`,
+      from: `"Yesra Sew Solution" <${this.transporter.options.auth.user}>`,
       to: email,
-      subject: 'YesraSew - Password Reset Code',
+      subject: 'Yesra Sew Solution - Password Reset Code',
       html: `
         <!DOCTYPE html>
         <html>
@@ -155,7 +155,7 @@ class EmailService {
             </div>
             <div class="content">
               <p>Hello ${firstName || 'there'},</p>
-              <p>We received a request to reset your YesraSew account password. Use the code below to reset your password:</p>
+              <p>We received a request to reset your Yesra Sew Solution account password. Use the code below to reset your password:</p>
               
               <div class="otp-box">
                 <div class="otp-code">${otp}</div>
@@ -167,10 +167,10 @@ class EmailService {
                 If you didn't request a password reset, please ignore this email and ensure your account is secure.
               </div>
               
-              <p>Best regards,<br>The YesraSew Team</p>
+              <p>Best regards,<br>The Yesra Sew Solution Team</p>
             </div>
             <div class="footer">
-              <p>© ${new Date().getFullYear()} YesraSew. All rights reserved.</p>
+              <p>© ${new Date().getFullYear()} Yesra Sew Solution. All rights reserved.</p>
             </div>
           </div>
         </body>
@@ -200,7 +200,7 @@ class EmailService {
     }
 
     const mailOptions = {
-      from: `"YesraSew" <${this.transporter.options.auth.user}>`,
+      from: `"Yesra Sew Solution" <${this.transporter.options.auth.user}>`,
       to: email,
       subject: subject,
       html: `
@@ -218,15 +218,15 @@ class EmailService {
         <body>
           <div class="container">
             <div class="header">
-              <h1>YesraSew</h1>
+              <h1>Yesra Sew Solution</h1>
             </div>
             <div class="content">
               <p>Hello ${firstName || 'there'},</p>
               ${message}
-              <p>Best regards,<br>The YesraSew Team</p>
+              <p>Best regards,<br>The Yesra Sew Solution Team</p>
             </div>
             <div class="footer">
-              <p>© ${new Date().getFullYear()} YesraSew. All rights reserved.</p>
+              <p>© ${new Date().getFullYear()} Yesra Sew Solution. All rights reserved.</p>
             </div>
           </div>
         </body>
@@ -256,9 +256,9 @@ class EmailService {
     }
 
     const mailOptions = {
-      from: `"YesraSew" <${this.transporter.options.auth.user}>`,
+      from: `"Yesra Sew Solution" <${this.transporter.options.auth.user}>`,
       to: testEmail,
-      subject: 'YesraSew - Email Configuration Test',
+      subject: 'Yesra Sew Solution - Email Configuration Test',
       html: `
         <h2>✅ Email Configuration Successful!</h2>
         <p>This is a test email to confirm that your Gmail SMTP configuration is working correctly.</p>

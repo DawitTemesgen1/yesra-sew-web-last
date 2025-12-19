@@ -21,7 +21,7 @@ import { useCustomTheme } from '../contexts/ThemeContext';
 const translations = {
   en: {
     navbar: {
-      logoSubtitle: "Purified Gold",
+      logoSubtitle: "Connecting Technology and Careers",
       home: "Home",
       tenders: "Tenders",
       jobs: "Jobs",
@@ -54,7 +54,7 @@ const translations = {
   },
   am: {
     navbar: {
-      logoSubtitle: "የነጠረ ወርቅ",
+      logoSubtitle: "ቴክኖሎጂ እና ስራን ያገናኛል",
       home: "መነሻ",
       tenders: "ጨረታዎች",
       jobs: "ስራዎች",
@@ -293,7 +293,7 @@ const Navbar = ({ activeTab, setActiveTab }) => {
                   WebkitTextFillColor: themeMode === 'dark' ? '#fff' : 'transparent',
                   letterSpacing: '-0.5px'
                 }}>
-                  YesraSew
+                  Yesra Sew
                 </Typography>
                 <Typography variant="caption" sx={{
                   color: themeMode === 'dark' ? '#D4AF37' : '#1E3A8A',
@@ -357,7 +357,7 @@ const Navbar = ({ activeTab, setActiveTab }) => {
                 WebkitTextFillColor: themeMode === 'dark' ? '#fff' : 'transparent',
                 fontSize: '1.25rem'
               }}>
-                YesraSew
+                Yesra Sew
               </Typography>
               <Typography variant="caption" sx={{
                 color: themeMode === 'dark' ? '#D4AF37' : '#1E3A8A',

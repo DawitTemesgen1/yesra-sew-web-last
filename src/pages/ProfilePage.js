@@ -454,7 +454,7 @@ const ProfilePage = () => {
     if (navigator.share) {
       navigator.share({
         title: listing.title,
-        text: `Check out this listing on YesraSew: ${listing.title}`,
+        text: `Check out this listing on Yesra Sew Solution: ${listing.title}`,
         url: window.location.href
       }).catch(console.error);
     } else {
@@ -533,7 +533,7 @@ const ProfilePage = () => {
     <Box sx={{ minHeight: '100vh', bgcolor: '#F8FAFC', pb: isMobile ? 2 : 4 }}>
       <SEO
         title={displayUser?.full_name || t.unknownUser}
-        description="Manage your YesraSew profile, listings, and account settings."
+        description="Manage your Yesra Sew Solution profile, listings, and account settings."
         keywords="user profile, yesrasew profile, my listings, settings"
       />
       {/* Hidden file input for avatar */}

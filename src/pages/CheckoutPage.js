@@ -303,8 +303,18 @@ const CheckoutPage = () => {
         if (!user || !plan) return;
 
         setProcessing(true);
+
+        // Set a timeout to prevent indefinite loading
+        const timeoutId = setTimeout(() => {
+            setProcessing(false);
+            toast.error('Payment request timed out. Please try again or contact support.');
+        }, 30000); // 30 second timeout
+
         try {
-            // Call Supabase Edge Function
+            // Call Supabase Edge Function with timeout
+            const controller = new AbortController();
+            const timeoutSignal = setTimeout(() => controller.abort(), 25000); // 25s internal timeout
+
             const { data, error } = await supabase.functions.invoke('payment-handler', {
                 body: {
                     action: 'initiate',
@@ -326,17 +336,42 @@ const CheckoutPage = () => {
                 }
             });
 
-            if (error) throw error;
+            clearTimeout(timeoutSignal);
+            clearTimeout(timeoutId);
+
+            if (error) {
+                console.error('Payment function error:', error);
+                throw new Error(error.message || 'Payment service error');
+            }
+
+            if (!data) {
+                throw new Error('No response from payment service. Please try again.');
+            }
 
             if (data?.success && data?.checkoutUrl) {
                 // Redirect to payment gateway
+                toast.success('Redirecting to payment gateway...');
                 window.location.href = data.checkoutUrl;
             } else {
-                throw new Error(data?.message || 'Failed to initialize payment');
+                const errorMsg = data?.message || data?.error || 'Failed to initialize payment';
+                throw new Error(errorMsg);
             }
         } catch (error) {
+            clearTimeout(timeoutId);
             console.error('Payment error:', error);
-            toast.error(error.message || 'Payment initialization failed');
+
+            // User-friendly error messages
+            let errorMessage = 'Payment initialization failed';
+
+            if (error.name === 'AbortError') {
+                errorMessage = 'Payment request timed out. Please check your internet connection and try again.';
+            } else if (error.message.includes('network') || error.message.includes('fetch')) {
+                errorMessage = 'Network error. Please check your internet connection.';
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+
+            toast.error(errorMessage);
         } finally {
             setProcessing(false);
         }

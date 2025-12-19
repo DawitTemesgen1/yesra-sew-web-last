@@ -49,7 +49,7 @@ const translations = {
         welcomeTitle: "Welcome Back",
         loginSubtitle: "Login to your account",
         createAccountTitle: "Create Account",
-        joinSubtitle: "Join YesraSew today",
+        joinSubtitle: "Join Yesra Sew Solution today",
         resetPasswordTitle: "Reset Password",
         resetSubtitle: "Reset your password",
         stepDetails: "1. Details",
@@ -303,9 +303,9 @@ const EnhancedAuthPage = () => {
     const searchParams = new URLSearchParams(location.search);
     const urlMode = searchParams.get('mode');
 
-    // States
+    // States - Default to REGISTER for new user acquisition
     const [authMode, setAuthMode] = useState(
-        urlMode === 'register' || location.pathname.includes('register') ? 'register' : 'login'
+        urlMode === 'login' || location.pathname.includes('login') ? 'login' : 'register'
     );
     const [method, setMethod] = useState('phone');
     const [accountType, setAccountType] = useState('individual');
@@ -772,7 +772,7 @@ const EnhancedAuthPage = () => {
         >
             <Helmet>
                 <title>{(authMode === 'login' ? t.login : t.createAccount) + ' | Yesira Sew'}</title>
-                <meta name="description" content="Securely login or create an account on YesraSew - Ethiopia's Premier Marketplace." />
+                <meta name="description" content="Securely login or create an account on Yesra Sew Solution - Ethiopia's Premier Marketplace." />
                 <meta name="keywords" content="login yesrasew, register yesrasew, sign up ethiopia, create account, ethiopian marketplace login" />
             </Helmet>
             <Box sx={{ position: 'absolute', top: 20, right: 20, display: 'flex', gap: 1, zIndex: 10 }}>

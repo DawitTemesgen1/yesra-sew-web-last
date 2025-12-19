@@ -29,7 +29,7 @@ const LoadingScreen = () => {
                         '100%': { transform: 'scale(1)', opacity: 1 },
                     }
                 }}
-                alt="YesiraSew"
+                alt="Yesra Sew Solution"
             />
             <CircularProgress size={40} thickness={4} sx={{ color: 'primary.main' }} />
             <Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 2 }}>

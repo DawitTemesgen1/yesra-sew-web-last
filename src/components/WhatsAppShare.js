@@ -17,13 +17,13 @@ const WhatsAppShare = ({ listing }) => {
 
 💰 Price: ${listing.price ? `${listing.price.toLocaleString()} ETB` : 'Contact for price'}
 📍 Location: ${listing.location || 'Not specified'}
-📱 Posted on YesraSew
+📱 Posted on Yesra Sew Solution
 
 ${listing.description ? `${listing.description.substring(0, 200)}...` : ''}
 
 👉 View details: ${window.location.origin}/listings/${listing.id}
 
-#YesraSew #Ethiopia #Classifieds #${listing.category?.replace(/\s+/g, '') || 'Marketplace'}`;
+#Yesra Sew Solution #Ethiopia #Classifieds #${listing.category?.replace(/\s+/g, '') || 'Marketplace'}`;
 
     return message;
   };
@@ -32,9 +32,9 @@ ${listing.description ? `${listing.description.substring(0, 200)}...` : ''}
     const message = formatListingMessage();
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
-    
+
     window.open(whatsappUrl, '_blank');
-    
+
     // Track share event
     if (window.gtag) {
       window.gtag('event', 'share', {
@@ -47,15 +47,15 @@ ${listing.description ? `${listing.description.substring(0, 200)}...` : ''}
 
   const copyToClipboard = async () => {
     const message = formatListingMessage();
-    
+
     try {
       await navigator.clipboard.writeText(message);
       setCopied(true);
       setSnackbarOpen(true);
-      
+
       // Reset copied state after 2 seconds
       setTimeout(() => setCopied(false), 2000);
-      
+
       // Track copy event
       if (window.gtag) {
         window.gtag('event', 'copy', {

@@ -760,7 +760,7 @@ const PostAdPage = () => {
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <SEO
         title={editListingId ? "Edit Listing" : t.postYourAd}
-        description="Post your ad for free on YesraSew - Ethiopia's Premier Marketplace. Sell cars, houses, post jobs and tenders easily."
+        description="Post your ad for free on Yesra Sew Solution - Ethiopia's Premier Marketplace. Sell cars, houses, post jobs and tenders easily."
         keywords="post ad ethiopia, sell item ethiopia, list job ethiopia, post tender ethiopia, classifieds ethiopia"
       />
       <Paper sx={{ p: { xs: 2, md: 4 }, borderRadius: 2 }}>

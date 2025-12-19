@@ -11,7 +11,7 @@ const translations = {
     en: {
         title: "Privacy Policy",
         lastUpdated: "Last Updated: December 2024",
-        intro: "At YesraSew, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our marketplace platform.",
+        intro: "At Yesra Sew Solution, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our marketplace platform.",
         commitment: "Our Commitment to Your Privacy",
         commitmentText: "We are committed to protecting your personal information and your right to privacy. If you have any questions or concerns about our policy or practices, please contact us at privacy@yesrasew.com",
         sections: {
@@ -177,7 +177,7 @@ const PrivacyPolicy = () => {
         <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: 8 }}>
             <SEO
                 title="Privacy Policy"
-                description="YesraSew Privacy Policy - Learn how we protect your personal information and data on Ethiopia's premier marketplace"
+                description="Yesra Sew Solution Privacy Policy - Learn how we protect your personal information and data on Ethiopia's premier marketplace"
                 keywords="privacy policy, data protection, user privacy, yesrasew privacy, ethiopia marketplace privacy"
             />
 

@@ -13,11 +13,11 @@ import { useLanguage } from '../contexts/LanguageContext';
 
 const translations = {
     en: {
-        title: "About YesraSew",
-        subtitle: "Ethiopia's Premier Marketplace - Purified Gold",
+        title: "About Yesra Sew Solution",
+        subtitle: "Ethiopia's Premier Technology and Career Platform",
         hero: {
             title: "Connecting Ethiopia Through Trust and Innovation",
-            description: "YesraSew is revolutionizing the way Ethiopians buy, sell, and connect. We're building more than a marketplace—we're creating a trusted community where opportunities flourish."
+            description: "Yesra Sew Solution is revolutionizing how Ethiopians find jobs, homes, cars, and tenders. We're building more than a platform—we're creating a trusted community where technology meets opportunity."
         },
         mission: {
             title: "Our Mission",
@@ -98,11 +98,11 @@ const translations = {
         }
     },
     am: {
-        title: "ስለ የስራ ሰው",
-        subtitle: "የኢትዮጵያ ቀዳሚ የገበያ ቦታ - የነጠረ ወርቅ",
+        title: "ስለ የስራ ሰው ሰልዩሽን",
+        subtitle: "የኢትዮጵያ ቀዳሚ የቴክኖሎጂ እና የስራ መድረክ",
         hero: {
             title: "ኢትዮጵያን በአመኔታ እና በፈጠራ እናገናኛለን",
-            description: "የስራ ሰው ኢትዮጵያውያን የሚገዙበት፣ የሚሸጡበት እና የሚገናኙበትን መንገድ እያደሰ ነው። ከገበያ በላይ እየገነባን ያለነው—እድሎች የሚበቅሉበት የታመነ ማህበረሰብ እየፈጠርን ነው።"
+            description: "የስራ ሰው ሰልዩሽን ኢትዮጵያውያን ስራ፣ ቤት፣ መኪና እና ጨረታዎች የሚያገኙበትን መንገድ እያደሰ ነው። ከመድረክ በላይ እየገነባን ያለነው—ቴክኖሎጂ እድል የሚገናኝበት የታመነ ማህበረሰብ እየፈጠርን ነው።"
         },
         mission: {
             title: "ተልዕኮአችን",
