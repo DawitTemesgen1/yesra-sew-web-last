@@ -367,45 +367,49 @@ const HomePage = () => {
       {/* Hero Section */}
       <Box sx={{
         position: 'relative',
-        minHeight: { xs: 700, md: 850 },
+        minHeight: { xs: 'auto', md: 850 },
+        pt: { xs: 12, md: 0 },
+        pb: { xs: 8, md: 0 },
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         overflow: 'hidden',
-        bgcolor: '#f8fafc', // Very light gray/white background
-        color: '#0f172a', // Slate 900
+        bgcolor: 'background.default', // Adapts to Dark/Light mode
+        color: 'text.primary',
       }}>
 
-        {/* Subtle Background Elements */}
-        {/* Top Right Gold Blur */}
+        {/* Dynamic Background Elements (Adaptive) */}
         <Box sx={{
           position: 'absolute',
           top: -100,
           right: -100,
-          width: 600,
-          height: 600,
-          background: 'radial-gradient(circle, rgba(255, 215, 0, 0.08) 0%, transparent 70%)',
+          width: { xs: 300, md: 600 },
+          height: { xs: 300, md: 600 },
+          background: theme.palette.mode === 'dark'
+            ? 'radial-gradient(circle, rgba(255, 215, 0, 0.15) 0%, transparent 70%)' // Gold Glow in Dark
+            : 'radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, transparent 70%)', // Gold Glow in Light
           filter: 'blur(80px)',
           zIndex: 0,
         }} />
 
-        {/* Bottom Left Blue Blur */}
         <Box sx={{
           position: 'absolute',
           bottom: -100,
           left: -100,
-          width: 500,
-          height: 500,
-          background: 'radial-gradient(circle, rgba(13, 71, 161, 0.05) 0%, transparent 70%)',
+          width: { xs: 300, md: 500 },
+          height: { xs: 300, md: 500 },
+          background: theme.palette.mode === 'dark'
+            ? 'radial-gradient(circle, rgba(13, 71, 161, 0.2) 0%, transparent 70%)' // Blue Glow in Dark
+            : 'radial-gradient(circle, rgba(13, 71, 161, 0.05) 0%, transparent 70%)', // Blue Glow in Light
           filter: 'blur(80px)',
           zIndex: 0,
         }} />
 
         <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 2 }}>
-          <Grid container alignItems="center" spacing={6}>
+          <Grid container alignItems="center" spacing={{ xs: 2, md: 6 }}>
 
-            {/* LEFT CONTENT: Clean, Bold Typography */}
-            <Grid item xs={12} md={6}>
+            {/* LEFT CONTENT: Typography & Search */}
+            <Grid item xs={12} md={6} sx={{ textAlign: { xs: 'center', md: 'left' } }}>
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -415,16 +419,20 @@ const HomePage = () => {
                 <Box sx={{
                   display: 'inline-block',
                   px: 2, py: 0.8,
-                  mb: 4,
+                  mb: { xs: 2, md: 4 },
                   borderRadius: 50,
-                  bgcolor: 'white',
-                  border: '1px solid rgba(0,0,0,0.05)',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                  bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'white',
+                  border: theme.palette.mode === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.05)',
+                  boxShadow: theme.palette.mode === 'dark' ? 'none' : '0 4px 12px rgba(0,0,0,0.05)',
                 }}>
                   <Stack direction="row" alignItems="center" spacing={1}>
                     <VerifiedUser sx={{ fontSize: 18, color: '#00A651' }} />
-                    <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 700, letterSpacing: 1 }}>
-                      THE #1 TRUSTED MARKETPLACE
+                    <Typography variant="caption" sx={{
+                      color: theme.palette.mode === 'dark' ? 'text.secondary' : '#64748b',
+                      fontWeight: 700,
+                      letterSpacing: 1
+                    }}>
+                      #1 TRUSTED MARKETPLACE
                     </Typography>
                   </Stack>
                 </Box>
@@ -433,68 +441,77 @@ const HomePage = () => {
                   fontFamily: 'Inter, sans-serif',
                   fontWeight: 900,
                   fontSize: { xs: '2.5rem', md: '4rem' },
-                  lineHeight: 1.1,
+                  lineHeight: { xs: 1.2, md: 1.1 },
                   mb: 3,
-                  color: '#0f172a',
+                  color: 'text.primary',
                   letterSpacing: '-0.03em'
                 }}>
-                  Discover <br />
+                  {t.landing.hero.title} <br />
                   <Box component="span" sx={{
                     background: 'linear-gradient(135deg, #0d47a1 0%, #00A651 100%)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent'
-                  }}>Ethiopia's Best</Box>
-                  <br /> Opportunities.
+                  }}>
+                    {/* Simplified for demo, ideally part of translation */}
+                    Yesra Sew
+                  </Box>
                 </Typography>
 
                 <Typography variant="h5" sx={{
                   fontWeight: 400,
-                  color: '#64748b', // Slate 500
-                  mb: 6,
-                  maxWidth: 500,
-                  fontSize: { xs: '1.1rem', md: '1.25rem' },
+                  color: 'text.secondary',
+                  mb: { xs: 4, md: 6 },
+                  maxWidth: { xs: '100%', md: 500 },
+                  mx: { xs: 'auto', md: 0 },
+                  fontSize: { xs: '1rem', md: '1.25rem' },
                   lineHeight: 1.6,
                 }}>
-                  From dream homes to dream jobs, find everything you need in one secure platform.
+                  {t.landing.hero.subtitle}
                 </Typography>
 
                 {/* Modern Shadow Search Box */}
                 <Box sx={{
-                  bgcolor: 'white',
+                  bgcolor: theme.palette.mode === 'dark' ? 'background.paper' : 'white',
                   p: 1,
                   borderRadius: 4,
-                  boxShadow: '0 20px 40px rgba(15, 23, 42, 0.08)',
+                  boxShadow: theme.palette.mode === 'dark' ? '0 8px 32px rgba(0,0,0,0.3)' : '0 20px 40px rgba(15, 23, 42, 0.08)',
                   mb: 5,
                   maxWidth: 600,
-                  border: '1px solid rgba(0,0,0,0.03)'
+                  mx: { xs: 'auto', md: 0 },
+                  border: theme.palette.mode === 'dark' ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.03)'
                 }}>
                   <SmartSearch
                     enableNavigation={true}
                     category="all"
-                    placeholder="Try 'Villa in Bole' or 'Software Job'..."
+                    placeholder={t.common.search}
                   />
                 </Box>
 
                 {/* Trust Categories - Small Icons */}
-                <Stack direction="row" spacing={3}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#00A651' }} />
-                    <Typography variant="body2" fontWeight="600" color="#475569">Verified Sellers</Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#FFD700' }} />
-                    <Typography variant="body2" fontWeight="600" color="#475569">Secure Payments</Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#0d47a1' }} />
-                    <Typography variant="body2" fontWeight="600" color="#475569">24/7 Support</Typography>
-                  </Box>
+                <Stack
+                  direction="row"
+                  spacing={{ xs: 2, md: 3 }}
+                  justifyContent={{ xs: 'center', md: 'flex-start' }}
+                  sx={{ flexWrap: 'wrap', gap: { xs: 1, md: 0 } }}
+                >
+                  {[
+                    { color: '#00A651', text: t.landing.features.feature1.title },
+                    { color: '#FFD700', text: t.landing.features.feature2.title },
+                    { color: '#0d47a1', text: t.landing.features.feature3.title }
+                  ].map((item, idx) => (
+                    <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: item.color }} />
+                      <Typography variant="body2" fontWeight="600" color="text.secondary">
+                        {item.text}
+                      </Typography>
+                    </Box>
+                  ))}
                 </Stack>
 
               </motion.div>
             </Grid>
 
-            {/* RIGHT CONTENT: Dynamic Bento Grid */}
+            {/* RIGHT CONTENT: Dynamic Bento Grid (Hidden on Mobile, Visible on Tablet+) */}
             <Grid item xs={12} md={6} sx={{ display: { xs: 'none', md: 'block' } }}>
               <Box sx={{ position: 'relative', height: 600, width: '100%' }}>
 
@@ -510,7 +527,7 @@ const HomePage = () => {
                     height: 480,
                     borderRadius: 6,
                     overflow: 'hidden',
-                    boxShadow: '0 30px 60px rgba(0,0,0,0.1)',
+                    boxShadow: theme.palette.mode === 'dark' ? '0 30px 60px rgba(0,0,0,0.4)' : '0 30px 60px rgba(0,0,0,0.1)',
                   }}>
                     <img
                       src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1000&auto=format&fit=crop"
@@ -518,7 +535,12 @@ const HomePage = () => {
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     />
                     {/* Floating Label inside */}
-                    <Box sx={{ position: 'absolute', bottom: 20, left: 20, bgcolor: 'rgba(255,255,255,0.9)', px: 2, py: 1, borderRadius: 3 }}>
+                    <Box sx={{
+                      position: 'absolute', bottom: 20, left: 20,
+                      bgcolor: 'rgba(255,255,255,0.9)',
+                      color: 'black',
+                      px: 2, py: 1, borderRadius: 3
+                    }}>
                       <Typography variant="subtitle2" fontWeight="bold">Modern Living Space</Typography>
                     </Box>
                   </Card>
@@ -536,8 +558,8 @@ const HomePage = () => {
                     height: 180,
                     borderRadius: 5,
                     overflow: 'hidden',
-                    boxShadow: '0 25px 50px rgba(0,0,0,0.15)',
-                    border: '4px solid white'
+                    boxShadow: theme.palette.mode === 'dark' ? '0 25px 50px rgba(0,0,0,0.5)' : '0 25px 50px rgba(0,0,0,0.15)',
+                    border: theme.palette.mode === 'dark' ? '4px solid #1e293b' : '4px solid white'
                   }}>
                     <img
                       src="https://images.unsplash.com/photo-1617788138017-80ad40651399?q=80&w=800&auto=format&fit=crop"
@@ -562,8 +584,8 @@ const HomePage = () => {
                     height: 160,
                     borderRadius: 4,
                     overflow: 'hidden',
-                    boxShadow: '0 20px 40px rgba(0,0,0,0.08)',
-                    border: '4px solid white'
+                    boxShadow: theme.palette.mode === 'dark' ? '0 20px 40px rgba(0,0,0,0.3)' : '0 20px 40px rgba(0,0,0,0.08)',
+                    border: theme.palette.mode === 'dark' ? '4px solid #1e293b' : '4px solid white'
                   }}>
                     <img
                       src="https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?q=80&w=800&auto=format&fit=crop"
@@ -572,9 +594,6 @@ const HomePage = () => {
                     />
                   </Card>
                 </motion.div>
-
-                {/* Decorative Dot Pattern included via CSS or overlay if needed, sticking to clean for now */}
-
               </Box>
             </Grid>
 
