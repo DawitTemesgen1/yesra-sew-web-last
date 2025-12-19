@@ -28,7 +28,7 @@ const JOB_IMAGES = [
  * Helper: robustly resolve the best image for the card
  */
 const getCardImage = (listing) => {
-    if (!listing) return FALLBACK_IMAGES.default;
+    if (!listing) return null;
 
     // DEBUG: Log the data inspection to help trace issues
     const debug = false;
