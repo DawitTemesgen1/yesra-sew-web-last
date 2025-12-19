@@ -50,34 +50,23 @@ const optimizeImageUrl = (url, width = 800, quality = 80) => {
 
 /**
  * Process listing images for optimal loading
+ * NOTE: We keep images as simple URLs - the UltraOptimizedImage component
+ * will handle the optimization and progressive loading
  */
 const processListingImages = (listing) => {
     if (!listing) return listing;
 
-    // Process images array
-    if (Array.isArray(listing.images) && listing.images.length > 0) {
-        listing.images = listing.images.map(img => ({
-            original: img,
-            thumbnail: optimizeImageUrl(img, 400, 70),  // Small thumbnail
-            medium: optimizeImageUrl(img, 800, 80),     // Card view
-            large: optimizeImageUrl(img, 1200, 85)      // Detail view
-        }));
+    // Images should already be an array of URLs from Supabase
+    // We don't need to transform them - just ensure they're valid
+    if (Array.isArray(listing.images)) {
+        listing.images = listing.images.filter(img =>
+            typeof img === 'string' && img.length > 0
+        );
     }
 
-    // Process custom_fields images
-    if (listing.custom_fields) {
-        Object.keys(listing.custom_fields).forEach(key => {
-            const value = listing.custom_fields[key];
-            // If it's an image URL, optimize it
-            if (typeof value === 'string' && (value.includes('supabase') || value.match(/\.(jpeg|jpg|gif|png|webp)$/i))) {
-                listing.custom_fields[`${key}_optimized`] = {
-                    original: value,
-                    thumbnail: optimizeImageUrl(value, 400, 70),
-                    medium: optimizeImageUrl(value, 800, 80),
-                    large: optimizeImageUrl(value, 1200, 85)
-                };
-            }
-        });
+    // Process custom_fields - keep image URLs as strings
+    if (listing.custom_fields && typeof listing.custom_fields === 'object') {
+        // No transformation needed - keep URLs as-is
     }
 
     return listing;
