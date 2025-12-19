@@ -147,7 +147,7 @@ const getSummaryFields = (template, listing) => {
  * Helper: Format Price
  */
 const formatPrice = (price) => {
-    if (!price) return 'Contact for Price';
+    if (!price || Number(price) === 0) return null;
     return `ETB ${Number(price).toLocaleString()}`;
 };
 
@@ -356,11 +356,11 @@ const DynamicListingCard = ({
                         {listing.title || 'Untitled Listing'}
                     </Typography>
 
-                    {/* Price (Hidden for Jobs) */}
+                    {/* Price (Hidden for Jobs and if No Price) */}
                     {!(listing.category && (
                         (typeof listing.category === 'string' && listing.category.toLowerCase().includes('job')) ||
                         (listing.category.slug && listing.category.slug.includes('job'))
-                    )) && (
+                    )) && formatPrice(listing.price) && (
                             <Typography variant="h6" color="primary.main" fontWeight={800} sx={{ mb: 1.5 }}>
                                 {formatPrice(listing.price)}
                             </Typography>
