@@ -367,198 +367,217 @@ const HomePage = () => {
       {/* Hero Section */}
       <Box sx={{
         position: 'relative',
-        minHeight: { xs: 650, md: 800 },
+        minHeight: { xs: 700, md: 850 },
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         overflow: 'hidden',
-        color: 'white',
+        bgcolor: '#f8fafc', // Very light gray/white background
+        color: '#0f172a', // Slate 900
       }}>
-        {/* Luxury Blue & Gold Background */}
-        <Box
-          component={motion.div}
-          initial={{ scale: 1.05 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 12, ease: "easeOut" }}
-          sx={{
-            position: 'absolute',
-            top: 0, left: 0, right: 0, bottom: 0,
-            backgroundImage: 'url(https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=2047&auto=format&fit=crop)', // Modern Blue High-Rise / Financial District
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            zIndex: 0,
-          }}
-        />
 
-        {/* Sophisticated Royal Blue Gradient Overlay */}
+        {/* Subtle Background Elements */}
+        {/* Top Right Gold Blur */}
         <Box sx={{
           position: 'absolute',
-          top: 0, left: 0, right: 0, bottom: 0,
-          background: 'linear-gradient(135deg, rgba(10, 25, 47, 0.95) 0%, rgba(20, 40, 80, 0.85) 60%, rgba(255, 215, 0, 0.1) 100%)', // Deep Navy with slight Gold tint
-          zIndex: 1
+          top: -100,
+          right: -100,
+          width: 600,
+          height: 600,
+          background: 'radial-gradient(circle, rgba(255, 215, 0, 0.08) 0%, transparent 70%)',
+          filter: 'blur(80px)',
+          zIndex: 0,
         }} />
 
-        {/* Golden Lighting Accents */}
+        {/* Bottom Left Blue Blur */}
         <Box sx={{
           position: 'absolute',
-          top: -200,
-          right: -200,
-          width: 800,
-          height: 800,
-          background: 'radial-gradient(circle, rgba(255, 215, 0, 0.15) 0%, transparent 60%)', // Golden Glow
-          filter: 'blur(100px)',
-          zIndex: 1,
+          bottom: -100,
+          left: -100,
+          width: 500,
+          height: 500,
+          background: 'radial-gradient(circle, rgba(13, 71, 161, 0.05) 0%, transparent 70%)',
+          filter: 'blur(80px)',
+          zIndex: 0,
         }} />
 
         <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 2 }}>
-          <Grid container alignItems="center" spacing={4}>
-            {/* Left Content */}
-            <Grid item xs={12} md={7} lg={6}>
+          <Grid container alignItems="center" spacing={6}>
+
+            {/* LEFT CONTENT: Clean, Bold Typography */}
+            <Grid item xs={12} md={6}>
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8 }}
               >
-                {/* Gold Premium Badge */}
+                {/* Premium Pill */}
                 <Box sx={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 1.5,
-                  px: 2.5, py: 1,
+                  display: 'inline-block',
+                  px: 2, py: 0.8,
                   mb: 4,
-                  borderRadius: 12,
-                  background: 'linear-gradient(90deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.05) 100%)',
-                  border: '1px solid rgba(255, 215, 0, 0.3)',
-                  backdropFilter: 'blur(10px)'
+                  borderRadius: 50,
+                  bgcolor: 'white',
+                  border: '1px solid rgba(0,0,0,0.05)',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
                 }}>
-                  <VerifiedUser sx={{ fontSize: 18, color: '#FFD700' }} />
-                  <Typography variant="overline" sx={{ color: '#FFD700', fontWeight: 800, letterSpacing: 2 }}>
-                    #1 PREMIUM MARKETPLACE
-                  </Typography>
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <VerifiedUser sx={{ fontSize: 18, color: '#00A651' }} />
+                    <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 700, letterSpacing: 1 }}>
+                      THE #1 TRUSTED MARKETPLACE
+                    </Typography>
+                  </Stack>
                 </Box>
 
                 <Typography variant={isMobile ? "h3" : "h1"} sx={{
-                  fontFamily: 'Playfair Display, serif',
-                  fontWeight: 800,
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 900,
+                  fontSize: { xs: '2.5rem', md: '4rem' },
                   lineHeight: 1.1,
                   mb: 3,
-                  background: 'linear-gradient(to right, #ffffff, #e0e0e0)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  textShadow: '0 20px 40px rgba(0,0,0,0.3)'
+                  color: '#0f172a',
+                  letterSpacing: '-0.03em'
                 }}>
-                  {t.landing.hero.title}
-                  <Box component="span" sx={{ color: '#FFD700', display: 'inline-block' }}>.</Box>
+                  Discover <br />
+                  <Box component="span" sx={{
+                    background: 'linear-gradient(135deg, #0d47a1 0%, #00A651 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent'
+                  }}>Ethiopia's Best</Box>
+                  <br /> Opportunities.
                 </Typography>
 
                 <Typography variant="h5" sx={{
-                  fontWeight: 300,
-                  color: 'rgba(255, 255, 255, 0.7)',
+                  fontWeight: 400,
+                  color: '#64748b', // Slate 500
                   mb: 6,
-                  maxWidth: 550,
+                  maxWidth: 500,
                   fontSize: { xs: '1.1rem', md: '1.25rem' },
                   lineHeight: 1.6,
-                  fontFamily: 'Inter, sans-serif'
                 }}>
-                  {t.landing.hero.subtitle}
+                  From dream homes to dream jobs, find everything you need in one secure platform.
                 </Typography>
 
-                {/* Elegant White/Gold Search Box */}
+                {/* Modern Shadow Search Box */}
                 <Box sx={{
-                  background: 'rgba(255, 255, 255, 0.98)',
-                  p: 1.2,
-                  borderRadius: 3,
-                  boxShadow: '0 20px 50px rgba(0, 0, 0, 0.3)',
+                  bgcolor: 'white',
+                  p: 1,
+                  borderRadius: 4,
+                  boxShadow: '0 20px 40px rgba(15, 23, 42, 0.08)',
                   mb: 5,
-                  maxWidth: 650,
-                  border: '1px solid rgba(255, 255, 255, 1)'
+                  maxWidth: 600,
+                  border: '1px solid rgba(0,0,0,0.03)'
                 }}>
                   <SmartSearch
                     enableNavigation={true}
                     category="all"
-                    placeholder={t.common.search}
+                    placeholder="Try 'Villa in Bole' or 'Software Job'..."
                   />
                 </Box>
 
-                {/* Trust Stats - Gold Accented */}
-                <Stack direction="row" spacing={5} sx={{ display: { xs: 'none', md: 'flex' } }}>
-                  {[
-                    { label: 'Total Listings', value: '25K+' },
-                    { label: 'Active Users', value: '10K+' },
-                    { label: 'Cities Covered', value: '15+' },
-                  ].map((stat, i) => (
-                    <Box key={i}>
-                      <Typography variant="h4" fontWeight="800" sx={{
-                        color: '#FFD700', // Gold
-                        mb: 0.5,
-                        textShadow: '0 5px 15px rgba(255, 215, 0, 0.2)'
-                      }}>
-                        {stat.value}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 1 }}>
-                        {stat.label}
-                      </Typography>
-                    </Box>
-                  ))}
-                </Stack>
-              </motion.div>
-            </Grid>
-
-            {/* Right Side: Modern Geometric Composition */}
-            <Grid item xs={12} md={5} lg={6} sx={{ display: { xs: 'none', md: 'block' }, position: 'relative' }}>
-              <motion.div
-                initial={{ opacity: 0, x: 50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 1, delay: 0.2 }}
-                style={{ height: 500, position: 'relative' }}
-              >
-                {/* Main Showcase Image Card */}
-                <Box sx={{
-                  position: 'absolute',
-                  top: 20, right: 40,
-                  width: 380, height: 480,
-                  borderRadius: 8,
-                  overflow: 'hidden',
-                  boxShadow: '0 30px 60px rgba(0,0,0,0.5)',
-                  transform: 'rotate(-3deg)',
-                  border: '4px solid rgba(255,255,255,0.1)'
-                }}>
-                  <img
-                    src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1000&auto=format&fit=crop" // Modern Office/Property
-                    alt="Modern Living"
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  />
-                  <Box sx={{
-                    position: 'absolute',
-                    bottom: 0, left: 0, right: 0,
-                    background: 'linear-gradient(to top, rgba(10, 25, 47, 0.9), transparent)',
-                    p: 4
-                  }}>
-                    <Typography variant="h6" color="white" fontWeight="bold">Premium Estates</Typography>
-                    <Typography variant="body2" color="#FFD700">Starting from 2M ETB</Typography>
+                {/* Trust Categories - Small Icons */}
+                <Stack direction="row" spacing={3}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#00A651' }} />
+                    <Typography variant="body2" fontWeight="600" color="#475569">Verified Sellers</Typography>
                   </Box>
-                </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#FFD700' }} />
+                    <Typography variant="body2" fontWeight="600" color="#475569">Secure Payments</Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#0d47a1' }} />
+                    <Typography variant="body2" fontWeight="600" color="#475569">24/7 Support</Typography>
+                  </Box>
+                </Stack>
 
-                {/* Floating Glass Cards */}
-                <GlassCard
-                  icon={<DirectionsCar sx={{ color: '#0d47a1' }} />}
-                  title="Luxury Cars"
-                  subtitle="Verified Dealers"
-                  top={80} left={20}
-                  delay={0.6}
-                  color="#0d47a1" // Blue Icon Background
-                />
-                <GlassCard
-                  icon={<Work sx={{ color: '#FFD700' }} />}
-                  title="Executive Jobs"
-                  subtitle="Top Companies"
-                  bottom={60} right={350}
-                  delay={0.8}
-                  color="#FFD700" // Gold Icon Background
-                  textColor="#000"
-                />
               </motion.div>
             </Grid>
+
+            {/* RIGHT CONTENT: Dynamic Bento Grid */}
+            <Grid item xs={12} md={6} sx={{ display: { xs: 'none', md: 'block' } }}>
+              <Box sx={{ position: 'relative', height: 600, width: '100%' }}>
+
+                {/* Item 1: Home (Largest) */}
+                <motion.div
+                  initial={{ y: 50, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.8, delay: 0.2 }}
+                  style={{ position: 'absolute', top: 0, right: 0, zIndex: 1 }}
+                >
+                  <Card sx={{
+                    width: 380,
+                    height: 480,
+                    borderRadius: 6,
+                    overflow: 'hidden',
+                    boxShadow: '0 30px 60px rgba(0,0,0,0.1)',
+                  }}>
+                    <img
+                      src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1000&auto=format&fit=crop"
+                      alt="Modern Home"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                    {/* Floating Label inside */}
+                    <Box sx={{ position: 'absolute', bottom: 20, left: 20, bgcolor: 'rgba(255,255,255,0.9)', px: 2, py: 1, borderRadius: 3 }}>
+                      <Typography variant="subtitle2" fontWeight="bold">Modern Living Space</Typography>
+                    </Box>
+                  </Card>
+                </motion.div>
+
+                {/* Item 2: Car (Bottom Left overlap) */}
+                <motion.div
+                  initial={{ x: -50, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ duration: 0.8, delay: 0.4 }}
+                  style={{ position: 'absolute', bottom: 80, right: 300, zIndex: 2 }}
+                >
+                  <Card sx={{
+                    width: 260,
+                    height: 180,
+                    borderRadius: 5,
+                    overflow: 'hidden',
+                    boxShadow: '0 25px 50px rgba(0,0,0,0.15)',
+                    border: '4px solid white'
+                  }}>
+                    <img
+                      src="https://images.unsplash.com/photo-1617788138017-80ad40651399?q=80&w=800&auto=format&fit=crop"
+                      alt="Luxury Car"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                    <Box sx={{ position: 'absolute', top: 10, right: 10, bgcolor: '#0d47a1', color: 'white', px: 1, py: 0.5, borderRadius: 2 }}>
+                      <Typography variant="caption" fontWeight="bold">New</Typography>
+                    </Box>
+                  </Card>
+                </motion.div>
+
+                {/* Item 3: Professional/Job (Top Left floating) */}
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.8, delay: 0.6 }}
+                  style={{ position: 'absolute', top: 100, right: 340, zIndex: 3 }}
+                >
+                  <Card sx={{
+                    width: 160,
+                    height: 160,
+                    borderRadius: 4,
+                    overflow: 'hidden',
+                    boxShadow: '0 20px 40px rgba(0,0,0,0.08)',
+                    border: '4px solid white'
+                  }}>
+                    <img
+                      src="https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?q=80&w=800&auto=format&fit=crop"
+                      alt="Professional"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  </Card>
+                </motion.div>
+
+                {/* Decorative Dot Pattern included via CSS or overlay if needed, sticking to clean for now */}
+
+              </Box>
+            </Grid>
+
           </Grid>
         </Container>
       </Box>
