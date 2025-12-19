@@ -15,106 +15,100 @@ import { motion } from 'framer-motion';
 /**
  * Helper: robustly resolve the best image for the card
  */
+// --- FALLBACK IMAGES (Beautiful Placeholders) ---
+const FALLBACK_IMAGES = {
+    cars: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=800&q=80',
+    homes: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&q=80',
+    tenders: 'https://images.unsplash.com/photo-1628348068343-c6a848d2b6dd?auto=format&fit=crop&w=800&q=80',
+    jobs: [
+        'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80'
+    ],
+    default: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80'
+};
+
+/**
+ * Helper: robustly resolve the best image for the card
+ */
 const getCardImage = (listing) => {
-    if (!listing) return null;
+    if (!listing) return FALLBACK_IMAGES.default;
 
     // DEBUG: Log the data inspection to help trace issues
-    const debug = false; // Set to true if images are missing
-    if (debug) console.groupCollapsed(`📷 Card Image Check: ${listing.title?.substring(0, 20)}... (${listing.id})`);
+    const debug = false;
 
     // Strict Image Validator
-    const isValidUrl = (val, source) => {
-        if (!val) return false;
-        if (typeof val !== 'string') {
-            if (debug) console.log(`[${source}] Rejected: Not a string`, val);
-            return false;
-        }
-        if (!val.startsWith('http') && !val.startsWith('/')) {
-            if (debug) console.log(`[${source}] Rejected: Not absolute/relative path`, val);
-            return false;
-        }
-        if (val.includes(' ')) {
-            if (debug) console.log(`[${source}] Rejected: Contains spaces`, val);
-            return false;
-        }
-        if (val.length > 500) {
-            if (debug) console.log(`[${source}] Rejected: Too long`, val);
-            return false;
-        }
+    const isValidUrl = (val) => {
+        if (!val || typeof val !== 'string') return false;
+        if (!val.startsWith('http') && !val.startsWith('/')) return false;
+        if (val.includes(' ') || val.length > 500) return false;
         return true;
     };
 
-    const isLikelyImage = (val, source) => {
-        if (!isValidUrl(val, source)) return false;
-
-        const isImg = /\.(jpeg|jpg|gif|png|webp|bmp|svg)$/i.test(val) ||
+    const isLikelyImage = (val) => {
+        if (!isValidUrl(val)) return false;
+        return /\.(jpeg|jpg|gif|png|webp|bmp|svg)$/i.test(val) ||
             (val.includes('supabase') && val.includes('image'));
-
-        if (!isImg && debug) console.log(`[${source}] Rejected: Not image-like`, val);
-        if (isImg && debug) console.log(`[${source}] ✅ VALID Candidate:`, val);
-        return isImg;
     };
 
     // 1. Check 'images' array (Supabase standard)
     if (Array.isArray(listing.images) && listing.images.length > 0) {
-        if (debug) console.log('Checking listing.images array:', listing.images);
         const first = listing.images[0];
-
-        if (isValidUrl(first, 'images[0]')) return first;
-        if (typeof first === 'object' && isValidUrl(first?.url, 'images[0].url')) return first.url;
+        if (isValidUrl(first)) return first;
+        if (typeof first === 'object' && isValidUrl(first?.url)) return first.url;
     }
 
     // 2. Check 'image' string
-    if (listing.image) {
-        if (debug) console.log('Checking listing.image:', listing.image);
-        if (isValidUrl(listing.image, 'listing.image')) return listing.image;
-    }
+    if (listing.image && isValidUrl(listing.image)) return listing.image;
 
     // 3. Check 'media_urls' (New Schema Support)
     if (Array.isArray(listing.media_urls) && listing.media_urls.length > 0) {
-        if (debug) console.log('Checking listing.media_urls:', listing.media_urls);
-        const validMedia = listing.media_urls.find(m => m.type === 'image' && isValidUrl(m.url, 'media_urls item'));
-        if (validMedia) {
-            if (debug) { console.log('✅ Selected listing.media_urls item:', validMedia); console.groupEnd(); }
-            return validMedia.url;
-        }
+        const validMedia = listing.media_urls.find(m => m.type === 'image' && isValidUrl(m.url));
+        if (validMedia) return validMedia.url;
     }
 
     // 4. Scan Custom Fields
     if (listing.custom_fields && typeof listing.custom_fields === 'object') {
         const cf = listing.custom_fields;
-        if (debug) console.log('Scanning custom_fields:', cf);
         const keys = Object.keys(cf);
-
         const imageKeys = keys.filter(k => /image|photo|picture|cover|thumb/i.test(k));
 
         for (const key of imageKeys) {
             const val = cf[key];
-            if (isLikelyImage(val, `cf.${key}`)) {
-                if (debug) { console.log(`✅ Selected custom_fields.${key}`); console.groupEnd(); }
-                return val;
-            }
+            if (isLikelyImage(val)) return val;
             if (Array.isArray(val) && val.length > 0) {
                 const first = val[0];
-                if (isLikelyImage(first, `cf.${key}[0]`)) return first;
-                if (typeof first === 'object' && isLikelyImage(first?.url, `cf.${key}[0].url`)) return first.url;
-            }
-        }
-
-        for (const key of keys) {
-            if (imageKeys.includes(key)) continue;
-            const val = cf[key];
-            if (isLikelyImage(val, `cf.${key} (deep)`)) return val;
-            if (Array.isArray(val) && val.length > 0) {
-                const first = val[0];
-                if (isLikelyImage(first, `cf.${key}[0] (deep)`)) return first;
-                if (typeof first === 'object' && isLikelyImage(first?.url, `cf.${key}[0].url (deep)`)) return first.url;
+                if (isLikelyImage(first)) return first;
+                if (typeof first === 'object' && isLikelyImage(first?.url)) return first.url;
             }
         }
     }
 
-    if (debug) { console.log('❌ No valid image found.'); console.groupEnd(); }
-    return null;
+    // ❌ No user image found -> USE FALLBACK
+
+    // Determine category slug
+    let categorySlug = 'default';
+    if (listing.category) {
+        if (typeof listing.category === 'string') categorySlug = listing.category.toLowerCase(); // if joined as 'Cars'
+        else if (listing.category.slug) categorySlug = listing.category.slug.toLowerCase();
+        else if (listing.category.name) categorySlug = listing.category.name.toLowerCase();
+    }
+    // Heuristic fallback if category object is missing but we know context (this is harder without context)
+
+    // Resolve Image
+    if (categorySlug.includes('car') || categorySlug.includes('vehicle')) return FALLBACK_IMAGES.cars;
+    if (categorySlug.includes('home') || categorySlug.includes('property') || categorySlug.includes('estate')) return FALLBACK_IMAGES.homes;
+    if (categorySlug.includes('tender')) return FALLBACK_IMAGES.tenders;
+    if (categorySlug.includes('job') || categorySlug.includes('vacan')) {
+        // Rotate 5 images deterministically based on ID or Title
+        const hash = (listing.id || listing.title || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        const index = hash % FALLBACK_IMAGES.jobs.length;
+        return FALLBACK_IMAGES.jobs[index];
+    }
+
+    return FALLBACK_IMAGES.default;
 };
 
 /**

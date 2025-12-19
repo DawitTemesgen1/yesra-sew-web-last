@@ -1,8 +1,9 @@
 -- ============================================================================
--- SEED LISTINGS (REALISTIC DATA) - Fixed Schema
+-- SEED LISTINGS (REALISTIC DATA) - Fixed Schema (v3)
 -- ============================================================================
 -- Description: Populates the 'listings' table with high-quality test data.
---              Removed 'currency' column (assumes default or handling in price).
+--              Removed 'currency' (does not exist).
+--              Removed 'is_active' (does not exist, uses status='active').
 -- Usage:       Run in Supabase Query Editor.
 -- ============================================================================
 
@@ -45,14 +46,14 @@ BEGIN
         -- Listing 1: Premium Toyota
         INSERT INTO listings (
             user_id, category_id, title, description, price, 
-            status, is_active, is_premium, is_featured,
+            status, is_premium,
             images, location, custom_fields, created_at
         ) VALUES (
             v_user_id, v_cars_id, 
             'Toyota Land Cruiser 2023 - V8', 
             'Immaculate condition, full option V8 Land Cruiser using the new professional template fields.',
             18500000,
-            'active', true, true, true, 
+            'active', true,
             ARRAY[v_img_car1]::text[],
             'Bole, Addis Ababa',
             '{
@@ -72,14 +73,14 @@ BEGIN
         -- Listing 2: Hyundai
         INSERT INTO listings (
             user_id, category_id, title, description, price,
-            status, is_active, is_premium, is_featured,
+            status, is_premium,
             images, location, custom_fields, created_at
         ) VALUES (
             v_user_id, v_cars_id,
             'Hyundai Tucson 2021',
             'Great city car, fuel efficient, maintained at dealership.',
             4200000,
-            'active', true, false, false,
+            'active', false,
             ARRAY[v_img_car2]::text[],
             'Kazanchis, Addis Ababa',
             '{
@@ -104,14 +105,14 @@ BEGIN
         -- Listing 1: Luxury Villa
         INSERT INTO listings (
             user_id, category_id, title, description, price,
-            status, is_active, is_premium, is_featured,
+            status, is_premium,
             images, location, custom_fields, created_at
         ) VALUES (
             v_user_id, v_homes_id,
             'Modern G+2 Villa in Sarbet',
             'Luxury finishings, spacious garden, and quiet neighborhood.',
             45000000,
-            'active', true, true, true,
+            'active', true,
             ARRAY[v_img_home1]::text[],
             'Sarbet, Addis Ababa',
             '{
@@ -129,14 +130,14 @@ BEGIN
         -- Listing 2: Apartment
         INSERT INTO listings (
             user_id, category_id, title, description, price,
-            status, is_active, is_premium, is_featured,
+            status, is_premium,
             images, location, custom_fields, created_at
         ) VALUES (
             v_user_id, v_homes_id,
             '2 Bedroom Apartment near Airport',
             'Convenient location, secured compound.',
             15000000,
-            'active', true, false, false,
+            'active', false,
             ARRAY[v_img_home2]::text[],
             'Bole, Addis Ababa',
             '{
@@ -158,14 +159,14 @@ BEGIN
     IF v_jobs_id IS NOT NULL THEN
         INSERT INTO listings (
             user_id, category_id, title, description, price,
-            status, is_active, is_premium, is_featured,
+            status, is_premium,
             images, location, custom_fields, created_at
         ) VALUES (
             v_user_id, v_jobs_id,
             'Senior React Developer',
             'We are looking for an experienced developer to join our tech team. Remote work possible.',
             0,
-            'active', true, true, false,
+            'active', true,
             ARRAY[v_img_job1]::text[],
             'Remotely / Addis Ababa',
             '{
@@ -187,14 +188,14 @@ BEGIN
     IF v_tenders_id IS NOT NULL THEN
         INSERT INTO listings (
             user_id, category_id, title, description, price,
-            status, is_active, is_premium, is_featured,
+            status, is_premium,
             images, location, custom_fields, created_at
         ) VALUES (
             v_user_id, v_tenders_id,
             'Procurement of Office Furniture',
             'Open tender for the supply of office chairs and desks.',
             500, -- Document Fee
-            'active', true, false, false,
+            'active', false,
             ARRAY[v_img_tender1]::text[],
             'Addis Ababa',
             '{
@@ -208,5 +209,5 @@ BEGIN
         );
     END IF;
 
-    RAISE NOTICE 'Seed listings created successfully! (Currency column removed)';
+    RAISE NOTICE 'Seed listings created successfully! (Currency/Active columns removed)';
 END $$;
