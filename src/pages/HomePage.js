@@ -374,76 +374,66 @@ const HomePage = () => {
         overflow: 'hidden',
         color: 'white',
       }}>
-        {/* Modern Abstract Business Background */}
+        {/* Luxury Blue & Gold Background */}
         <Box
           component={motion.div}
           initial={{ scale: 1.05 }}
           animate={{ scale: 1 }}
-          transition={{ duration: 8, ease: "easeOut" }}
+          transition={{ duration: 12, ease: "easeOut" }}
           sx={{
             position: 'absolute',
             top: 0, left: 0, right: 0, bottom: 0,
-            backgroundImage: 'url(https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop)', // Modern Skyscrapers / Business Abstract
+            backgroundImage: 'url(https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=2047&auto=format&fit=crop)', // Modern Blue High-Rise / Financial District
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             zIndex: 0,
           }}
         />
 
-        {/* Sophisticated Gradient Overlay */}
+        {/* Sophisticated Royal Blue Gradient Overlay */}
         <Box sx={{
           position: 'absolute',
           top: 0, left: 0, right: 0, bottom: 0,
-          background: 'linear-gradient(105deg, rgba(0, 10, 5, 0.95) 0%, rgba(0, 50, 25, 0.85) 50%, rgba(0, 0, 0, 0.4) 100%)', // Deep Green/Black Gradient
+          background: 'linear-gradient(135deg, rgba(10, 25, 47, 0.95) 0%, rgba(20, 40, 80, 0.85) 60%, rgba(255, 215, 0, 0.1) 100%)', // Deep Navy with slight Gold tint
           zIndex: 1
         }} />
 
-        {/* Abstract Geometric Accents */}
+        {/* Golden Lighting Accents */}
         <Box sx={{
           position: 'absolute',
-          top: -100,
-          left: -100,
-          width: 500,
-          height: 500,
-          background: 'radial-gradient(circle, rgba(0, 166, 81, 0.2) 0%, transparent 70%)',
-          filter: 'blur(80px)',
-          zIndex: 1,
-        }} />
-        <Box sx={{
-          position: 'absolute',
-          bottom: -150,
-          right: -100,
-          width: 600,
-          height: 600,
-          background: 'radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, transparent 70%)',
+          top: -200,
+          right: -200,
+          width: 800,
+          height: 800,
+          background: 'radial-gradient(circle, rgba(255, 215, 0, 0.15) 0%, transparent 60%)', // Golden Glow
           filter: 'blur(100px)',
           zIndex: 1,
         }} />
 
         <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 2 }}>
           <Grid container alignItems="center" spacing={4}>
-            {/* Left Content (Text & Search) */}
-            <Grid item xs={12} md={8} lg={7}>
+            {/* Left Content */}
+            <Grid item xs={12} md={7} lg={6}>
               <motion.div
-                initial={{ opacity: 0, x: -30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8 }}
               >
-                {/* Brand Badge */}
+                {/* Gold Premium Badge */}
                 <Box sx={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: 1,
-                  px: 2, py: 0.8,
+                  gap: 1.5,
+                  px: 2.5, py: 1,
                   mb: 4,
-                  borderRadius: 50,
-                  bgcolor: 'rgba(255, 255, 255, 0.1)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: 12,
+                  background: 'linear-gradient(90deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.05) 100%)',
+                  border: '1px solid rgba(255, 215, 0, 0.3)',
                   backdropFilter: 'blur(10px)'
                 }}>
-                  <VerifiedUser sx={{ fontSize: 16, color: '#00A651' }} />
-                  <Typography variant="caption" sx={{ color: '#fff', fontWeight: 600, letterSpacing: 1.2 }}>
-                    TRUSTED BY 10,000+ USERS
+                  <VerifiedUser sx={{ fontSize: 18, color: '#FFD700' }} />
+                  <Typography variant="overline" sx={{ color: '#FFD700', fontWeight: 800, letterSpacing: 2 }}>
+                    #1 PREMIUM MARKETPLACE
                   </Typography>
                 </Box>
 
@@ -452,33 +442,36 @@ const HomePage = () => {
                   fontWeight: 800,
                   lineHeight: 1.1,
                   mb: 3,
-                  background: 'linear-gradient(45deg, #FFFFFF 30%, #4caf50 90%)',
+                  background: 'linear-gradient(to right, #ffffff, #e0e0e0)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
-                  textShadow: '0 20px 40px rgba(0,0,0,0.1)'
+                  textShadow: '0 20px 40px rgba(0,0,0,0.3)'
                 }}>
                   {t.landing.hero.title}
+                  <Box component="span" sx={{ color: '#FFD700', display: 'inline-block' }}>.</Box>
                 </Typography>
 
                 <Typography variant="h5" sx={{
                   fontWeight: 300,
-                  color: 'rgba(255, 255, 255, 0.85)',
+                  color: 'rgba(255, 255, 255, 0.7)',
                   mb: 6,
-                  maxWidth: 600,
-                  fontSize: { xs: '1.1rem', md: '1.35rem' },
-                  lineHeight: 1.6
+                  maxWidth: 550,
+                  fontSize: { xs: '1.1rem', md: '1.25rem' },
+                  lineHeight: 1.6,
+                  fontFamily: 'Inter, sans-serif'
                 }}>
                   {t.landing.hero.subtitle}
                 </Typography>
 
-                {/* Search Bar - Modern Card Style */}
+                {/* Elegant White/Gold Search Box */}
                 <Box sx={{
-                  background: 'rgba(255, 255, 255, 0.95)',
-                  p: 1,
+                  background: 'rgba(255, 255, 255, 0.98)',
+                  p: 1.2,
                   borderRadius: 3,
-                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+                  boxShadow: '0 20px 50px rgba(0, 0, 0, 0.3)',
                   mb: 5,
-                  maxWidth: 700
+                  maxWidth: 650,
+                  border: '1px solid rgba(255, 255, 255, 1)'
                 }}>
                   <SmartSearch
                     enableNavigation={true}
@@ -487,18 +480,22 @@ const HomePage = () => {
                   />
                 </Box>
 
-                {/* Stats / Trust Indicators */}
-                <Stack direction="row" spacing={4} sx={{ display: { xs: 'none', md: 'flex' } }}>
+                {/* Trust Stats - Gold Accented */}
+                <Stack direction="row" spacing={5} sx={{ display: { xs: 'none', md: 'flex' } }}>
                   {[
-                    { label: 'Active Listings', value: '5,000+' },
-                    { label: 'Weekly Visits', value: '12k' },
-                    { label: 'Categories', value: '4 Major' },
+                    { label: 'Total Listings', value: '25K+' },
+                    { label: 'Active Users', value: '10K+' },
+                    { label: 'Cities Covered', value: '15+' },
                   ].map((stat, i) => (
                     <Box key={i}>
-                      <Typography variant="h6" fontWeight="bold" sx={{ color: '#00A651' }}>
+                      <Typography variant="h4" fontWeight="800" sx={{
+                        color: '#FFD700', // Gold
+                        mb: 0.5,
+                        textShadow: '0 5px 15px rgba(255, 215, 0, 0.2)'
+                      }}>
                         {stat.value}
                       </Typography>
-                      <Typography variant="body2" color="rgba(255,255,255,0.6)">
+                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 1 }}>
                         {stat.label}
                       </Typography>
                     </Box>
@@ -507,35 +504,58 @@ const HomePage = () => {
               </motion.div>
             </Grid>
 
-            {/* Right Content (Floating Cards / Visuals - Hidden on Mobile for clean look) */}
-            <Grid item xs={12} mid={4} lg={5} sx={{ display: { xs: 'none', md: 'block' } }}>
+            {/* Right Side: Modern Geometric Composition */}
+            <Grid item xs={12} md={5} lg={6} sx={{ display: { xs: 'none', md: 'block' }, position: 'relative' }}>
               <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 1, delay: 0.3 }}
-                style={{ position: 'relative', height: 400 }}
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 1, delay: 0.2 }}
+                style={{ height: 500, position: 'relative' }}
               >
-                {/* Floating Glass Cards representing categories */}
+                {/* Main Showcase Image Card */}
+                <Box sx={{
+                  position: 'absolute',
+                  top: 20, right: 40,
+                  width: 380, height: 480,
+                  borderRadius: 8,
+                  overflow: 'hidden',
+                  boxShadow: '0 30px 60px rgba(0,0,0,0.5)',
+                  transform: 'rotate(-3deg)',
+                  border: '4px solid rgba(255,255,255,0.1)'
+                }}>
+                  <img
+                    src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1000&auto=format&fit=crop" // Modern Office/Property
+                    alt="Modern Living"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                  <Box sx={{
+                    position: 'absolute',
+                    bottom: 0, left: 0, right: 0,
+                    background: 'linear-gradient(to top, rgba(10, 25, 47, 0.9), transparent)',
+                    p: 4
+                  }}>
+                    <Typography variant="h6" color="white" fontWeight="bold">Premium Estates</Typography>
+                    <Typography variant="body2" color="#FFD700">Starting from 2M ETB</Typography>
+                  </Box>
+                </Box>
+
+                {/* Floating Glass Cards */}
                 <GlassCard
-                  icon={<Work sx={{ color: '#fff' }} />}
-                  title="Dream Jobs"
-                  subtitle="Find your career"
-                  top={20} right={80}
-                  delay={0.5}
+                  icon={<DirectionsCar sx={{ color: '#0d47a1' }} />}
+                  title="Luxury Cars"
+                  subtitle="Verified Dealers"
+                  top={80} left={20}
+                  delay={0.6}
+                  color="#0d47a1" // Blue Icon Background
                 />
                 <GlassCard
-                  icon={<Apartment sx={{ color: '#fff' }} />}
-                  title="Modern Homes"
-                  subtitle="Rent or Buy"
-                  top={140} left={40}
-                  delay={0.7}
-                />
-                <GlassCard
-                  icon={<DirectionsCar sx={{ color: '#fff' }} />}
-                  title="Vehicles"
-                  subtitle="Best deals"
-                  bottom={40} right={120}
-                  delay={0.9}
+                  icon={<Work sx={{ color: '#FFD700' }} />}
+                  title="Executive Jobs"
+                  subtitle="Top Companies"
+                  bottom={60} right={350}
+                  delay={0.8}
+                  color="#FFD700" // Gold Icon Background
+                  textColor="#000"
                 />
               </motion.div>
             </Grid>
@@ -839,7 +859,7 @@ const InsightItem = ({ title, value, desc, color }) => (
   </Grid>
 );
 
-const GlassCard = ({ icon, title, subtitle, top, left, right, bottom, delay }) => (
+const GlassCard = ({ icon, title, subtitle, top, left, right, bottom, delay, color = '#00A651', textColor = 'white' }) => (
   <motion.div
     initial={{ opacity: 0, y: 30 }}
     animate={{ opacity: 1, y: 0 }}
@@ -852,7 +872,7 @@ const GlassCard = ({ icon, title, subtitle, top, left, right, bottom, delay }) =
       gap: 2,
       p: 2,
       borderRadius: 4,
-      background: 'rgba(255, 255, 255, 0.1)',
+      background: 'rgba(255, 255, 255, 0.15)',
       backdropFilter: 'blur(16px)',
       border: '1px solid rgba(255, 255, 255, 0.2)',
       boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
@@ -861,8 +881,8 @@ const GlassCard = ({ icon, title, subtitle, top, left, right, bottom, delay }) =
       <Box sx={{
         p: 1.5,
         borderRadius: '50%',
-        background: 'linear-gradient(135deg, #00A651 0%, #00d26a 100%)',
-        boxShadow: '0 4px 12px rgba(0, 166, 81, 0.3)',
+        background: color === '#FFD700' ? `linear-gradient(135deg, ${color} 0%, #FDB931 100%)` : `linear-gradient(135deg, ${color} 0%, ${color}DD 100%)`,
+        boxShadow: `0 4px 12px ${color}40`,
         display: 'flex'
       }}>
         {icon}
