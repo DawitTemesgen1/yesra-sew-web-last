@@ -192,8 +192,10 @@ const DynamicListingCard = ({
     const summaryFields = useMemo(() => getSummaryFields(template, listing), [template, listing]);
 
     // --- Access Control ---
-    const { isListingLocked } = useListingAccess('all');
-    const locked = isListingLocked(listing);
+    const { permissions } = useListingAccess('all');
+    // Lock ONLY if listing is Premium and user lacks 'is_premium' permission
+    // (Ignores category-level restrictions like 'Jobs' viewing limits for this card view)
+    const locked = listing.is_premium && (!permissions || !permissions.is_premium);
 
     // --- Event Handlers ---
     const handleCardClick = () => {
