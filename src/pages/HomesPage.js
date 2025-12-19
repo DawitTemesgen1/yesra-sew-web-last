@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Container, Typography, Box, Grid, Card, CardContent,
   useTheme, useMediaQuery, Stack,
-  CircularProgress, Alert, Button
+  CircularProgress, Alert, Button, Chip
 } from '@mui/material';
 import Skeleton from '@mui/material/Skeleton';
 import {
@@ -39,7 +39,12 @@ const translations = {
     hoursAgo: "hours ago",
     justNow: "Just now",
     pricePrefix: "ETB",
-    freeListings: "Free Listings"
+    pricePrefix: "ETB",
+    freeListings: "Free Listings",
+    forSale: "For Sale",
+    forRent: "For Rent",
+    allTypes: "All Types",
+    keywords: "house for sale ethiopia, rent house addis ababa, real estate ethiopia, villas for sale, condominiums ethiopia, apartments addis ababa, property for sale"
   },
   am: {
     heroTitle: "የህልም ቤትዎን ያግኙ",
@@ -55,7 +60,12 @@ const translations = {
     hoursAgo: "ሰዓታት በፊት",
     justNow: "አሁን",
     pricePrefix: "ብር",
-    freeListings: "ነፃ ዝርዝሮች"
+    pricePrefix: "ብር",
+    freeListings: "ነፃ ዝርዝሮች",
+    forSale: "የሚሸጥ",
+    forRent: "የሚከራይ",
+    allTypes: "ሁሉም",
+    keywords: "ቤት ለሽያጭ ኢትዮጵያ, ቤት ለኪራይ አዲስ አበባ, ቪላ ለሽያጭ, ኮንዶሚኒየም ኢትዮጵያ, አፓርታማ አዲስ አበባ, የቤት ሽያጭ, ንብረት ኢትዮጵያ"
   },
   om: {
     heroTitle: "Mana Abjuu Keessanii Argadhaa",
@@ -71,7 +81,12 @@ const translations = {
     hoursAgo: "sa'aatii dura",
     justNow: "Amma",
     pricePrefix: "ETB",
-    freeListings: "Tarreeffama Bilisaa"
+    pricePrefix: "ETB",
+    freeListings: "Tarreeffama Bilisaa",
+    forSale: "Gurguraaf",
+    forRent: "Kireeffachuuf",
+    allTypes: "Hunda",
+    keywords: "mana gurguraaf, mana kiraayii, addis ababa mana, real estate ethiopia, gabaa manaa"
   },
   ti: {
     heroTitle: "ናይ ሕልሚ ገዛኹም ርኸቡ",
@@ -89,7 +104,11 @@ const translations = {
     pricePrefix: "ብር",
     freeListings: "ነፃ ዝርዝራት",
     premiumHomes: "ፕሪሚየም ኣባይቲ",
-    standardHomes: "መደበኛ ኣባይቲ"
+    standardHomes: "መደበኛ ኣባይቲ",
+    forSale: "ንመሸጣ",
+    forRent: "ንክራይ",
+    allTypes: "ኩሎም",
+    keywords: "ገዛ ንመሸጣ, ገዛ ንክራይ, ኣዲስ ኣበባ ኣፓርታማ, ቪላ ንመሸጣ, ንብረት ዕዳጋ"
   }
 };
 
@@ -104,6 +123,7 @@ const HomesPage = () => {
   const t = translations[language] || translations.en;
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [listingType, setListingType] = useState('ALL');
   const [templateFields, setTemplateFields] = useState([]);
 
   // Access Control
@@ -134,11 +154,12 @@ const HomesPage = () => {
 
   // Fetch Properties (Cached)
   const { data: properties = [], isLoading, error } = useQuery(
-    ['homes', searchQuery],
+    ['homes', searchQuery, listingType],
     async () => {
       const params = {
-        category: 'homes', // Reverted to plural 'homes' to match database slug
-        search: searchQuery || undefined
+        category: 'homes',
+        search: searchQuery || undefined,
+        type: listingType !== 'ALL' ? listingType : undefined
       };
       const response = await apiService.getListings(params);
       return response.listings || response || [];
@@ -168,7 +189,7 @@ const HomesPage = () => {
       <SEO
         title={t.heroTitle}
         description={t.heroSubtitle}
-        keywords="house for sale ethiopia, rent house addis ababa, real estate ethiopia, villas for sale, condominiums ethiopia, apartments addis ababa, ቤት ለሽያጭ ኢትዮጵያ, ቤት ለኪራይ አዲስ አበባ, ቪላ ለሽያጭ, ኮንዶሚኒየም ኢትዮጵያ, አፓርታማ አዲስ አበባ, የቤት ሽያጭ, ንብረት ኢትዮጵያ, real estate addis ababa, property ethiopia, የቤት ማስታወቂያ"
+        keywords={t.keywords}
       />
       {/* Hero Section */}
       <Box sx={{
@@ -237,6 +258,43 @@ const HomesPage = () => {
         </Container>
       </Box>
 
+      {/* Filters Section */}
+      <Box sx={{ bgcolor: 'background.default', pt: 3, pb: 1 }}>
+        <Container maxWidth="lg">
+          <Stack direction="row" spacing={1} sx={{ justifyContent: isMobile ? 'flex-start' : 'center', overflowX: 'auto', pb: 1 }}>
+            {[
+              { id: 'ALL', label: t.allTypes || 'All Types' },
+              { id: 'sale', label: t.forSale || 'For Sale' },
+              { id: 'rent', label: t.forRent || 'For Rent' }
+            ].map((type) => {
+              const isSelected = listingType === type.id;
+              return (
+                <Chip
+                  key={type.id}
+                  label={type.label}
+                  onClick={() => setListingType(type.id)}
+                  clickable
+                  sx={{
+                    px: 2,
+                    py: 2.5,
+                    fontSize: '0.95rem',
+                    fontWeight: isSelected ? 700 : 500,
+                    bgcolor: isSelected ? 'text.primary' : 'background.paper',
+                    color: isSelected ? 'background.paper' : 'text.primary',
+                    boxShadow: isSelected ? '0 4px 12px rgba(0,0,0,0.15)' : 'none',
+                    border: isSelected ? 'none' : `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+                    '&:hover': {
+                      bgcolor: isSelected ? 'text.primary' : alpha(theme.palette.text.primary, 0.05)
+                    },
+                    borderRadius: '12px'
+                  }}
+                />
+              );
+            })}
+          </Stack>
+        </Container>
+      </Box>
+
       {/* Properties Grid */}
       < Container maxWidth="lg" sx={{ py: 4, minHeight: 500 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
@@ -285,7 +343,6 @@ const HomesPage = () => {
                               listing={property}
                               templateFields={templateFields}
                               viewMode="grid"
-                              isLocked={isListingLocked(property)}
                             />
                           </Grid>
                         ))}
@@ -311,7 +368,6 @@ const HomesPage = () => {
                             listing={property}
                             templateFields={templateFields}
                             viewMode="grid"
-                            isLocked={false}
                           />
                         </Grid>
                       ))

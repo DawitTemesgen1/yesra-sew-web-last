@@ -1,4 +1,25 @@
 {
+    "seo": {
+        "defaultTitle": "Yesira Sew - Purified Gold",
+        "defaultDescription": "Ethiopia's Premier Marketplace for Jobs, Tenders, Cars, and Real Estate. Find the best deals in Addis Ababa and beyond.",
+        "defaultKeywords": "ethiopia, marketplace, jobs, tenders, cars, real estate, buy, sell, addis ababa, classifieds",
+        "homeTitle": "Home",
+        "carsTitle": "Cars for Sale in Ethiopia",
+        "carsDesc": "Find the best deals on new and used cars in Ethiopia.",
+        "homesTitle": "Real Estate & Homes",
+        "homesDesc": "Browse houses, apartments, and land for sale or rent in Addis Ababa.",
+        "jobsTitle": "Jobs in Ethiopia",
+        "jobsDesc": "Find your next career opportunity in Ethiopia.",
+        "tendersTitle": "Tenders & Bids",
+        "tendersDesc": "Latest government and private tenders in Ethiopia."
+    },
+    "cookie": {
+        "title": "We Value Your Privacy",
+        "description": "This website uses cookies to ensure you get the best experience on our website. We use cookies to personalize content and ads, to provide social media features and to analyze our traffic.",
+        "accept": "Accept All",
+        "decline": "Decline",
+        "learnMore": "Learn More"
+    },
     "common": {
         "welcome": "Welcome",
         "login": "Login",

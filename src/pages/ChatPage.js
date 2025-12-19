@@ -21,8 +21,8 @@ import {
 import { Send, ArrowBack, Search } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
-import { useLocation, useNavigate } from 'react-router-dom';
-import apiService from '../services/api';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import apiService, { supabase } from '../services/api';
 import { formatDistanceToNow } from '../utils/dateUtils';
 
 const ChatPage = () => {
@@ -48,49 +48,59 @@ const ChatPage = () => {
         return () => clearInterval(interval);
     }, []);
 
-    // Handle navigation from listing detail page OR profile chat list
-    useEffect(() => {
-        if (!loading && location.state) {
-            // Case 1: Coming from profile chat list with conversationId
-            if (location.state.conversationId) {
-                const existingConv = conversations.find(conv => conv.id === location.state.conversationId);
-                if (existingConv) {
-                    setSelectedConversation(existingConv);
-                } else if (location.state.conversation) {
-                    // Use the conversation data passed from profile
-                    setSelectedConversation(location.state.conversation);
-                }
-                navigate(location.pathname, { replace: true, state: {} });
-                return;
-            }
+    const { recipientId: paramRecipientId } = useParams();
 
-            // Case 2: Coming from listing detail page with recipientId
-            if (location.state.recipientId) {
-                // Find existing conversation with this recipient
+    useEffect(() => {
+        const initChat = async () => {
+            if (loading) return;
+
+            const recipientId = paramRecipientId || location.state?.recipientId;
+
+            if (recipientId) {
+                // Check if we already have a conversation with this user
                 const existingConv = conversations.find(conv => {
                     const otherUser = conv.participants?.find(p => p.id !== user?.id);
-                    return otherUser?.id === location.state.recipientId;
+                    return otherUser?.id === recipientId;
                 });
 
                 if (existingConv) {
-                    // Select existing conversation
                     setSelectedConversation(existingConv);
                 } else {
-                    // Create a new conversation object for display
+                    // Need to create new conversation placeholder
+                    // If we have state data, use it
+                    let otherUser = {
+                        id: recipientId,
+                        fullName: location.state?.recipientName || 'User',
+                        avatarUrl: location.state?.recipientAvatar || null,
+                        isOnline: false
+                    };
+
+                    // If no state data (e.g. direct URL), try to fetch public profile
+                    if (!location.state?.recipientName) {
+                        try {
+                            const { data: profile } = await supabase
+                                .from('profiles')
+                                .select('full_name, avatar_url')
+                                .eq('id', recipientId)
+                                .single();
+                            if (profile) {
+                                otherUser.fullName = profile.full_name || 'User';
+                                otherUser.avatarUrl = profile.avatar_url;
+                            }
+                        } catch (err) {
+                            console.log("Could not fetch recipient profile", err);
+                        }
+                    }
+
                     const newConv = {
-                        id: `new_${location.state.recipientId}`,
+                        id: `new_${recipientId}`,
                         participants: [
                             {
                                 id: user?.id,
                                 fullName: user?.user_metadata?.full_name || 'You',
                                 avatarUrl: user?.user_metadata?.avatar_url
                             },
-                            {
-                                id: location.state.recipientId,
-                                fullName: location.state.recipientName,
-                                avatarUrl: location.state.recipientAvatar,
-                                isOnline: false
-                            }
+                            otherUser
                         ],
                         lastMessage: '',
                         lastMessageAt: null,
@@ -98,18 +108,31 @@ const ChatPage = () => {
                     };
                     setSelectedConversation(newConv);
                 }
-
-                // Clear navigation state to prevent re-triggering
+                // Clear state if present but dont replace URL if it was param based
+                if (location.state?.recipientId) {
+                    navigate(location.pathname, { replace: true, state: {} });
+                }
+            } else if (location.state?.conversationId) {
+                const existingConv = conversations.find(conv => conv.id === location.state.conversationId);
+                if (existingConv) {
+                    setSelectedConversation(existingConv);
+                } else if (location.state.conversation) {
+                    setSelectedConversation(location.state?.conversation);
+                }
                 navigate(location.pathname, { replace: true, state: {} });
             }
-        }
-    }, [conversations, location.state, user, navigate, location.pathname, loading]);
+        };
+
+        initChat();
+    }, [conversations, paramRecipientId, location.state, user, loading]);
 
     useEffect(() => {
-        if (selectedConversation) {
+        if (selectedConversation && !selectedConversation.isNew) {
             fetchMessages(selectedConversation.id);
             const interval = setInterval(() => fetchMessages(selectedConversation.id), 5000); // Poll messages every 5s
             return () => clearInterval(interval);
+        } else if (selectedConversation?.isNew) {
+            setMessages([]);
         }
     }, [selectedConversation]);
 

@@ -183,7 +183,6 @@ const SearchPage = () => {
                                         listing={item}
                                         templateFields={[]} // Standard fields for search results
                                         viewMode="grid"
-                                        isLocked={isListingLocked(item)}
                                     />
                                 </motion.div>
                             </Grid>

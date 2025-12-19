@@ -1,0 +1,9 @@
+/* Make NProgress colorful and match theme */
+#nprogress .bar {
+  background: #FFD700 !important; /* Gold */
+  height: 3px !important;
+}
+
+#nprogress .peg {
+  box-shadow: 0 0 10px #FFD700, 0 0 5px #FFD700 !important;
+}

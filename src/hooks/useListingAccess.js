@@ -52,41 +52,42 @@ export const useListingAccess = (categorySlug) => {
 
         // 2. Check Session History (Already Viewed?)
         // If viewed in this session, it is ALWAYS unlocked
-        // Use consistent key format matches ListingDetailPage
         const viewedSessionKey = `viewed_${listing.id}_${user?.id}`;
         if (user && sessionStorage.getItem(viewedSessionKey)) {
             return false; // Unlocked
         }
 
-        // 3. Check Category Restrictions
+        // 3. Only check restrictions for PREMIUM listings
+        // Non-premium listings are always unlocked
+        if (listing.is_premium !== true) {
+            return false; // Not premium = always unlocked
+        }
+
+        // 4. For premium listings, check user access
         const restrictedCategories = ['jobs', 'tenders'];
-        const isRestricted = restrictedCategories.includes(itemCategory) || listing.is_premium;
 
-        if (isRestricted) {
-            if (!user) return true; // Guests blocked
-            if (!permissions) return true; // Loading safegaurd
+        // If no user, lock premium listings
+        if (!user) return true;
 
-            // If user has 'is_premium' but this specific cat is 0?
-            // Actually, if listing is is_premium manually but category is Open (e.g. Premium Car),
-            // current logic usually relies on general 'is_premium' flag or specific cat limit.
-            // Let's stick to category view limits for Jobs/Tenders.
+        // If permissions not loaded yet, lock as safeguard
+        if (!permissions) return true;
 
-            if (restrictedCategories.includes(itemCategory)) {
-                const viewLimit = permissions.can_view?.[itemCategory];
-                const hasCredit = (viewLimit === -1 || viewLimit === true || (typeof viewLimit === 'number' && viewLimit > 0));
+        // Check category-specific restrictions
+        if (restrictedCategories.includes(itemCategory)) {
+            const viewLimit = permissions.can_view?.[itemCategory];
+            const hasCredit = (viewLimit === -1 || viewLimit === true || (typeof viewLimit === 'number' && viewLimit > 0));
 
-                // Block if NO credit
-                if (!hasCredit) return true;
+            // Block if NO credit
+            if (!hasCredit) return true;
 
-                // If has credit (remaining > 0), show Unlocked
-                return false;
-            }
+            // If has credit (remaining > 0), show Unlocked
+            return false;
+        }
 
-            // For other categories (Homes/Cars) marked is_premium:
-            // Fallback to generic "is_premium" status?
-            if (listing.is_premium && !permissions.is_premium) {
-                return true;
-            }
+        // For other categories (Homes/Cars) marked is_premium:
+        // Check if user has premium subscription
+        if (listing.is_premium && !permissions.is_premium) {
+            return true;
         }
 
         return false;

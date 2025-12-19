@@ -395,7 +395,6 @@ const TendersPage = () => {
                             listing={tender}
                             templateFields={templateFields}
                             viewMode="grid"
-                            isLocked={isListingLocked(tender)}
                           />
                         </Grid>
                       ))}
@@ -422,7 +421,6 @@ const TendersPage = () => {
                             listing={tender}
                             templateFields={templateFields}
                             viewMode="grid"
-                            isLocked={false}
                           />
                         </Grid>
                       ))

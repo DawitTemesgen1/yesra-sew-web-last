@@ -662,6 +662,16 @@ class ApiService {
     }
   }
 
+  async getMarketStats() {
+    try {
+      const listingService = (await import('./listing-service')).default;
+      return await listingService.getMarketStats();
+    } catch (error) {
+      console.error('Error in apiService.getMarketStats:', error);
+      return { jobs: 0, homes: 0, cars: 0 };
+    }
+  }
+
   // --- Mocks & Data Helpers ---
   get listings() {
     return {

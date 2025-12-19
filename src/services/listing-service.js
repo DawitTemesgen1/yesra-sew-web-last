@@ -387,6 +387,33 @@ const listingService = {
         };
 
         return { success: true, stats, listings };
+    },
+
+    async getMarketStats() {
+        try {
+            // Core Category IDs (Verified Prod IDs)
+            const catIds = {
+                jobs: 'eade00c5-cfe5-4a6c-8d4f-42b3de59d792',
+                homes: '85259f35-6146-4fd2-b75e-046199527aec',
+                cars: '461d8ebf-be96-474a-8d51-d97f84c7a042'
+            };
+
+            // Run counts in parallel for maximum speed
+            const [jobs, homes, cars] = await Promise.all([
+                supabase.from('listings').select('id', { count: 'exact', head: true }).eq('category_id', catIds.jobs).in('status', ['active', 'approved']),
+                supabase.from('listings').select('id', { count: 'exact', head: true }).eq('category_id', catIds.homes).in('status', ['active', 'approved']),
+                supabase.from('listings').select('id', { count: 'exact', head: true }).eq('category_id', catIds.cars).in('status', ['active', 'approved'])
+            ]);
+
+            return {
+                jobs: jobs.count || 0,
+                homes: homes.count || 0,
+                cars: cars.count || 0
+            };
+        } catch (err) {
+            console.error("Error fetching market stats:", err);
+            return { jobs: 0, homes: 0, cars: 0 };
+        }
     }
 };
 

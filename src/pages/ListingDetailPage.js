@@ -248,84 +248,15 @@ const ListingDetailPage = () => {
   const template = templateData?.template; // Extract actual template object if nested
   const steps = templateData?.steps || [];
 
-  const { user } = useAuth();
-  const [hasAccess, setHasAccess] = useState(null);
-  const [accessChecked, setAccessChecked] = useState(false);
+
 
   useEffect(() => {
     if (listing) {
       setIsFavorite(listing.is_favorited || false);
-      checkViewAccess();
     }
-  }, [listing, user]);
+  }, [listing]);
 
-  const checkViewAccess = async () => {
-    try {
-      if (user && listing.user_id === user.id) {
-        setHasAccess(true);
-        setAccessChecked(true);
-        return;
-      }
 
-      // OPTIMIZED: Use hardcoded restrictions first to avoid extra API call if possible
-      const categories = await adminService.getCategories(); // Should be cached
-      const category = categories.find(c => c.id === listing.category_id);
-      const catSlug = category?.slug || 'general';
-
-      // We treat jobs/tenders as restricted. Others might be too depending on plan?
-      // For now, let's assume all categories check permissions if user is logged in, 
-      // but maybe non-logged in can see non-restricted?
-      const isRestrictedCategory = ['jobs', 'tenders', 'homes', 'cars'].includes(catSlug);
-
-      if (!isRestrictedCategory) {
-        setHasAccess(true);
-        setAccessChecked(true);
-        return;
-      }
-
-      if (user) {
-        // Check if already viewed in this session to avoid double counting
-        const viewedSessionKey = `viewed_${listing.id}_${user.id}`;
-        if (sessionStorage.getItem(viewedSessionKey)) {
-          setHasAccess(true);
-          setAccessChecked(true);
-          return;
-        }
-
-        // Check Permissions (Now uses robust count-based logic)
-        const perms = await adminService.checkSubscriptionAccess(user.id);
-        const viewLimit = perms?.can_view?.[catSlug];
-
-        // If unlimited (-1) or has remaining (> 0)
-        // If undefined, assume 0 (blocked) for restricted categories
-        if (viewLimit === -1 || (typeof viewLimit === 'number' && viewLimit > 0)) {
-          // Record view (Robust Row Insert)
-          const { error: usageError } = await supabase.rpc('record_listing_view', {
-            p_listing_id: listing.id,
-            p_category_slug: catSlug
-          });
-
-          if (usageError) {
-            console.error("View record error:", usageError);
-          }
-
-          // Grant access
-          setHasAccess(true);
-          sessionStorage.setItem(viewedSessionKey, 'true');
-        } else {
-          console.log("No view access remaining for category:", catSlug);
-          setHasAccess(false);
-        }
-      } else {
-        setHasAccess(false);
-      }
-    } catch (error) {
-      console.error('Error checking access:', error);
-      setHasAccess(false);
-    } finally {
-      setAccessChecked(true);
-    }
-  };
 
   const handleToggleFavorite = async () => {
     try {
@@ -394,6 +325,17 @@ const ListingDetailPage = () => {
       return allFields.filter(f => f.section === 'main' || !f.section);
     }
     return allFields.filter(field => field.section === section);
+  };
+
+  const getColumnWidth = (width) => {
+    if (typeof width === 'number') return width;
+    switch (width) {
+      case 'full': return 12;
+      case 'half': return 6;
+      case 'third': return 4;
+      case 'quarter': return 3;
+      default: return 12;
+    }
   };
 
   if (loadingListing) {
@@ -624,225 +566,176 @@ const ListingDetailPage = () => {
           {/* Right Column - Dynamic Content */}
           <Grid item xs={12} md={5}>
             <Box sx={{ p: isMobile ? 2 : 0 }}>
-              {/* Loading State - Checking Access */}
-              {hasAccess === null ? (
-                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 300 }}>
-                  <CircularProgress />
-                </Box>
-              ) : /* Content Access Control - Denied */
-                accessChecked && !hasAccess ? (
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      p: 4,
-                      textAlign: 'center',
-                      bgcolor: alpha(theme.palette.error.main, 0.05),
-                      border: `1px solid ${alpha(theme.palette.error.main, 0.2)}`,
-                      borderRadius: 3,
-                      my: 4
-                    }}
-                  >
-                    <Box sx={{
-                      width: 64, height: 64, borderRadius: '50%', bgcolor: 'error.main',
-                      color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      mx: 'auto', mb: 2
-                    }}>
-                      <Lock sx={{ fontSize: 32 }} />
-                    </Box>
-                    <Typography variant="h5" fontWeight="bold" gutterBottom>
-                      Premium Content
+              <>
+                <Stack spacing={3}>
+                  {/* Title */}
+                  <Box>
+                    <Typography variant={isMobile ? "h5" : "h4"} fontWeight="bold" gutterBottom>
+                      {listing.title}
                     </Typography>
-                    <Typography variant="body1" color="text.secondary" paragraph>
-                      This listing is exclusive to our premium members. <br />
-                      Upgrade your plan to view full details and contact the seller.
-                    </Typography>
+                    <Stack direction="row" spacing={0.5} alignItems="center" color="text.secondary">
+                      <LocationOn sx={{ fontSize: 20 }} />
+                      <Typography variant="body1">
+                        {listing.city || listing.location || listing.address || 'Location not specified'}
+                      </Typography>
+                    </Stack>
+                  </Box>
+
+                  {/* Header Section Fields */}
+                  {headerFields.length > 0 && (
+                    <Grid container spacing={2}>
+                      {headerFields.map(field => {
+                        const value = getFieldValue(field);
+                        return value ? (
+                          <Grid item xs={12} md={field.width ? getColumnWidth(field.width) : 6} key={field.id}>
+                            <DynamicField field={field} value={value} isMobile={isMobile} />
+                          </Grid>
+                        ) : null;
+                      })}
+                    </Grid>
+                  )}
+
+                  {/* Main Section Fields */}
+                  {mainFields.length > 0 && (
+                    <Grid container spacing={2}>
+                      {mainFields.map(field => {
+                        const value = getFieldValue(field);
+                        return value ? (
+                          <Grid item xs={12} md={field.field_type === 'textarea' ? 12 : (field.width ? getColumnWidth(field.width) : 6)} key={field.id}>
+                            <DynamicField field={field} value={value} isMobile={isMobile} />
+                          </Grid>
+                        ) : null;
+                      })}
+                    </Grid>
+                  )}
+
+                  {/* Sidebar Section Fields */}
+                  {sidebarFields.length > 0 && (
+                    <Grid container spacing={2}>
+                      {sidebarFields.map(field => {
+                        const value = getFieldValue(field);
+                        return value ? (
+                          <Grid item xs={12} md={field.width ? getColumnWidth(field.width) : 12} key={field.id}>
+                            <DynamicField field={field} value={value} isMobile={isMobile} />
+                          </Grid>
+                        ) : null;
+                      })}
+                    </Grid>
+                  )}
+
+                  {/* Fallback: Show description if no template */}
+                  {(!steps || steps.length === 0 || mainFields.length === 0) && listing.description && (
+                    <Paper sx={{ p: 3, borderRadius: 2 }} variant="outlined">
+                      <Typography variant="h6" fontWeight="bold" gutterBottom>
+                        Description
+                      </Typography>
+                      <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.7 }}>
+                        {listing.description}
+                      </Typography>
+                    </Paper>
+                  )}
+
+                  {/* Desktop Action Buttons */}
+                  <Stack spacing={2} sx={{ display: { xs: 'none', md: 'flex' } }}>
                     <Button
+                      fullWidth
                       variant="contained"
                       size="large"
-                      startIcon={<Verified />}
-                      onClick={() => {
-                        // Determine category slug for pricing redirect
-                        // We need to fetch it again or store it in state, but usually we can guess from context or fetch logic
-                        // For simplicty, redirect to general pricing or specific if known
-                        navigate(`/pricing`);
-                      }}
-                      sx={{
-                        mt: 2,
-                        fontWeight: 'bold',
-                        px: 4,
-                        py: 1.5,
-                        borderRadius: 50,
-                        background: 'linear-gradient(45deg, #1E3A8A 30%, #FFD700 90%)',
-                      }}
+                      startIcon={<Phone />}
+                      onClick={handleCallSeller}
+                      sx={{ py: 1.5, borderRadius: 2, fontWeight: 600 }}
                     >
-                      Unlock Now
+                      {t.callSeller}
                     </Button>
-                  </Paper>
-                ) : (
-                  <>
-                    <Stack spacing={3}>
-                      {/* Title */}
-                      <Box>
-                        <Typography variant={isMobile ? "h5" : "h4"} fontWeight="bold" gutterBottom>
-                          {listing.title}
-                        </Typography>
-                        <Stack direction="row" spacing={0.5} alignItems="center" color="text.secondary">
-                          <LocationOn sx={{ fontSize: 20 }} />
-                          <Typography variant="body1">
-                            {listing.city || listing.location || listing.address || 'Location not specified'}
-                          </Typography>
-                        </Stack>
-                      </Box>
 
-                      {/* Header Section Fields */}
-                      {headerFields.length > 0 && (
-                        <Grid container spacing={2}>
-                          {headerFields.map(field => {
-                            const value = getFieldValue(field);
-                            return value ? (
-                              <Grid item xs={12} md={field.width || 6} key={field.id}>
-                                <DynamicField field={field} value={value} isMobile={isMobile} />
-                              </Grid>
-                            ) : null;
-                          })}
-                        </Grid>
-                      )}
+                    {/* Telegram Button */}
+                    {(listing.telegram_username || listing.seller?.telegram) && (
+                      <Button
+                        fullWidth
+                        variant="outlined"
+                        size="large"
+                        startIcon={
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18 1.897-.962 6.502-1.359 8.627-.168.9-.5 1.201-.82 1.23-.697.064-1.226-.461-1.901-.903-1.056-.693-1.653-1.124-2.678-1.8-1.185-.781-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.139-5.062 3.345-.479.329-.913.489-1.302.481-.428-.008-1.252-.241-1.865-.44-.752-.244-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.831-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635.099-.002.321.023.465.141.121.099.155.232.171.326.016.094.036.308.02.475z" />
+                          </svg>
+                        }
+                        onClick={() => {
+                          const username = listing.telegram_username || listing.seller?.telegram;
+                          window.open(`https://t.me/${username}`, '_blank');
+                        }}
+                        sx={{
+                          py: 1.5,
+                          borderRadius: 2,
+                          fontWeight: 600,
+                          color: '#0088cc',
+                          borderColor: '#0088cc',
+                          '&:hover': {
+                            borderColor: '#0088cc',
+                            bgcolor: alpha('#0088cc', 0.1)
+                          }
+                        }}
+                      >
+                        Message on Telegram
+                      </Button>
+                    )}
 
-                      {/* Main Section Fields */}
-                      {mainFields.length > 0 && (
-                        <Grid container spacing={2}>
-                          {mainFields.map(field => {
-                            const value = getFieldValue(field);
-                            return value ? (
-                              <Grid item xs={12} md={field.field_type === 'textarea' ? 12 : (field.width || 6)} key={field.id}>
-                                <DynamicField field={field} value={value} isMobile={isMobile} />
-                              </Grid>
-                            ) : null;
-                          })}
-                        </Grid>
-                      )}
+                    <Button
+                      fullWidth
+                      variant="outlined"
+                      size="large"
+                      startIcon={<Chat />}
+                      onClick={() => navigate(`/chat/${listing.author_id || listing.user_id}`, {
+                        state: {
+                          recipientName: listing.seller?.name || 'Seller',
+                          recipientAvatar: listing.seller?.avatar,
+                          recipientId: listing.author_id || listing.user_id
+                        }
+                      })}
+                      sx={{ py: 1.5, borderRadius: 2, fontWeight: 600 }}
+                    >
+                      {t.chatNow}
+                    </Button>
+                  </Stack>
 
-                      {/* Sidebar Section Fields */}
-                      {sidebarFields.length > 0 && (
-                        <Grid container spacing={2}>
-                          {sidebarFields.map(field => {
-                            const value = getFieldValue(field);
-                            return value ? (
-                              <Grid item xs={12} md={field.width || 12} key={field.id}>
-                                <DynamicField field={field} value={value} isMobile={isMobile} />
-                              </Grid>
-                            ) : null;
-                          })}
-                        </Grid>
-                      )}
+                  {/* Comments Section */}
+                  <Divider />
+                  <Box>
+                    <Typography variant="h6" fontWeight="bold" gutterBottom>
+                      {t.comments} ({comments.length})
+                    </Typography>
 
-                      {/* Fallback: Show description if no template */}
-                      {(!steps || steps.length === 0 || mainFields.length === 0) && listing.description && (
-                        <Paper sx={{ p: 3, borderRadius: 2 }} variant="outlined">
-                          <Typography variant="h6" fontWeight="bold" gutterBottom>
-                            Description
-                          </Typography>
-                          <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.7 }}>
-                            {listing.description}
-                          </Typography>
-                        </Paper>
-                      )}
-
-                      {/* Desktop Action Buttons */}
-                      <Stack spacing={2} sx={{ display: { xs: 'none', md: 'flex' } }}>
-                        <Button
-                          fullWidth
-                          variant="contained"
-                          size="large"
-                          startIcon={<Phone />}
-                          onClick={handleCallSeller}
-                          sx={{ py: 1.5, borderRadius: 2, fontWeight: 600 }}
-                        >
-                          {t.callSeller}
-                        </Button>
-
-                        {/* Telegram Button */}
-                        {(listing.telegram_username || listing.seller?.telegram) && (
-                          <Button
-                            fullWidth
-                            variant="outlined"
-                            size="large"
-                            startIcon={
-                              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18 1.897-.962 6.502-1.359 8.627-.168.9-.5 1.201-.82 1.23-.697.064-1.226-.461-1.901-.903-1.056-.693-1.653-1.124-2.678-1.8-1.185-.781-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.139-5.062 3.345-.479.329-.913.489-1.302.481-.428-.008-1.252-.241-1.865-.44-.752-.244-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.831-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635.099-.002.321.023.465.141.121.099.155.232.171.326.016.094.036.308.02.475z" />
-                              </svg>
-                            }
-                            onClick={() => {
-                              const username = listing.telegram_username || listing.seller?.telegram;
-                              window.open(`https://t.me/${username}`, '_blank');
-                            }}
-                            sx={{
-                              py: 1.5,
-                              borderRadius: 2,
-                              fontWeight: 600,
-                              color: '#0088cc',
-                              borderColor: '#0088cc',
-                              '&:hover': {
-                                borderColor: '#0088cc',
-                                bgcolor: alpha('#0088cc', 0.1)
-                              }
-                            }}
-                          >
-                            Message on Telegram
-                          </Button>
-                        )}
-
-                        <Button
-                          fullWidth
-                          variant="outlined"
-                          size="large"
-                          startIcon={<Chat />}
-                          onClick={() => navigate(`/chat/${listing.author_id || listing.user_id}`)}
-                          sx={{ py: 1.5, borderRadius: 2, fontWeight: 600 }}
-                        >
-                          {t.chatNow}
-                        </Button>
-                      </Stack>
-
-                      {/* Comments Section */}
-                      <Divider />
-                      <Box>
-                        <Typography variant="h6" fontWeight="bold" gutterBottom>
-                          {t.comments} ({comments.length})
-                        </Typography>
-
-                        {/* Add Comment */}
-                        <Stack direction="row" spacing={1} sx={{ mb: 3 }}>
-                          <TextField
-                            fullWidth
-                            size="small"
-                            placeholder={t.addComment}
-                            value={comment}
-                            onChange={(e) => setComment(e.target.value)}
-                            onKeyPress={(e) => e.key === 'Enter' && handlePostComment()}
-                          />
-                          <IconButton color="primary" onClick={handlePostComment}>
-                            <Send />
-                          </IconButton>
-                        </Stack>
-
-                        {/* Comments List */}
-                        <Stack spacing={2}>
-                          {comments.map((c, idx) => (
-                            <Paper key={idx} sx={{ p: 2, bgcolor: 'background.default' }}>
-                              <Stack direction="row" spacing={1} alignItems="center" mb={1}>
-                                <Avatar sx={{ width: 24, height: 24 }}>{c.user_name?.[0]}</Avatar>
-                                <Typography variant="body2" fontWeight="600">{c.user_name}</Typography>
-                                <Typography variant="caption" color="text.secondary">{new Date(c.created_at).toLocaleDateString()}</Typography>
-                              </Stack>
-                              <Typography variant="body2">{c.comment}</Typography>
-                            </Paper>
-                          ))}
-                        </Stack>
-                      </Box>
+                    {/* Add Comment */}
+                    <Stack direction="row" spacing={1} sx={{ mb: 3 }}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        placeholder={t.addComment}
+                        value={comment}
+                        onChange={(e) => setComment(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && handlePostComment()}
+                      />
+                      <IconButton color="primary" onClick={handlePostComment}>
+                        <Send />
+                      </IconButton>
                     </Stack>
-                  </>
-                )}
+
+                    {/* Comments List */}
+                    <Stack spacing={2}>
+                      {comments.map((c, idx) => (
+                        <Paper key={idx} sx={{ p: 2, bgcolor: 'background.default' }}>
+                          <Stack direction="row" spacing={1} alignItems="center" mb={1}>
+                            <Avatar sx={{ width: 24, height: 24 }}>{c.user_name?.[0]}</Avatar>
+                            <Typography variant="body2" fontWeight="600">{c.user_name}</Typography>
+                            <Typography variant="caption" color="text.secondary">{new Date(c.created_at).toLocaleDateString()}</Typography>
+                          </Stack>
+                          <Typography variant="body2">{c.comment}</Typography>
+                        </Paper>
+                      ))}
+                    </Stack>
+                  </Box>
+                </Stack>
+              </>
+
             </Box>
           </Grid>
         </Grid>
@@ -905,7 +798,13 @@ const ListingDetailPage = () => {
             fullWidth
             variant="outlined"
             startIcon={<Chat />}
-            onClick={() => navigate(`/chat/${listing.author_id || listing.user_id}`)}
+            onClick={() => navigate(`/chat/${listing.author_id || listing.user_id}`, {
+              state: {
+                recipientName: listing.seller?.name || 'Seller',
+                recipientAvatar: listing.seller?.avatar,
+                recipientId: listing.author_id || listing.user_id
+              }
+            })}
             sx={{ fontSize: '0.875rem' }}
           >
             Chat

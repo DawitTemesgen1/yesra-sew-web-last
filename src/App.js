@@ -14,8 +14,11 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AdminProtectedRoute from './components/AdminProtectedRoute';
 import RouteLoader from './components/RouteLoader';
 import ScrollToTop from './components/ScrollToTop';
-import './i18n/config';
+import { AnimatePresence } from 'framer-motion';
+import CookieConsent from './components/CookieConsent';
+import NotFoundPage from './pages/NotFoundPage';
 import { HelmetProvider } from 'react-helmet-async';
+
 // Core Data & State
 import { QueryClientProvider } from 'react-query';
 import { queryClient } from './lib/react-query';
@@ -61,11 +64,20 @@ const Layout = ({ children }) => {
     const isChatPage = location.pathname === '/chat';
     const hideNavFooter = isAuthPage || isProfilePage || isAdminPage || isChatPage;
 
+    // Initialize GA4 (Placeholder)
+    React.useEffect(() => {
+        if (process.env.NODE_ENV === 'production') {
+            // Example: ReactGA.initialize('G-XXXXXXXXXX');
+            // ReactGA.pageview(window.location.pathname + window.location.search);
+        }
+    }, [location]);
+
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
             {!hideNavFooter && <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />}
             <Box component="main" sx={{ flexGrow: 1 }}>{children}</Box>
             {!hideNavFooter && <Footer />}
+            <CookieConsent />
         </Box>
     );
 };
@@ -73,10 +85,114 @@ const Layout = ({ children }) => {
 
 
 
+const RedirectHandler = () => {
+    React.useEffect(() => {
+        if (process.env.NODE_ENV === 'production') {
+            const { hostname, protocol, pathname, search, hash } = window.location;
+            const targetDomain = 'www.yesrasewsolution.com';
+
+            // 1. Enforce HTTPS
+            if (protocol !== 'https:' && hostname !== 'localhost') {
+                window.location.href = `https://${hostname}${pathname}${search}${hash}`;
+                return;
+            }
+
+            // 2. Enforce WWW for yesrasewsolution.com
+            // If we are on the root domain (non-www), redirect to www
+            if (hostname === 'yesrasewsolution.com') {
+                window.location.href = `https://${targetDomain}${pathname}${search}${hash}`;
+                return;
+            }
+        }
+    }, []);
+    return null;
+};
+
+// Prefetch critical pages for instant navigation
+const prefetchRoutes = () => {
+    const criticalRoutes = [
+        () => import('./pages/CarsPage'),
+        () => import('./pages/HomesPage'),
+        () => import('./pages/JobsPage'),
+        () => import('./pages/TendersPage'),
+        () => import('./pages/ListingsPage')
+    ];
+
+    criticalRoutes.forEach(promise => {
+        try {
+            promise();
+        } catch (e) {
+            // Ignore prefetch errors
+        }
+    });
+};
+
+const AnimatedRoutes = () => {
+    const location = useLocation();
+
+    // Trigger prefetch on first load
+    React.useEffect(() => {
+        const timer = setTimeout(() => {
+            prefetchRoutes();
+        }, 2000); // Start prefetching 2s after app load
+        return () => clearTimeout(timer);
+    }, []);
+
+    return (
+        <AnimatePresence mode="wait">
+            <Routes location={location} key={location.pathname}>
+                <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+                <Route path="/tenders" element={<ProtectedRoute><TendersPage /></ProtectedRoute>} />
+                <Route path="/jobs" element={<ProtectedRoute><JobsPage /></ProtectedRoute>} />
+                <Route path="/homes" element={<ProtectedRoute><HomesPage /></ProtectedRoute>} />
+                <Route path="/cars" element={<ProtectedRoute><CarsPage /></ProtectedRoute>} />
+                <Route path="/listings" element={<ProtectedRoute><ListingsPage /></ProtectedRoute>} />
+                <Route path="/listings/:id" element={<ProtectedRoute><ListingDetailPage /></ProtectedRoute>} />
+                <Route path="/login" element={<EnhancedAuthPage />} />
+                <Route path="/register" element={<EnhancedAuthPage />} />
+                <Route path="/auth" element={<EnhancedAuthPage />} />
+                {/* Redirect /dashboard to /profile */}
+                <Route path="/dashboard" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+                <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+                <Route path="/post-ad" element={<ProtectedRoute><PostAdPage /></ProtectedRoute>} />
+                <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
+                <Route path="/chat/:recipientId" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
+                <Route path="/admin-login" element={<AdminLoginPage />} />
+                <Route path="/admin-panel" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
+                <Route path="/search" element={<ProtectedRoute><SearchPage /></ProtectedRoute>} />
+                <Route path="/payment/success" element={<PaymentCallbackPage />} />
+                <Route path="/payment/cancel" element={<PaymentCallbackPage />} />
+                <Route path="/payment/error" element={<PaymentCallbackPage />} />
+                <Route path="/admin-panel/post-template/:categoryId" element={<AdminProtectedRoute><PostTemplateScreen /></AdminProtectedRoute>} />
+
+                {/* Legal & Info Pages */}
+                <Route path="/terms" element={<TermsOfService />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/about" element={<AboutUs />} />
+
+                {/* Membership & Pricing */}
+                <Route path="/upgrade-plan" element={<ProtectedRoute><UpgradePlanPage /></ProtectedRoute>} />
+                <Route path="/pricing" element={<ProtectedRoute><PricingPage /></ProtectedRoute>} />
+                <Route path="/pricing/jobs" element={<ProtectedRoute><JobsTendersPricingPage category="jobs" /></ProtectedRoute>} />
+                <Route path="/pricing/tenders" element={<ProtectedRoute><JobsTendersPricingPage category="tenders" /></ProtectedRoute>} />
+                <Route path="/pricing/homes" element={<ProtectedRoute><HomesCarsPricingPage category="homes" /></ProtectedRoute>} />
+                <Route path="/pricing/cars" element={<ProtectedRoute><HomesCarsPricingPage category="cars" /></ProtectedRoute>} />
+                <Route path="/membership-plans" element={<ProtectedRoute><PricingPage /></ProtectedRoute>} />
+                <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
+
+                {/* Dynamic Pages (Privacy, Terms, etc.) - Must be last */}
+                <Route path="/:slug" element={<ProtectedRoute><DynamicPage /></ProtectedRoute>} />
+                <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+        </AnimatePresence>
+    );
+};
+
 function App() {
     // App Root with Providers
     return (
         <HelmetProvider>
+            <RedirectHandler />
             <QueryClientProvider client={queryClient}>
                 <LanguageProvider>
                     <CustomThemeProvider>
@@ -88,48 +204,7 @@ function App() {
                                         <Layout>
                                             <ScrollToTop />
                                             <Suspense fallback={<RouteLoader />}>
-                                                <Routes>
-                                                    <Route path="/" element={<HomePage />} />
-                                                    <Route path="/tenders" element={<TendersPage />} />
-                                                    <Route path="/jobs" element={<JobsPage />} />
-                                                    <Route path="/homes" element={<HomesPage />} />
-                                                    <Route path="/cars" element={<CarsPage />} />
-                                                    <Route path="/listings" element={<ListingsPage />} />
-                                                    <Route path="/listings/:id" element={<ListingDetailPage />} />
-                                                    <Route path="/login" element={<EnhancedAuthPage />} />
-                                                    <Route path="/register" element={<EnhancedAuthPage />} />
-                                                    <Route path="/auth" element={<EnhancedAuthPage />} />
-                                                    {/* Redirect /dashboard to /profile */}
-                                                    <Route path="/dashboard" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-                                                    <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-                                                    <Route path="/post-ad" element={<ProtectedRoute><PostAdPage /></ProtectedRoute>} />
-                                                    <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
-                                                    <Route path="/admin-login" element={<AdminLoginPage />} />
-                                                    <Route path="/admin-panel" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
-                                                    <Route path="/search" element={<SearchPage />} />
-                                                    <Route path="/payment/success" element={<PaymentCallbackPage />} />
-                                                    <Route path="/payment/cancel" element={<PaymentCallbackPage />} />
-                                                    <Route path="/payment/error" element={<PaymentCallbackPage />} />
-                                                    <Route path="/admin-panel/post-template/:categoryId" element={<AdminProtectedRoute><PostTemplateScreen /></AdminProtectedRoute>} />
-
-                                                    {/* Legal & Info Pages */}
-                                                    <Route path="/terms" element={<TermsOfService />} />
-                                                    <Route path="/privacy" element={<PrivacyPolicy />} />
-                                                    <Route path="/about" element={<AboutUs />} />
-
-                                                    {/* Membership & Pricing */}
-                                                    <Route path="/upgrade-plan" element={<ProtectedRoute><UpgradePlanPage /></ProtectedRoute>} />
-                                                    <Route path="/pricing" element={<PricingPage />} />
-                                                    <Route path="/pricing/jobs" element={<JobsTendersPricingPage category="jobs" />} />
-                                                    <Route path="/pricing/tenders" element={<JobsTendersPricingPage category="tenders" />} />
-                                                    <Route path="/pricing/homes" element={<HomesCarsPricingPage category="homes" />} />
-                                                    <Route path="/pricing/cars" element={<HomesCarsPricingPage category="cars" />} />
-                                                    <Route path="/membership-plans" element={<PricingPage />} />
-                                                    <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
-
-                                                    {/* Dynamic Pages (Privacy, Terms, etc.) - Must be last */}
-                                                    <Route path="/:slug" element={<DynamicPage />} />
-                                                </Routes>
+                                                <AnimatedRoutes />
                                             </Suspense>
                                         </Layout>
                                     </Router>

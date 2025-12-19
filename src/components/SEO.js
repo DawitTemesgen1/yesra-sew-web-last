@@ -3,14 +3,14 @@ import { Helmet } from 'react-helmet-async';
 import { useLanguage } from '../contexts/LanguageContext';
 
 const SEO = ({ title, description, keywords, image, url }) => {
-    const { language } = useLanguage();
+    const { language, t } = useLanguage();
 
     // Default values based on language could be expanded here if needed, 
     // but usually passed from the page component which utilizes t() functions.
     // For now, English defaults are provided.
-    const siteTitle = 'Yesira Sew - Purified Gold';
-    const defaultDescription = 'Ethiopia\'s Premier Marketplace for Jobs, Tenders, Cars, and Real Estate. Find the best deals in Addis Ababa and beyond.';
-    const defaultKeywords = 'ethiopia, marketplace, jobs, tenders, cars, real estate, buy, sell, addis ababa, classifieds, jobs in ethiopia, cars in ethiopia';
+    const siteTitle = t('seo.defaultTitle') || 'Yesira Sew - Purified Gold';
+    const defaultDescription = t('seo.defaultDescription') || 'Ethiopia\'s Premier Marketplace for Jobs, Tenders, Cars, and Real Estate. Find the best deals in Addis Ababa and beyond.';
+    const defaultKeywords = t('seo.defaultKeywords') || 'ethiopia, marketplace, jobs, tenders, cars, real estate, buy, sell, addis ababa, classifieds, jobs in ethiopia, cars in ethiopia';
 
     // Dynamic Title Construction
     const fullTitle = title ? `${title} | ${siteTitle}` : siteTitle;

@@ -120,7 +120,8 @@ const optimizedListingService = {
                     status,
                     views,
                     created_at,
-                    category_id
+                    category_id,
+                    type
                 `)
                 .order('created_at', { ascending: false });
 
@@ -150,6 +151,11 @@ const optimizedListingService = {
             } else {
                 // Default: only active/approved
                 query = query.in('status', ['active', 'approved']);
+            }
+
+            // Type filter (Sale/Rent)
+            if (filters.type) {
+                query = query.eq('type', filters.type);
             }
 
             // Search

@@ -12,7 +12,32 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import useListingAccess from '../hooks/useListingAccess';
+import { useLanguage } from '../contexts/LanguageContext';
 import { Lock } from '@mui/icons-material';
+
+const translations = {
+    en: {
+        premiumOnly: "Premium Only",
+        premiumContent: "Premium Content",
+        subscribe: "Subscribe to view full details and contact info."
+    },
+    am: {
+        premiumOnly: "ፕሪሚየም ብቻ",
+        premiumContent: "ፕሪሚየም ይዘት",
+        subscribe: "ሙሉ ዝርዝሮችን እና እውቂያዎችን ለማየት ይመዝገቡ"
+    },
+    om: {
+        premiumOnly: "Premium Qofa",
+        premiumContent: "Qabiyyee Premium",
+        subscribe: "Bal'ina guutuu fi qunnamtii argachuuf maallaqa kaffalaa"
+    },
+    ti: {
+        premiumOnly: "ናይ ፕሪሚየም",
+        premiumContent: "ናይ ፕሪሚየም ትሕዝቶ",
+        subscribe: "ሙሉእ ዝርዝርን ርክብን ንምርኣይ ተመዝገቡ"
+    }
+};
+
 
 /**
  * Helper: robustly resolve the best image for the card
@@ -176,10 +201,13 @@ const DynamicListingCard = ({
     isFavorite = false,
     showActions = false,
     onEdit,
-    template // New Prop: Admin Template
+    template,
+    isLocked // Optional override
 }) => {
     const theme = useTheme();
     const navigate = useNavigate();
+    const { language } = useLanguage();
+    const t = translations[language] || translations.en;
 
     // --- Data Preparation ---
     const imageUrl = useMemo(() => getCardImage(listing), [listing]);
@@ -193,14 +221,20 @@ const DynamicListingCard = ({
 
     // --- Access Control ---
     const { permissions } = useListingAccess('all');
-    // Lock ONLY if listing is Premium and user lacks 'is_premium' permission
-    // (Ignores category-level restrictions like 'Jobs' viewing limits for this card view)
-    const locked = listing.is_premium && (!permissions || !permissions.is_premium);
+    // Lock logic:
+    // 1. If isLocked prop is passed, use it directly (override).
+    // 2. Otherwise, lock if listing is Premium AND user lacks 'is_premium' permission.
+    const locked = isLocked !== undefined
+        ? isLocked
+        : (listing?.is_premium === true && (!permissions || !permissions.is_premium));
+
+
+
 
     // --- Event Handlers ---
     const handleCardClick = () => {
         if (locked) {
-            navigate('/upgrade');
+            navigate('/pricing');
             return;
         }
         navigate(`/listings/${listing.id}`);
@@ -242,6 +276,7 @@ const DynamicListingCard = ({
                 onClick={handleCardClick}
                 sx={{
                     height: '100%',
+                    position: 'relative', // Ensure Overlay covers card
                     display: 'flex',
                     flexDirection: isList ? 'row' : 'column',
                     cursor: 'pointer',
@@ -322,6 +357,21 @@ const DynamicListingCard = ({
                     >
                         {isFavorite ? <Favorite color="error" sx={{ fontSize: 18 }} /> : <FavoriteBorder sx={{ fontSize: 18 }} />}
                     </IconButton>
+
+                    {/* PREMIUM CHIP (Top Left) */}
+                    {isPremium && (
+                        <Box sx={{
+                            position: 'absolute', top: 10, left: 10,
+                            background: 'linear-gradient(45deg, #FFD700, #FFA500)',
+                            color: 'black', px: 1.2, py: 0.4, borderRadius: 1,
+                            fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                            zIndex: 2,
+                            letterSpacing: 0.5
+                        }}>
+                            {t.premiumOnly}
+                        </Box>
+                    )}
 
                     {/* Bottom Gradient for Contrast */}
                     <Box sx={{
@@ -456,16 +506,16 @@ const DynamicListingCard = ({
                             <Lock sx={{ fontSize: 24 }} />
                         </Box>
                         <Typography variant="h6" fontWeight="bold" sx={{ color: 'black', textShadow: '0 2px 4px rgba(255,255,255,0.8)', mb: 0.5 }}>
-                            Premium Content
+                            {t.premiumContent}
                         </Typography>
                         <Typography variant="body2" sx={{ color: '#333', fontWeight: 600, mb: 2 }}>
-                            Subscribe to unlock details
+                            {t.subscribe}
                         </Typography>
                         <Chip
                             label="Subscribe Now"
                             color="secondary"
                             sx={{ fontWeight: 'bold', cursor: 'pointer' }}
-                            onClick={(e) => { e.stopPropagation(); navigate('/upgrade'); }}
+                            onClick={(e) => { e.stopPropagation(); navigate('/pricing'); }}
                         />
                     </Box>
                 )}

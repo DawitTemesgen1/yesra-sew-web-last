@@ -304,6 +304,28 @@ const PostAdPage = () => {
           fields: s.fields || []
         }));
 
+        // INJECT 'Type' field for Cars and Homes if not present
+        if (['cars', 'homes', 'car', 'home'].some(slug => category.slug?.includes(slug))) {
+          const typeFieldExists = validatedSteps.some(s => s.fields.some(f => f.field_name === 'type'));
+
+          if (!typeFieldExists && validatedSteps.length > 0) {
+            // Add to the first step
+            const typeField = {
+              id: 'injected-type',
+              field_name: 'type',
+              field_label: 'Listing Type', // Could use translation if I had it here, but English default ok for now
+              field_type: 'select',
+              options: ['sale', 'rent'],
+              is_required: true,
+              is_visible: true,
+              width: 6,
+              placeholder: 'Select Type (Sale/Rent)'
+            };
+            // Prepend to fields of first step
+            validatedSteps[0].fields.unshift(typeField);
+          }
+        }
+
         setSteps(validatedSteps);
         setActiveStep(1);
       } else {
@@ -387,7 +409,8 @@ const PostAdPage = () => {
       // Separate standard fields from custom fields
       // NOTE: We reduced this list to avoid "column not found" errors. 
       // 'location', 'city', 'specific_location' will now go into custom_fields unless/until the schema is updated.
-      const standardFields = ['title', 'description', 'price'];
+      // 'location', 'city', 'specific_location' will now go into custom_fields unless/until the schema is updated.
+      const standardFields = ['title', 'description', 'price', 'type'];
 
       // Calculate expiration date (default 30 days) if new
       const expirationDate = new Date();
@@ -640,6 +663,18 @@ const PostAdPage = () => {
     </Grid>
   );
 
+  // Helper to convert DB text width to Grid numeric width
+  const getColumnWidth = (width) => {
+    if (typeof width === 'number') return width; // Legacy support
+    switch (width) {
+      case 'full': return 12;
+      case 'half': return 6;
+      case 'third': return 4;
+      case 'quarter': return 3;
+      default: return 12;
+    }
+  };
+
   // Render Dynamic Template Step
   const renderTemplateStep = (stepIndex) => {
     const step = steps[stepIndex];
@@ -656,7 +691,12 @@ const PostAdPage = () => {
           </Typography>
         </Grid>
         {step.fields?.map((field) => (
-          <Grid item xs={12} md={field.width || (field.field_type === 'textarea' ? 12 : 6)} key={field.id}>
+          <Grid
+            item
+            xs={12}
+            md={field.width ? getColumnWidth(field.width) : (field.field_type === 'textarea' ? 12 : 6)}
+            key={field.id}
+          >
             <DynamicField
               field={field}
               value={formData[field.field_name]}

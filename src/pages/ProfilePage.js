@@ -268,6 +268,7 @@ const ProfilePage = () => {
     apiService.users.getProfile,
     {
       enabled: !!authUser,
+      select: (res) => res?.user || res,
       onSuccess: (data) => {
         setEditForm({
           ...data,
@@ -304,6 +305,16 @@ const ProfilePage = () => {
 
   const loading = profileLoading; // Main loading state
   const error = profileError?.message;
+
+  // Merge profile data with auth metadata to ensure we have a name
+  const displayUser = React.useMemo(() => {
+    if (!user) return null;
+    return {
+      ...user,
+      full_name: user.full_name || authUser?.user_metadata?.full_name || authUser?.user_metadata?.name || 'User',
+      avatar_url: user.avatar_url || authUser?.user_metadata?.avatar_url || authUser?.user_metadata?.picture
+    };
+  }, [user, authUser]);
 
   // Calculate Stats
   const stats = React.useMemo(() => {
@@ -364,7 +375,9 @@ const ProfilePage = () => {
 
   const handleSaveProfile = async () => {
     try {
-      const updatedUser = await apiService.users.updateProfile(editForm);
+      // Remove 'data' property if it exists, as it's not a column in profiles
+      const { data, ...cleanForm } = editForm;
+      const updatedUser = await apiService.users.updateProfile(cleanForm);
       queryClient.setQueryData(['profile', authUser?.id], updatedUser);
       setEditDialogOpen(false);
       toast.success(t.profileUpdated);
@@ -417,7 +430,7 @@ const ProfilePage = () => {
   }
 
   // Error state
-  if (error || !user) {
+  if (error || !displayUser) {
     return (
       <Box sx={{
         minHeight: '100vh',
@@ -441,12 +454,23 @@ const ProfilePage = () => {
     if (navigator.share) {
       navigator.share({
         title: listing.title,
-        text: listing.description,
-        url: `${window.location.origin}/listings/${listing.id}`
+        text: `Check out this listing on YesraSew: ${listing.title}`,
+        url: window.location.href
       }).catch(console.error);
     } else {
       navigator.clipboard.writeText(`${window.location.origin}/listings/${listing.id}`);
-      toast.success(t.linkCopied || 'Link copied to clipboard');
+      toast.success('Link copied to clipboard!');
+    }
+  };
+
+  const handleToggleFavorite = async (listingId) => {
+    try {
+      await apiService.toggleFavorite(listingId);
+      queryClient.invalidateQueries(['userFavorites', authUser?.id]);
+      toast.success('Favorites updated');
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+      toast.error('Failed to update favorites');
     }
   };
 
@@ -508,7 +532,7 @@ const ProfilePage = () => {
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: '#F8FAFC', pb: isMobile ? 2 : 4 }}>
       <SEO
-        title={user?.full_name || t.unknownUser}
+        title={displayUser?.full_name || t.unknownUser}
         description="Manage your YesraSew profile, listings, and account settings."
         keywords="user profile, yesrasew profile, my listings, settings"
       />
@@ -626,13 +650,13 @@ const ProfilePage = () => {
             <Box sx={{ flex: 1, textAlign: isMobile ? 'center' : 'left', color: 'white' }}>
               <Stack direction="row" spacing={1} alignItems="center" justifyContent={isMobile ? 'center' : 'flex-start'} mb={1}>
                 <Typography variant={isMobile ? 'h5' : 'h4'} fontWeight="bold">
-                  {user.full_name || 'User'}
+                  {displayUser.full_name}
                 </Typography>
-                {user.verified && <Verified sx={{ color: BRAND_COLORS.gold }} />}
+                {displayUser.verified && <Verified sx={{ color: BRAND_COLORS.gold }} />}
               </Stack>
 
               <Typography variant="body1" sx={{ opacity: 0.9, mb: 2 }}>
-                {user.bio || t.noBio}
+                {displayUser.bio || t.noBio}
               </Typography>
 
               <Stack
@@ -642,38 +666,38 @@ const ProfilePage = () => {
                 flexWrap="wrap"
                 mb={2}
               >
-                {user.location && (
+                {displayUser.location && (
                   <Chip
                     icon={<LocationOn />}
-                    label={user.location}
+                    label={displayUser.location}
                     sx={{ bgcolor: alpha('#fff', 0.2), color: 'white' }}
                   />
                 )}
-                {user.email && (
+                {displayUser.email && (
                   <Chip
                     icon={<Email />}
-                    label={user.email}
+                    label={displayUser.email}
                     sx={{ bgcolor: alpha('#fff', 0.2), color: 'white' }}
                   />
                 )}
-                {user.phone && (
+                {displayUser.phone && (
                   <Chip
                     icon={<Phone />}
-                    label={user.phone}
+                    label={displayUser.phone}
                     sx={{ bgcolor: alpha('#fff', 0.2), color: 'white' }}
                   />
                 )}
                 <Chip
                   icon={<Star />}
-                  label={`${user.rating || '0.0'} (${user.reviews_count || 0} ${t.reviews})`}
+                  label={`${displayUser.rating || '0.0'} (${displayUser.reviews_count || 0} ${t.reviews})`}
                   sx={{ bgcolor: alpha(BRAND_COLORS.gold, 0.3), color: 'white', fontWeight: 'bold' }}
                 />
               </Stack>
 
               {/* Social Media Links */}
-              {user.social_media && Object.keys(user.social_media).length > 0 && (
+              {displayUser.social_media && Object.keys(displayUser.social_media).length > 0 && (
                 <Stack direction="row" spacing={1} justifyContent={isMobile ? 'center' : 'flex-start'}>
-                  {Object.entries(user.social_media).map(([platform, url]) => (
+                  {Object.entries(displayUser.social_media).map(([platform, url]) => (
                     url && (
                       <Tooltip key={platform} title={platform.charAt(0).toUpperCase() + platform.slice(1)}>
                         <IconButton
@@ -775,7 +799,7 @@ const ProfilePage = () => {
             }}
           >
             <Tab icon={<Description />} label={t.myListings} iconPosition="start" />
-            <Tab icon={<Favorite />} label={t.favorites} iconPosition="start" />
+            {/* <Tab icon={<Favorite />} label={t.favorites} iconPosition="start" /> */}
             <Tab icon={<Chat />} label={t.chats} iconPosition="start" />
             <Tab icon={<Assessment />} label={t.analytics} iconPosition="start" />
             <Tab icon={<CardMembership />} label={t.membershipPlan} iconPosition="start" />
@@ -824,8 +848,8 @@ const ProfilePage = () => {
                 </motion.div>
               )}
 
-              {/* Favorites Tab */}
-              {activeTab === 1 && (
+              {/* Favorites Tab - HIDDEN */}
+              {false && activeTab === 1 && (
                 <motion.div
                   key="favorites"
                   initial={{ opacity: 0, x: 20 }}
@@ -845,6 +869,8 @@ const ProfilePage = () => {
                         <Grid item xs={12} sm={6} md={4} key={listing.id}>
                           <DynamicListingCard
                             listing={listing}
+                            isFavorite={true}
+                            onToggleFavorite={handleToggleFavorite}
                           />
                         </Grid>
                       ))}
@@ -854,7 +880,7 @@ const ProfilePage = () => {
               )}
 
               {/* Chats Tab */}
-              {activeTab === 2 && (
+              {activeTab === 1 && (
                 <motion.div
                   key="chats"
                   initial={{ opacity: 0, x: 20 }}
@@ -874,7 +900,27 @@ const ProfilePage = () => {
                   ) : (
                     <List>
                       {userChats.map((chat) => {
-                        const otherUser = chat.other_user || chat.participants?.find(p => p.id !== user.id);
+                        // Logic to find the "other" user in the conversation
+                        let otherUser = chat.other_user;
+
+                        if (!otherUser && chat.participants && Array.isArray(chat.participants)) {
+                          otherUser = chat.participants.find(p => p.id !== user.id && p.id !== authUser?.id);
+                        }
+
+                        // Fallback if still undefined (e.g. metadata)
+                        if (!otherUser && chat.metadata) {
+                          // Try to reconstruct from metadata if available
+                          otherUser = {
+                            full_name: chat.metadata.recipient_name || chat.metadata.other_user_name,
+                            avatar_url: chat.metadata.recipient_avatar,
+                            id: chat.metadata.recipient_id
+                          };
+                        }
+
+                        // Check for snake_case AND camelCase (apiService returns fullName)
+                        const displayName = otherUser?.full_name || otherUser?.fullName || otherUser?.name || otherUser?.email || t.unknownUser;
+                        const displayAvatar = otherUser?.avatar_url || otherUser?.avatarUrl || otherUser?.avatar;
+
                         return (
                           <ListItemButton
                             key={chat.id}
@@ -895,15 +941,15 @@ const ProfilePage = () => {
                           >
                             <ListItemAvatar>
                               <Badge badgeContent={chat.unread_count || 0} color="error">
-                                <Avatar src={otherUser?.avatar_url}>
-                                  {otherUser?.full_name?.[0] || '?'}
+                                <Avatar src={displayAvatar}>
+                                  {displayName?.[0] || '?'}
                                 </Avatar>
                               </Badge>
                             </ListItemAvatar>
                             <ListItemText
                               primary={
                                 <Typography variant="subtitle1" fontWeight="bold">
-                                  {otherUser?.full_name || t.unknownUser}
+                                  {displayName}
                                 </Typography>
                               }
                               secondary={
@@ -924,7 +970,7 @@ const ProfilePage = () => {
               )}
 
               {/* Analytics Tab */}
-              {activeTab === 3 && (
+              {activeTab === 2 && (
                 <motion.div
                   key="analytics"
                   initial={{ opacity: 0, x: 20 }}
@@ -944,7 +990,7 @@ const ProfilePage = () => {
               )}
 
               {/* Membership Plan Tab */}
-              {activeTab === 4 && (
+              {activeTab === 3 && (
                 <motion.div
                   key="membership"
                   initial={{ opacity: 0, x: 20 }}

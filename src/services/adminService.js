@@ -1262,9 +1262,12 @@ const adminService = {
     // --- Template Fields ---
     async createField(fieldData) {
         try {
+            // Remove 'id' if it exists to let DB generate it
+            const { id, ...cleanData } = fieldData;
+
             const { data, error } = await supabase
                 .from('template_fields')
-                .insert(fieldData)
+                .insert(cleanData)
                 .select();
 
             if (error) throw error;
@@ -1278,13 +1281,16 @@ const adminService = {
 
     async updateField(id, updates) {
         try {
-            if (!id || id === 'NaN' || id === 'undefined') {
+            if (!id || String(id) === 'NaN' || String(id) === 'undefined') {
                 throw new Error(`Invalid field ID: ${id}`);
             }
 
+            // Sanitization: Remove id from updates if present to prevent conflict
+            const { id: _, ...cleanUpdates } = updates;
+
             const { data, error } = await supabase
                 .from('template_fields')
-                .update(updates)
+                .update(cleanUpdates)
                 .eq('id', id)
                 .select();
 

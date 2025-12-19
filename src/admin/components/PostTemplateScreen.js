@@ -192,7 +192,7 @@ const PostTemplateScreen = () => {
         setEditingField(null);
         setFieldForm({
             field_name: '', field_label: '', field_type: 'text', placeholder: '', help_text: '',
-            is_required: false, is_visible: true, width: 12, section: 'main',
+            is_required: false, is_visible: true, width: 'full', section: 'main',
             options: [], allow_multiple: false
         });
         setFieldDialogOpen(true);
@@ -223,19 +223,11 @@ const PostTemplateScreen = () => {
 
     const handleSaveField = async () => {
         try {
-            // Convert width from UI format to database format
-            const widthMap = {
-                'full': 12,
-                'half': 6,
-                'third': 4,
-                'quarter': 3
-            };
-
             const fieldData = {
                 ...fieldForm,
                 field_name: fieldForm.field_name || fieldForm.field_label.toLowerCase().replace(/\s+/g, '_'),
                 step_id: currentStepId,
-                width: typeof fieldForm.width === 'string' ? (widthMap[fieldForm.width] || 12) : fieldForm.width,
+                width: fieldForm.width || 'full', // DB expects text: 'full', 'half', 'third', 'quarter'
                 display_order: editingField ? editingField.display_order : (steps.find(s => s.id === currentStepId)?.fields.length || 0) + 1
             };
 
@@ -606,7 +598,7 @@ const PostTemplateScreen = () => {
                                                                                     {(fieldDragProvided) => (
                                                                                         <Grid
                                                                                             item
-                                                                                            xs={field.width === 'half' ? 6 : 12}
+                                                                                            xs={field.width === 'half' || field.width === 6 ? 6 : (field.width === 'third' || field.width === 4 ? 4 : (field.width === 'quarter' || field.width === 3 ? 3 : 12))}
                                                                                             ref={fieldDragProvided.innerRef}
                                                                                             {...fieldDragProvided.draggableProps}
                                                                                         >

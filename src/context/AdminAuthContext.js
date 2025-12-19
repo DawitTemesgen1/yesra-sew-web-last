@@ -33,7 +33,8 @@ export const AdminAuthProvider = ({ children }) => {
             if (error) {
                 // If permission denied (403/401), likely RLS issue, but effectively 'not admin' for now unless metadata says so
                 if (error.code === 'PGRST301' || error.code === '42501') {
-                    console.warn("⚠️ AdminAuthContext: RLS Permission denied reading profile role.");
+                    console.warn("⚠️ AdminAuthContext: RLS Permission denied reading profile role. Assuming 'user'.");
+                    return { role: 'user' }; // Treat as normal user
                 }
                 throw error;
             }

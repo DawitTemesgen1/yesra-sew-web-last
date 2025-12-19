@@ -74,7 +74,8 @@ const translations = {
     },
     common: {
       search: "What are you looking for?"
-    }
+    },
+    keywords: "ethiopia marketplace, buy sell ethiopia, jobs ethiopia, tenders ethiopia, cars ethiopia, real estate ethiopia, classifieds addis ababa"
   },
   am: {
     landing: {
@@ -125,7 +126,8 @@ const translations = {
     },
     common: {
       search: "ምን እየፈለጉ ነው?"
-    }
+    },
+    keywords: "የኢትዮጵያ ገበያ, ስራ ኢትዮጵያ, መኪና ኢትዮጵያ, ቤት ኢትዮጵያ, ጨረታ ኢትዮጵያ, አዲስ አበባ ገበያ, የስራ ማስታወቂያ, የመኪና ሽያጭ"
   },
   om: {
     landing: {
@@ -176,7 +178,8 @@ const translations = {
     },
     common: {
       search: "Maal Barbaadaa Jirtu?"
-    }
+    },
+    keywords: "gabaa ethiopia, hojii ethiopia, konkolaataa gurguraaf, mana gurguraaf, caalbaasii, addis ababa marketplace"
   },
   ti: {
     landing: {
@@ -227,7 +230,8 @@ const translations = {
     },
     common: {
       search: "እንታይ ትደሊ ኣለኻ?"
-    }
+    },
+    keywords: "ዕዳጋ ኢትዮጵያ, ስራሕ ኢትዮጵያ, መኪና ኢትዮጵያ, ገዛ ኢትዮጵያ, ጨረታ ኢትዮጵያ, ኣዲስ ኣበባ ዕዳጋ"
   }
 };
 
@@ -293,7 +297,7 @@ const HomePage = () => {
   ];
 
   // Fetch Featured Listings (Recently Added - All Categories)
-  const { data: featuredListings = [], isLoading: recentLoading } = useQuery(
+  const { data: featuredListings = [], isLoading: recentLoading, isPreviousData: isRecentPreviousData } = useQuery(
     ['featuredListings', language],
     async () => {
       try {
@@ -302,26 +306,53 @@ const HomePage = () => {
         return response.listings || response || [];
       } catch (e) {
         console.error('Failed to fetch featured listings', e);
-        return [];
+        // Important: Throw error to trigger retry strategy instead of silent failure
+        throw e;
       }
     },
-    { staleTime: 1000 * 60 * 5 }
+    {
+      staleTime: 1000 * 60 * 5,
+      keepPreviousData: true,
+      retry: 2,
+      refetchOnWindowFocus: false, // Prevent jarring refetch flashes
+      onError: () => toast.error("Could not load latest listings")
+    }
   );
 
   // Fetch Premium Listings (All Categories)
-  const { data: premiumListings = [], isLoading: premiumLoading } = useQuery(
+  const { data: premiumListings = [], isLoading: premiumLoading, isPreviousData: isPremiumPreviousData } = useQuery(
     ['premiumListings', language],
     async () => {
       try {
-        // Fetch all premium listings
-        const response = await apiService.getListings({ is_premium: true, limit: 10 });
-        const listings = response.listings || response || [];
-        // Fallback: If no premium found, just return popular ones for demo (optional, but requested behavior implies robust "general" view)
-        // If backend works, this returns mixed premium.
-        return listings;
-      } catch (err) { return []; }
+        // Fetch premium listings - limit requested is 10
+        const response = await apiService.getListings({ is_premium: true, limit: 15 });
+        const items = response.listings || response || [];
+
+        // Strict Client-Side Filter: Only allow truly premium items in this section
+        return items.filter(listing => listing.is_premium === true);
+      } catch (err) {
+        console.error("Error fetching premium listings:", err);
+        throw err;
+      }
     },
-    { staleTime: 1000 * 60 * 5 }
+    {
+      staleTime: 1000 * 60 * 5,
+      keepPreviousData: true,
+      retry: 2,
+      refetchOnWindowFocus: false,
+      // If error, we might want to fail silently or visually handle it, effectively returning empty is fine after retries
+      onError: () => { }
+    }
+  );
+
+
+  // Fetch Real Market Stats (Counts)
+  const { data: marketStats = { jobs: 0, homes: 0, cars: 0 }, isLoading: statsLoading } = useQuery(
+    'marketStats',
+    async () => {
+      return await apiService.getMarketStats();
+    },
+    { staleTime: 1000 * 60 * 15 } // Cache for 15 minutes
   );
 
 
@@ -330,14 +361,14 @@ const HomePage = () => {
       <SEO
         title={t.landing.hero.subtitle}
         description={t.landing.hero.description}
-        keywords="ethiopia marketplace, buy sell ethiopia, jobs ethiopia, tenders ethiopia, cars ethiopia, real estate ethiopia, የስራ ሰው, የኢትዮጵያ ገበያ, ስራ ኢትዮጵያ, መኪና ኢትዮጵያ, ቤት ኢትዮጵያ, ጨረታ ኢትዮጵያ, አዲስ አበባ ገበያ, የስራ ማስታወቂያ, የመኪና ሽያጭ, የቤት ሽያጭ, classifieds ethiopia, addis ababa marketplace, የአዲስ አበባ ገበያ, online shopping ethiopia"
+        keywords={t.keywords}
       />
 
       {/* Hero Section */}
       <Box sx={{
         height: { xs: 600, md: 700 },
         position: 'relative',
-        backgroundImage: 'url(https://images.unsplash.com/photo-1556740738-b6a63e27c4df?q=80&w=1080)',
+        backgroundImage: 'url(https://images.unsplash.com/photo-1556740738-b6a63e27c4df?q=60&w=1280&auto=format)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         display: 'flex',
@@ -516,7 +547,7 @@ const HomePage = () => {
                 </Typography>
                 <Button
                   variant="contained"
-                  onClick={() => navigate('/upgrade')}
+                  onClick={() => navigate('/pricing')}
                   sx={{
                     bgcolor: '#FFD700',
                     color: 'black',
@@ -540,7 +571,7 @@ const HomePage = () => {
                     <DynamicListingCard
                       listing={listing}
                       viewMode="grid"
-                      isLocked={isListingLocked(listing)}
+                      // isLocked prop removed to allow DynamicListingCard to self-manage access via useListingAccess
                       onToggleFavorite={toggleFavorite}
                       isFavorite={favorites.includes(listing.id) || listing.is_favorited}
                     />
@@ -597,7 +628,6 @@ const HomePage = () => {
                   <DynamicListingCard
                     listing={listing}
                     viewMode="grid"
-                    isLocked={isListingLocked(listing)}
                     onToggleFavorite={toggleFavorite}
                     isFavorite={favorites.includes(listing.id) || listing.is_favorited}
                   />
@@ -648,19 +678,19 @@ const HomePage = () => {
           <Grid container spacing={4}>
             <InsightItem
               title={t.landing.stats.jobs}
-              value={recentLoading ? '-' : featuredListings.filter(l => l.category === 'jobs' || l.type === 'jobs').length + '+'}
+              value={statsLoading ? '-' : (marketStats.jobs > 50 ? marketStats.jobs + '+' : marketStats.jobs)}
               desc={t.landing.stats.jobsDesc}
               color="success.main"
             />
             <InsightItem
               title={t.landing.stats.properties}
-              value={recentLoading ? '-' : featuredListings.filter(l => l.category === 'homes' || l.type === 'homes').length + '+'}
+              value={statsLoading ? '-' : (marketStats.homes > 50 ? marketStats.homes + '+' : marketStats.homes)}
               desc={t.landing.stats.propertiesDesc}
               color="info.main"
             />
             <InsightItem
               title={t.landing.stats.cars}
-              value={recentLoading ? '-' : featuredListings.filter(l => l.category === 'cars' || l.type === 'cars').length + '+'}
+              value={statsLoading ? '-' : (marketStats.cars > 50 ? marketStats.cars + '+' : marketStats.cars)}
               desc={t.landing.stats.carsDesc}
               color="warning.main"
             />

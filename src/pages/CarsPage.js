@@ -36,6 +36,10 @@ const translations = {
     hoursAgo: "h ago",
     daysAgo: "d ago",
     pricePrefix: "ETB",
+    forSale: "For Sale",
+    forRent: "For Rent",
+    allTypes: "All Types",
+    keywords: "cars for sale ethiopia, buy cars addis ababa, used cars ethiopia, car rental ethiopia, toyota ethiopia, vehicles for sale, latest cars addis ababa"
   },
   am: {
     pageTitle: "መኪናዎች",
@@ -50,6 +54,10 @@ const translations = {
     hoursAgo: "ሰ በፊት",
     daysAgo: "ቀን በፊት",
     pricePrefix: "ብር",
+    forSale: "የሚሸጥ",
+    forRent: "የሚከራይ",
+    allTypes: "ሁሉም",
+    keywords: "መኪና ሽያጭ, መኪና ኪራይ, ያገለገለ መኪና, አዲስ አበባ መኪና, ቶዮታ ኢትዮጵያ, የምኪና ገበያ, ተሽከርካሪዎች"
   },
   om: {
     pageTitle: "Konkolaattota",
@@ -64,6 +72,10 @@ const translations = {
     hoursAgo: "sa'a dura",
     daysAgo: "guyyaa dura",
     pricePrefix: "ETB",
+    forSale: "Gurguraaf",
+    forRent: "Kireeffachuuf",
+    allTypes: "Hunda",
+    keywords: "konkolaataa gurguraaf, konkolaataa kiraayii, konkolaataa durii, addis ababa konkolaataa, toyota ethiopia, gabaa konkolaataa"
   },
   ti: {
     pageTitle: "መካይን",
@@ -78,6 +90,10 @@ const translations = {
     hoursAgo: "ሰዓት ቅድሚ",
     daysAgo: "መዓልቲ ቅድሚ",
     pricePrefix: "ብር",
+    forSale: "ንመሸጣ",
+    forRent: "ንክራይ",
+    allTypes: "ኩሎም",
+    keywords: "መኪና ሽያጥ, መኪና ክራይ, ዝተጠቐመ መኪና, ኣዲስ ኣበባ መኪና, ቶዮታ ኢትዮጵያ, ዕዳጋ መኪና"
   }
 };
 
@@ -106,6 +122,7 @@ const CarsPage = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('ALL');
+  const [listingType, setListingType] = useState('ALL'); // 'sale', 'rent', 'ALL'
   const [templateFields, setTemplateFields] = useState([]);
 
   // Access Control
@@ -136,12 +153,13 @@ const CarsPage = () => {
 
   // Fetch Cars (Cached)
   const { data: cars = [], isLoading, error } = useQuery(
-    ['cars', selectedBrand, searchQuery],
+    ['cars', selectedBrand, searchQuery, listingType],
     async () => {
       const params = {
-        category: 'cars', // Reverted to plural 'cars' to match database slug
+        category: 'cars',
         brand: selectedBrand !== 'ALL' ? selectedBrand : undefined,
-        search: searchQuery || undefined
+        search: searchQuery || undefined,
+        type: listingType !== 'ALL' ? listingType : undefined
       };
       const response = await apiService.getListings(params);
       return response.listings || response || [];
@@ -171,7 +189,7 @@ const CarsPage = () => {
       <SEO
         title={t.pageTitle}
         description={t.heroDescription}
-        keywords="used cars ethiopia, toyota vitz ethiopia, car prices addis ababa, buy cars ethiopia, sell cars ethiopia, vehicles for sale, ምኪና ኢትዮጵያ, የምኪና ሽያጭ, ቶዮታ ቪጭ ኢትዮጵያ, ምኪና አዲስ አበባ, የምኪና ማስታወቂያ, የተጠመደ ምኪና, cars addis ababa, toyota ethiopia, የምኪና ጋብያ"
+        keywords={t.keywords}
       />
       {/* Hero Section */}
       <Box sx={{
@@ -237,41 +255,90 @@ const CarsPage = () => {
         </Container>
       </Box>
 
-      {/* Brand Filters */}
-      < Box sx={{ bgcolor: 'background.default', pt: 3, pb: 1 }}>
-        <Box sx={{
-          overflowX: 'auto',
-          px: 3,
-          '&::-webkit-scrollbar': { display: 'none' },
-          msOverflowStyle: 'none',
-          scrollbarWidth: 'none'
-        }}>
-          <Stack direction="row" spacing={1.25} sx={{ minWidth: 'max-content' }}>
-            {CAR_BRANDS.map((brand) => {
-              const isSelected = selectedBrand === brand.id;
+      {/* Filters Section (Type & Brand) */}
+      <Box sx={{ bgcolor: 'background.default', pt: 3, pb: 1 }}>
+        <Container maxWidth="lg">
+          {/* Type Filter (Sale / Rent) */}
+          <Stack direction="row" spacing={1} sx={{ mb: 2, justifyContent: isMobile ? 'flex-start' : 'center', overflowX: 'auto' }}>
+            {[
+              { id: 'ALL', label: t.allTypes || 'All Types' },
+              { id: 'sale', label: t.forSale || 'For Sale' },
+              { id: 'rent', label: t.forRent || 'For Rent' }
+            ].map((type) => {
+              const isSelected = listingType === type.id;
               return (
                 <Chip
-                  key={brand.id}
-                  label={brand.label}
-                  onClick={() => setSelectedBrand(brand.id)}
+                  key={type.id}
+                  label={type.label}
+                  onClick={() => setListingType(type.id)}
+                  clickable
                   sx={{
-                    bgcolor: isSelected ? 'primary.main' : 'background.paper',
-                    color: isSelected ? 'primary.contrastText' : 'text.primary',
-                    borderRadius: '20px',
                     px: 2,
-                    py: 2.8,
+                    py: 2.5,
+                    fontSize: '0.95rem',
+                    fontWeight: isSelected ? 700 : 500,
+                    bgcolor: isSelected ? 'text.primary' : 'background.paper',
+                    color: isSelected ? 'background.paper' : 'text.primary',
+                    boxShadow: isSelected ? '0 4px 12px rgba(0,0,0,0.15)' : 'none',
                     border: isSelected ? 'none' : `1px solid ${alpha(theme.palette.divider, 0.5)}`,
-                    fontWeight: isSelected ? 600 : 'normal',
                     '&:hover': {
-                      bgcolor: isSelected ? 'primary.dark' : alpha(theme.palette.text.primary, 0.04)
-                    }
+                      bgcolor: isSelected ? 'text.primary' : alpha(theme.palette.text.primary, 0.05)
+                    },
+                    borderRadius: '12px'
                   }}
                 />
               );
             })}
           </Stack>
-        </Box>
-      </Box >
+
+          {/* Brand Filters */}
+          <Box sx={{
+            overflowX: 'auto',
+            pb: 1,
+            '&::-webkit-scrollbar': { display: 'none' },
+            msOverflowStyle: 'none',
+            scrollbarWidth: 'none',
+            mx: -2, // Mobile negative margin
+            px: 2, // Compensate padding
+            textAlign: isMobile ? 'left' : 'center' // Center chips on desktop
+          }}>
+            <Stack
+              direction="row"
+              spacing={1.25}
+              sx={{
+                minWidth: 'max-content',
+                mx: isMobile ? 0 : 'auto', // Center stack on desktop
+                display: isMobile ? 'flex' : 'inline-flex' // Allow centering behavior
+              }}
+            >
+              {CAR_BRANDS.map((brand) => {
+                const isSelected = selectedBrand === brand.id;
+                return (
+                  <Chip
+                    key={brand.id}
+                    label={brand.label}
+                    onClick={() => setSelectedBrand(brand.id)}
+                    sx={{
+                      bgcolor: isSelected ? 'primary.main' : 'transparent',
+                      color: isSelected ? 'primary.contrastText' : 'text.secondary',
+                      borderRadius: '20px',
+                      px: 1.5,
+                      py: 2.2, // Slightly smaller than Type chips
+                      border: isSelected ? 'none' : `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+                      fontWeight: isSelected ? 600 : 'normal',
+                      '&:hover': {
+                        bgcolor: isSelected ? 'primary.dark' : alpha(theme.palette.text.primary, 0.04),
+                        borderColor: isSelected ? 'transparent' : 'text.primary'
+                      },
+                      transition: 'all 0.2s ease'
+                    }}
+                  />
+                );
+              })}
+            </Stack>
+          </Box>
+        </Container>
+      </Box>
 
       {/* Cars Grid */}
       {/* Cars Grid */}
@@ -317,7 +384,6 @@ const CarsPage = () => {
                         listing={car}
                         template={{ steps: [{ fields: templateFields }] }}
                         viewMode="grid"
-                        isLocked={isListingLocked(car)}
                       />
                     </Grid>
                   ))}
@@ -345,7 +411,6 @@ const CarsPage = () => {
                         listing={car}
                         template={{ steps: [{ fields: templateFields }] }}
                         viewMode="grid"
-                        isLocked={false}
                       />
                     </Grid>
                   ))

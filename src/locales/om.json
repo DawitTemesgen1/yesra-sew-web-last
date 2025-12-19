@@ -32,6 +32,13 @@
         "show": "Mul'isi",
         "hide": "Dhoksi"
     },
+    "cookie": {
+        "title": "Iccitii Keessan Ni Kabajna",
+        "description": "marsariitiin kun muuxannoo gaarii akka argattan mirkaneessuuf kukiis fayyadama. Qabiyyee fi beeksisa dhuunfaa, amala miidiyaa hawaasaa dhiyeessuu fi xiinxala traafika keenyaaf kukiis ni fayyadamna.",
+        "accept": "Hunda Fudhadhu",
+        "decline": "Diduu",
+        "learnMore": "Dabalataan Baraa"
+    },
     "auth": {
         "welcomeBack": "Baga nagaan deebitan!",
         "signInToContinue": "Gara YesraSew itti fufuuf seeni",

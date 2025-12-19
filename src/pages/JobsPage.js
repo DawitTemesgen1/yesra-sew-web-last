@@ -333,7 +333,6 @@ const JobsPage = () => {
                             listing={job}
                             templateFields={templateFields}
                             viewMode="grid"
-                            isLocked={isListingLocked(job)}
                           />
                         </Grid>
                       ))}
@@ -360,7 +359,6 @@ const JobsPage = () => {
                             listing={job}
                             templateFields={templateFields}
                             viewMode="grid"
-                            isLocked={false}
                           />
                         </Grid>
                       ))
