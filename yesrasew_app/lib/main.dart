@@ -1,18 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:webview_flutter/webview_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:url_launcher/url_launcher.dart';
+import 'dart:html' as html;
+import 'dart:ui' as ui;
 
-// Conditional import for web platform
-import 'package:webview_flutter_web/webview_flutter_web.dart'
-    if (dart.library.io) 'package:webview_flutter_android/webview_flutter_android.dart';
-import 'package:webview_flutter_platform_interface/webview_flutter_platform_interface.dart';
+// Only import WebView for non-web platforms
+import 'package:webview_flutter/webview_flutter.dart'
+    if (dart.library.html) 'dart:html';
 
 void main() {
-  // Register web platform implementation
-  if (kIsWeb) {
-    WebViewPlatform.instance = WebWebViewPlatform();
-  }
   runApp(const MyApp());
 }
 
@@ -43,12 +39,48 @@ class WebViewScreen extends StatefulWidget {
 }
 
 class _WebViewScreenState extends State<WebViewScreen> {
-  late final WebViewController _controller;
   bool _isLoading = true;
+  late WebViewController _controller;
 
   @override
   void initState() {
     super.initState();
+
+    if (kIsWeb) {
+      // For web platform, register the iframe
+      _registerIframeView();
+    } else {
+      // For mobile platforms, use WebView
+      _initializeWebView();
+    }
+  }
+
+  void _registerIframeView() {
+    // Register iframe for web platform
+    // ignore: undefined_prefixed_name
+    ui.platformViewRegistry.registerViewFactory('yesrasew-iframe', (
+      int viewId,
+    ) {
+      final iframe = html.IFrameElement()
+        ..src = 'https://yesrasewsolution.com'
+        ..style.border = 'none'
+        ..style.height = '100%'
+        ..style.width = '100%';
+
+      // Listen for load events
+      iframe.onLoad.listen((event) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      });
+
+      return iframe;
+    });
+  }
+
+  void _initializeWebView() {
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(Colors.white)
@@ -100,28 +132,45 @@ class _WebViewScreenState extends State<WebViewScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        if (await _controller.canGoBack()) {
-          await _controller.goBack();
-          return false;
-        }
-        return true;
-      },
-      child: Scaffold(
+    if (kIsWeb) {
+      // Web platform: Use HtmlElementView
+      return Scaffold(
         backgroundColor: Colors.white,
-        body: SafeArea(
-          child: Stack(
-            children: [
-              WebViewWidget(controller: _controller),
-              if (_isLoading)
-                const Center(
-                  child: CircularProgressIndicator(color: Color(0xFF00A651)),
-                ),
-            ],
+        body: Stack(
+          children: [
+            const HtmlElementView(viewType: 'yesrasew-iframe'),
+            if (_isLoading)
+              const Center(
+                child: CircularProgressIndicator(color: Color(0xFF00A651)),
+              ),
+          ],
+        ),
+      );
+    } else {
+      // Mobile platforms: Use WebView
+      return WillPopScope(
+        onWillPop: () async {
+          if (await _controller.canGoBack()) {
+            await _controller.goBack();
+            return false;
+          }
+          return true;
+        },
+        child: Scaffold(
+          backgroundColor: Colors.white,
+          body: SafeArea(
+            child: Stack(
+              children: [
+                WebViewWidget(controller: _controller),
+                if (_isLoading)
+                  const Center(
+                    child: CircularProgressIndicator(color: Color(0xFF00A651)),
+                  ),
+              ],
+            ),
           ),
         ),
-      ),
-    );
+      );
+    }
   }
 }
