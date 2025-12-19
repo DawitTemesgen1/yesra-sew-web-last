@@ -241,10 +241,9 @@ const CheckoutPage = () => {
         try {
             let providers = await adminService.getPaymentProviders();
 
-            // FALLBACK: If RLS blocks access or no providers return, and we are in production/demo, 
-            // default to Chapa as it's the primary gateway for this app.
+            // FALLBACK: If RLS blocks access or no providers return, default to Chapa
             if (!providers || providers.length === 0) {
-                console.warn('No payment providers found (likely RLS). Falling back to default.');
+                console.warn('No payment providers found. Using default Chapa provider.');
                 providers = [{
                     name: 'chapa',
                     display_name: 'Chapa',
@@ -255,7 +254,22 @@ const CheckoutPage = () => {
                 }];
             }
 
-            const enabled = providers.filter(p => p.is_enabled);
+            // Filter enabled providers
+            let enabled = providers.filter(p => p.is_enabled);
+
+            // If no enabled providers, still use Chapa as fallback
+            if (enabled.length === 0) {
+                console.warn('No enabled payment providers. Using Chapa as default.');
+                enabled = [{
+                    name: 'chapa',
+                    display_name: 'Chapa',
+                    is_enabled: true,
+                    config: {
+                        description: 'Ethiopian payment gateway supporting mobile money, bank transfers, and cards'
+                    }
+                }];
+            }
+
             setEnabledProviders(enabled);
 
             // Auto-select first enabled provider
