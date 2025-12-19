@@ -442,8 +442,67 @@ const CheckoutPage = () => {
 
     if (loading) {
         return (
-            <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <CircularProgress />
+            <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4 }}>
+                <Container maxWidth="lg">
+                    {/* Back Button Skeleton */}
+                    <Box sx={{ width: 150, height: 36, bgcolor: alpha(theme.palette.primary.main, 0.1), borderRadius: 1, mb: 3 }} />
+
+                    <Grid container spacing={4}>
+                        {/* Left Column - Plan Details Skeleton */}
+                        <Grid item xs={12} md={7}>
+                            <Card sx={{ borderRadius: 4, overflow: 'hidden' }}>
+                                <Box sx={{ p: 4, height: 200, bgcolor: alpha(theme.palette.primary.main, 0.1) }}>
+                                    <Box sx={{ width: '40%', height: 32, bgcolor: alpha(theme.palette.common.white, 0.3), borderRadius: 1, mb: 2 }} />
+                                    <Box sx={{ width: '60%', height: 24, bgcolor: alpha(theme.palette.common.white, 0.2), borderRadius: 1, mb: 4 }} />
+                                    <Box sx={{ width: '30%', height: 48, bgcolor: alpha(theme.palette.common.white, 0.3), borderRadius: 1 }} />
+                                </Box>
+                                <CardContent sx={{ p: 4 }}>
+                                    <Box sx={{ width: '50%', height: 28, bgcolor: alpha(theme.palette.grey[400], 0.2), borderRadius: 1, mb: 3 }} />
+                                    <Stack spacing={2}>
+                                        {[1, 2, 3, 4].map(i => (
+                                            <Box key={i} display="flex" gap={2}>
+                                                <Box sx={{ width: 24, height: 24, borderRadius: '50%', bgcolor: alpha(theme.palette.grey[400], 0.1) }} />
+                                                <Box sx={{ flex: 1, height: 24, bgcolor: alpha(theme.palette.grey[400], 0.1), borderRadius: 1 }} />
+                                            </Box>
+                                        ))}
+                                    </Stack>
+                                </CardContent>
+                            </Card>
+                        </Grid>
+
+                        {/* Right Column - Payment Selection Skeleton */}
+                        <Grid item xs={12} md={5}>
+                            <Card sx={{ p: 4, borderRadius: 4 }}>
+                                <Box sx={{ width: '60%', height: 32, bgcolor: alpha(theme.palette.grey[400], 0.2), borderRadius: 1, mb: 2 }} />
+                                <Box sx={{ width: '80%', height: 20, bgcolor: alpha(theme.palette.grey[400], 0.1), borderRadius: 1, mb: 4 }} />
+
+                                <Stack spacing={2} mb={4}>
+                                    {[1, 2].map(i => (
+                                        <Box key={i} sx={{ height: 80, border: '1px solid', borderColor: alpha(theme.palette.grey[400], 0.2), borderRadius: 3, p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+                                            <Box sx={{ width: 40, height: 40, borderRadius: 2, bgcolor: alpha(theme.palette.grey[400], 0.1) }} />
+                                            <Box sx={{ flex: 1 }}>
+                                                <Box sx={{ width: '50%', height: 20, bgcolor: alpha(theme.palette.grey[400], 0.1), borderRadius: 1, mb: 1 }} />
+                                                <Box sx={{ width: '80%', height: 16, bgcolor: alpha(theme.palette.grey[400], 0.05), borderRadius: 1 }} />
+                                            </Box>
+                                        </Box>
+                                    ))}
+                                </Stack>
+
+                                <Box sx={{ height: 56, bgcolor: alpha(theme.palette.primary.main, 0.1), borderRadius: 3 }} />
+                            </Card>
+                        </Grid>
+                    </Grid>
+                </Container>
+
+                <style>{`
+                    @keyframes pulse {
+                        0%, 100% { opacity: 1; transform: scale(1); }
+                        50% { opacity: 0.6; transform: scale(0.98); }
+                    }
+                    .MuiBox-root, .MuiCard-root {
+                        animation: pulse 1.5s ease-in-out infinite;
+                    }
+                `}</style>
             </Box>
         );
     }

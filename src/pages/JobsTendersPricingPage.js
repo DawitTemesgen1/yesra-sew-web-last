@@ -128,6 +128,7 @@ const JobsTendersPricingPage = ({ category = 'jobs' }) => {
     const [plans, setPlans] = useState([]);
     const [loading, setLoading] = useState(true);
     const [userPlan, setUserPlan] = useState(null);
+    const [subscribingId, setSubscribingId] = useState(null);
 
     const categoryConfig = {
         jobs: {
@@ -210,6 +211,8 @@ const JobsTendersPricingPage = ({ category = 'jobs' }) => {
             return;
         }
 
+        setSubscribingId(plan.id);
+
         // For FREE plans (price = 0), activate immediately
         if (plan.price === 0) {
             try {
@@ -228,6 +231,7 @@ const JobsTendersPricingPage = ({ category = 'jobs' }) => {
                     } else {
                         toast.error(data.error || 'Failed to activate plan');
                     }
+                    setSubscribingId(null);
                     return;
                 }
 
@@ -238,11 +242,13 @@ const JobsTendersPricingPage = ({ category = 'jobs' }) => {
             } catch (error) {
                 console.error('Error activating plan:', error);
                 toast.error(`Failed to activate plan: ${error.message}`);
+                setSubscribingId(null);
             }
             return;
         }
 
         navigate(`/checkout?plan=${plan.slug || plan.id}`, { state: { plan } });
+        // Don't reset subscribingId here as we are navigating away
     };
 
     const getFeaturesList = (plan) => {
@@ -349,10 +355,83 @@ const JobsTendersPricingPage = ({ category = 'jobs' }) => {
         );
     };
 
+    // Skeleton Loader Component
+    const PricingCardSkeleton = () => (
+        <Card sx={{
+            height: '100%',
+            borderRadius: 4,
+            bgcolor: theme.palette.background.paper,
+            overflow: 'hidden'
+        }}>
+            <Box sx={{
+                p: 4,
+                background: `linear-gradient(135deg, ${alpha(config.color, 0.3)} 0%, ${alpha(config.color, 0.1)} 100%)`,
+            }}>
+                <Box sx={{ width: '60%', height: 28, bgcolor: alpha(theme.palette.common.white, 0.3), borderRadius: 1, mb: 2 }} />
+                <Box sx={{ width: '80%', height: 16, bgcolor: alpha(theme.palette.common.white, 0.2), borderRadius: 1, mb: 3 }} />
+                <Box sx={{ width: '40%', height: 40, bgcolor: alpha(theme.palette.common.white, 0.3), borderRadius: 1 }} />
+            </Box>
+            <CardContent sx={{ p: isMobile ? 2.5 : 4 }}>
+                <Stack spacing={2}>
+                    {[1, 2, 3, 4, 5].map((i) => (
+                        <Box key={i} display="flex" gap={1.5}>
+                            <Box sx={{ width: 18, height: 18, borderRadius: '50%', bgcolor: alpha(theme.palette.grey[400], 0.2) }} />
+                            <Box sx={{ flex: 1, height: 18, bgcolor: alpha(theme.palette.grey[400], 0.2), borderRadius: 1 }} />
+                        </Box>
+                    ))}
+                </Stack>
+                <Box sx={{ mt: 4, height: 48, bgcolor: alpha(config.color, 0.1), borderRadius: 3 }} />
+            </CardContent>
+        </Card>
+    );
+
     if (loading) {
         return (
-            <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: theme.palette.background.default }}>
-                <CircularProgress sx={{ color: config.color }} />
+            <Box sx={{
+                minHeight: '100vh',
+                background: theme.palette.mode === 'dark' ? theme.palette.background.default : 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+                py: { xs: 4, md: 8 },
+                color: theme.palette.text.primary
+            }}>
+                <Container maxWidth="lg">
+                    {/* Header Skeleton */}
+                    <Box textAlign="center" mb={isMobile ? 4 : 8}>
+                        <Box sx={{
+                            width: 60, height: 60, borderRadius: '50%', bgcolor: alpha(config.color, 0.1), mx: 'auto', mb: 2,
+                            animation: 'pulse 1.5s ease-in-out infinite'
+                        }} />
+                        <Box sx={{
+                            width: 300, height: 48, bgcolor: alpha(config.color, 0.1), borderRadius: 2, mx: 'auto', mb: 2,
+                            animation: 'pulse 1.5s ease-in-out infinite'
+                        }} />
+                        <Box sx={{
+                            width: { xs: '90%', md: 500 }, height: 24, bgcolor: alpha(theme.palette.grey[400], 0.1), borderRadius: 1, mx: 'auto',
+                            animation: 'pulse 1.5s ease-in-out infinite 0.2s'
+                        }} />
+                    </Box>
+
+                    {/* Cards Skeleton */}
+                    <Grid container spacing={isMobile ? 2 : 4} justifyContent="center" px={isMobile ? 1 : 0}>
+                        {[1, 2, 3].map((i) => (
+                            <Grid item xs={12} md={4} key={i}>
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.4, delay: i * 0.1 }}
+                                >
+                                    <PricingCardSkeleton />
+                                </motion.div>
+                            </Grid>
+                        ))}
+                    </Grid>
+                </Container>
+
+                <style>{`
+                    @keyframes pulse {
+                        0%, 100% { opacity: 1; transform: scale(1); }
+                        50% { opacity: 0.6; transform: scale(0.98); }
+                    }
+                `}</style>
             </Box>
         );
     }
@@ -448,6 +527,7 @@ const JobsTendersPricingPage = ({ category = 'jobs' }) => {
                                                 variant="contained"
                                                 size="large"
                                                 onClick={() => handleSelectPlan(plan)}
+                                                disabled={subscribingId !== null}
                                                 sx={{
                                                     py: 1.5,
                                                     borderRadius: 3,
@@ -455,10 +535,15 @@ const JobsTendersPricingPage = ({ category = 'jobs' }) => {
                                                     color: 'white',
                                                     textTransform: 'none',
                                                     fontWeight: 'bold',
-                                                    boxShadow: theme.shadows[4]
+                                                    boxShadow: theme.shadows[4],
+                                                    position: 'relative'
                                                 }}
                                             >
-                                                {plan.price === 0 ? t.startFree : t.choosePlan}
+                                                {subscribingId === plan.id ? (
+                                                    <CircularProgress size={24} sx={{ color: 'white' }} />
+                                                ) : (
+                                                    plan.price === 0 ? t.startFree : t.choosePlan
+                                                )}
                                             </Button>
                                         </CardContent>
                                     </Card>

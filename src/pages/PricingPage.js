@@ -255,10 +255,93 @@ const PricingPage = () => {
         }
     };
 
+    // Skeleton Loader Component
+    const PricingCardSkeleton = () => (
+        <Card sx={{
+            height: '100%',
+            borderRadius: 4,
+            bgcolor: theme.palette.background.paper
+        }}>
+            <Box sx={{
+                p: 4,
+                background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.3)} 0%, ${alpha(theme.palette.primary.main, 0.1)} 100%)`,
+                borderTopLeftRadius: 16,
+                borderTopRightRadius: 16
+            }}>
+                <Box sx={{ width: '60%', height: 32, bgcolor: alpha(theme.palette.common.white, 0.3), borderRadius: 1, mb: 2 }} />
+                <Box sx={{ width: '80%', height: 20, bgcolor: alpha(theme.palette.common.white, 0.2), borderRadius: 1, mb: 3 }} />
+                <Box sx={{ width: '40%', height: 48, bgcolor: alpha(theme.palette.common.white, 0.3), borderRadius: 1 }} />
+            </Box>
+            <CardContent sx={{ p: 3 }}>
+                <Stack spacing={2}>
+                    {[1, 2, 3, 4, 5].map((i) => (
+                        <Box key={i} display="flex" gap={1.5}>
+                            <Box sx={{ width: 20, height: 20, borderRadius: '50%', bgcolor: alpha(theme.palette.grey[400], 0.2) }} />
+                            <Box sx={{ flex: 1, height: 20, bgcolor: alpha(theme.palette.grey[400], 0.2), borderRadius: 1 }} />
+                        </Box>
+                    ))}
+                </Stack>
+                <Box sx={{ mt: 4, height: 48, bgcolor: alpha(theme.palette.primary.main, 0.1), borderRadius: 3 }} />
+            </CardContent>
+        </Card>
+    );
+
     if (loading) {
         return (
-            <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: theme.palette.background.default }}>
-                <CircularProgress color="primary" />
+            <Box sx={{ minHeight: '100vh', background: theme.palette.background.default, py: 8, color: theme.palette.text.primary }}>
+                <Container maxWidth="xl">
+                    {/* Header Skeleton */}
+                    <Box textAlign="center" mb={8}>
+                        <Box sx={{
+                            width: 400,
+                            height: 56,
+                            bgcolor: alpha(theme.palette.primary.main, 0.1),
+                            borderRadius: 2,
+                            mx: 'auto',
+                            mb: 2,
+                            animation: 'pulse 1.5s ease-in-out infinite',
+                            '@keyframes pulse': {
+                                '0%, 100%': { opacity: 1 },
+                                '50%': { opacity: 0.5 }
+                            }
+                        }} />
+                        <Box sx={{
+                            width: 600,
+                            height: 28,
+                            bgcolor: alpha(theme.palette.grey[400], 0.1),
+                            borderRadius: 1,
+                            mx: 'auto',
+                            mb: 6,
+                            animation: 'pulse 1.5s ease-in-out infinite 0.2s'
+                        }} />
+
+                        {/* Billing Toggle Skeleton */}
+                        <Box sx={{
+                            width: 300,
+                            height: 48,
+                            bgcolor: theme.palette.background.paper,
+                            borderRadius: 10,
+                            mx: 'auto',
+                            boxShadow: 1
+                        }} />
+                    </Box>
+
+                    {/* Pricing Cards Skeleton */}
+                    <Grid container spacing={4} justifyContent="center">
+                        {[1, 2, 3, 4].map((i) => (
+                            <Grid item xs={12} md={6} lg={3} key={i}>
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.4, delay: i * 0.1 }}
+                                    style={{ height: '100%' }}
+                                >
+                                    <PricingCardSkeleton />
+                                </motion.div>
+                            </Grid>
+                        ))}
+                    </Grid>
+                </Container>
             </Box>
         );
     }
