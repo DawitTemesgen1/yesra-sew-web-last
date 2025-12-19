@@ -292,16 +292,14 @@ const HomePage = () => {
     }
   ];
 
-  // Fetch Featured Listings (Recently Added)
+  // Fetch Featured Listings (Recently Added - All Categories)
   const { data: featuredListings = [], isLoading: recentLoading } = useQuery(
     ['featuredListings', language],
     async () => {
       try {
-        const [homes, cars] = await Promise.all([
-          apiService.getListings({ category: 'homes', limit: 4 }),
-          apiService.getListings({ category: 'cars', limit: 4 })
-        ]);
-        return [...(homes.listings || []), ...(cars.listings || [])];
+        // Fetch general listings (mixed categories)
+        const response = await apiService.getListings({ limit: 8, sort: 'newest' });
+        return response.listings || response || [];
       } catch (e) {
         console.error('Failed to fetch featured listings', e);
         return [];
@@ -310,20 +308,17 @@ const HomePage = () => {
     { staleTime: 1000 * 60 * 5 }
   );
 
-  // Fetch Premium Listings (Properties specifically)
-  // We'll treat this as a "Premium Properties" showcase
+  // Fetch Premium Listings (All Categories)
   const { data: premiumListings = [], isLoading: premiumLoading } = useQuery(
     ['premiumListings', language],
     async () => {
-      // Fetch specifically premium homes (mocking param usage for now if backend doesnt support)
-      // If no 'is_premium' filter exists, we might need to filter client side or mock it by picking some
       try {
-        const response = await apiService.getListings({ category: 'homes', limit: 4 }); // In real app, pass { is_premium: true }
-        // For demonstration, we'll mark them as premium visually if backend doesn't return premium flag
-        let listings = response.listings || response || [];
-
-        // Force them to look premium for the showcase if they aren't marked
-        return listings.map(l => ({ ...l, is_premium: true }));
+        // Fetch all premium listings
+        const response = await apiService.getListings({ is_premium: true, limit: 10 });
+        const listings = response.listings || response || [];
+        // Fallback: If no premium found, just return popular ones for demo (optional, but requested behavior implies robust "general" view)
+        // If backend works, this returns mixed premium.
+        return listings;
       } catch (err) { return []; }
     },
     { staleTime: 1000 * 60 * 5 }
