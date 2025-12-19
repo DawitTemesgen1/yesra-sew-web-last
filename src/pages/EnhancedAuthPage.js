@@ -8,7 +8,7 @@ import {
 import {
     Visibility, VisibilityOff, Email, Phone, Lock, Person, Business,
     ArrowBack, Google, CheckCircle, Error as ErrorIcon, Timer,
-    Refresh, Security, Language, DarkMode, LightMode
+    Refresh, Security, Language, DarkMode, LightMode, Login
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -810,6 +810,30 @@ const EnhancedAuthPage = () => {
                             backdropFilter: 'blur(10px)'
                         }}
                     >
+                        {/* Top Login Button for Register Mode */}
+                        {authMode === 'register' && (
+                            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
+                                <Button
+                                    onClick={() => switchMode('login')}
+                                    startIcon={<Login />}
+                                    variant="outlined"
+                                    sx={{
+                                        borderRadius: 5,
+                                        textTransform: 'none',
+                                        fontWeight: 'bold',
+                                        borderWidth: 2,
+                                        px: 3,
+                                        borderColor: 'primary.main',
+                                        '&:hover': {
+                                            borderWidth: 2,
+                                            background: 'rgba(102, 126, 234, 0.08)'
+                                        }
+                                    }}
+                                >
+                                    {t.login}
+                                </Button>
+                            </Box>
+                        )}
                         {/* Header */}
                         <Box sx={{ textAlign: 'center', mb: 3 }}>
                             <motion.div

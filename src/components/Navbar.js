@@ -280,8 +280,35 @@ const Navbar = ({ activeTab, setActiveTab }) => {
   if (!isMobile) {
     return (
       <>
-        <AppBar position="sticky" color="inherit" elevation={0} sx={{ backdropFilter: 'blur(20px)', backgroundColor: alpha(theme.palette.background.paper, 0.8), borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
-          <Toolbar sx={{ minHeight: 80, px: { md: 4 } }}>
+        {/* Floating Desktop App Bar */}
+        <AppBar
+          position="sticky"
+          color="inherit"
+          elevation={4}
+          sx={{
+            width: '94%',
+            maxWidth: '1400px',
+            mx: 'auto',
+            mt: 2,
+            mb: 1, // spacing below before content starts
+            top: 16,
+            borderRadius: 4,
+            backdropFilter: 'blur(12px)',
+            // Branding: deep blue background gradient with golden accents
+            background: themeMode === 'dark'
+              ? 'linear-gradient(135deg, rgba(10, 25, 41, 0.95) 0%, rgba(20, 40, 60, 0.95) 100%)'
+              : 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(245, 247, 250, 0.95) 100%)',
+            border: themeMode === 'dark' ? '1px solid rgba(212, 175, 55, 0.2)' : '1px solid rgba(212, 175, 55, 0.3)', // Golden subtle border
+            boxShadow: themeMode === 'dark'
+              ? '0 8px 32px rgba(0, 0, 0, 0.4)'
+              : '0 8px 32px rgba(30, 58, 138, 0.1)', // Blue-tinted shadow for light mode
+          }}
+        >
+          <Toolbar sx={{
+            minHeight: 72,
+            px: { md: 3 },
+            justifyContent: 'space-between'
+          }}>
             <Box onClick={() => navigate('/')} sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center', mr: 4 }}>
               <Box component="img" src={logo} sx={{ width: 45, height: 45, mr: 1.5 }} alt="Logo" />
               <Box>
@@ -310,7 +337,38 @@ const Navbar = ({ activeTab, setActiveTab }) => {
             </Box>
             <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', gap: 1 }}>
               {navLinks.map((item, idx) => (
-                <Button key={item.label} onClick={() => handleNav(item.path, idx)} sx={{ color: currentTab === idx ? 'primary.main' : 'text.secondary', fontWeight: currentTab === idx ? 700 : 500, px: 2.5, py: 1, borderRadius: 3, backgroundColor: currentTab === idx ? alpha(theme.palette.primary.main, 0.08) : 'transparent', '&:hover': { backgroundColor: alpha(theme.palette.primary.main, 0.12) } }}>{item.label}</Button>
+                <Button
+                  key={item.label}
+                  onClick={() => handleNav(item.path, idx)}
+                  sx={{
+                    position: 'relative',
+                    color: currentTab === idx
+                      ? '#D4AF37' // Active: Golden
+                      : themeMode === 'dark' ? '#cbd5e1' : '#1E3A8A', // Inactive: Slate (dark) or Deep Blue (light)
+                    fontWeight: currentTab === idx ? 800 : 600,
+                    px: 3,
+                    py: 1,
+                    borderRadius: 3,
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      backgroundColor: alpha('#D4AF37', 0.1),
+                      transform: 'translateY(-2px)'
+                    },
+                    '&::after': currentTab === idx ? {
+                      content: '""',
+                      position: 'absolute',
+                      bottom: 8,
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      width: '20px',
+                      height: '3px',
+                      borderRadius: '2px',
+                      backgroundColor: '#D4AF37'
+                    } : {}
+                  }}
+                >
+                  {item.label}
+                </Button>
               ))}
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -327,8 +385,46 @@ const Navbar = ({ activeTab, setActiveTab }) => {
                   <Tooltip title={t.tooltips.theme}><IconButton onClick={toggleTheme} sx={{ border: `1px solid ${theme.palette.divider}` }}>{themeMode === 'light' ? <DarkMode fontSize="small" /> : <LightMode fontSize="small" />}</IconButton></Tooltip>
                   <Tooltip title={t.tooltips.changeLanguage}><IconButton onClick={handleLanguageMenuOpen} sx={{ border: `1px solid ${theme.palette.divider}` }}><Language fontSize="small" /></IconButton></Tooltip>
                   <Box sx={{ borderLeft: `1px solid ${theme.palette.divider}`, height: 32, mx: 1 }} />
-                  <Button variant="outlined" onClick={() => navigate('/auth')} sx={{ borderRadius: 3, px: 3, py: 1.2, fontWeight: 600 }}>{t.navbar.login}</Button>
-                  <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/auth?mode=register')} sx={{ borderRadius: 3, px: 3, py: 1.2, fontWeight: 600 }}>{t.navbar.register}</Button>
+                  <Button
+                    variant="outlined"
+                    onClick={() => navigate('/auth')}
+                    sx={{
+                      borderRadius: 3,
+                      px: 3,
+                      py: 1.2,
+                      fontWeight: 700,
+                      borderColor: '#1E3A8A',
+                      color: themeMode === 'dark' ? '#fff' : '#1E3A8A',
+                      borderWidth: 2,
+                      '&:hover': {
+                        borderWidth: 2,
+                        borderColor: '#D4AF37',
+                        color: '#D4AF37'
+                      }
+                    }}
+                  >
+                    {t.navbar.login}
+                  </Button>
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={() => navigate('/auth?mode=register')}
+                    sx={{
+                      borderRadius: 3,
+                      px: 3,
+                      py: 1.2,
+                      fontWeight: 700,
+                      background: 'linear-gradient(135deg, #1E3A8A 0%, #0055FF 100%)',
+                      boxShadow: '0 4px 14px 0 rgba(0, 85, 255, 0.39)',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #D4AF37 0%, #F6E05E 100%)', // Golden hover
+                        boxShadow: '0 4px 14px 0 rgba(212, 175, 55, 0.39)',
+                        color: '#1E3A8A'
+                      }
+                    }}
+                  >
+                    {t.navbar.register}
+                  </Button>
                 </>
               )}
             </Box>
