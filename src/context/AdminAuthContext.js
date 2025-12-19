@@ -16,6 +16,21 @@ export const AdminAuthProvider = ({ children }) => {
             return true;
         }
 
+        // 2. Performance Optimization: If metadata exists and it is NOT admin, 
+        // we can be 95% sure they are not admin. For standard users, we skip the DB check
+        // unless they are specifically hitting an admin route (which can be checked elsewhere)
+        // or we have a forced check.
+        if (userMetadata && userMetadata.role && !['admin', 'super_admin'].includes(userMetadata.role)) {
+            console.log("🛡️ AdminAuthContext: User is clearly not admin based on metadata. Skipping DB check.");
+            return false;
+        }
+
+        // 3. Cache for session-level persistence of "not admin" state to prevent repeat DB hits
+        const cacheKey = `is_not_admin_${userId}`;
+        if (sessionStorage.getItem(cacheKey)) {
+            return false;
+        }
+
         const fetchRoleWithTimeout = async () => {
             // TIMEOUT PROTECTION: logic to ensure we don't hang forever on the database query
             const profilePromise = supabase
@@ -25,16 +40,16 @@ export const AdminAuthProvider = ({ children }) => {
                 .maybeSingle();
 
             const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('Profile check DB timeout')), 5000)
+                setTimeout(() => reject(new Error('Profile check DB timeout')), 4000)
             );
 
             const { data: profile, error } = await Promise.race([profilePromise, timeoutPromise]);
 
             if (error) {
-                // If permission denied (403/401), likely RLS issue, but effectively 'not admin' for now unless metadata says so
+                // If permission denied (403/401), likely RLS issue, but effectively 'not admin' for now
                 if (error.code === 'PGRST301' || error.code === '42501') {
-                    console.warn("⚠️ AdminAuthContext: RLS Permission denied reading profile role. Assuming 'user'.");
-                    return { role: 'user' }; // Treat as normal user
+                    console.warn("⚠️ AdminAuthContext: RLS Permission denied reading profile role.");
+                    return { role: 'user' };
                 }
                 throw error;
             }
@@ -44,30 +59,33 @@ export const AdminAuthProvider = ({ children }) => {
         const start = Date.now();
         console.log(`🛡️ [${start}] AdminAuthContext: Verifying role for User ID: ${userId}`);
 
-        for (let attempt = 0; attempt < 3; attempt++) {
+        // For non-admin metadata users, only try ONCE to avoid hanging the app
+        const maxAttempts = (userMetadata && !userMetadata.role) ? 1 : 2;
+
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
             try {
                 const profile = await fetchRoleWithTimeout();
 
                 const duration = Date.now() - start;
-                console.log(`🛡️ [${duration}ms] AdminAuthContext: DB Query complete (Attempt ${attempt + 1}).`);
-                console.log("🛡️ AdminAuthContext: Role verified ->", profile?.role);
+                console.log(`🛡️ [${duration}ms] AdminAuthContext: DB Query complete.`);
 
                 if (profile?.role === 'admin' || profile?.role === 'super_admin') {
                     return true;
                 }
 
-                console.warn("⚠️ User is valid but role is:", profile?.role);
-                return false; // Valid response, just not admin. Don't retry.
+                // If they are not admin, cache it for this session to avoid re-checking
+                console.log("🛡️ AdminAuthContext: User is not admin. Caching state.");
+                sessionStorage.setItem(cacheKey, 'true');
+                return false;
 
             } catch (err) {
                 console.warn(`⚠️ Admin check attempt ${attempt + 1} failed:`, err.message);
-                if (attempt < 2) {
-                    await new Promise(r => setTimeout(r, 1000 * (attempt + 1))); // Backoff: 1s, 2s
+                if (attempt < maxAttempts - 1) {
+                    await new Promise(r => setTimeout(r, 1000));
                 }
             }
         }
 
-        console.error(`❌ AdminAuthContext: Role verification FAILED after 3 attempts.`);
         return false;
     };
 

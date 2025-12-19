@@ -52,13 +52,25 @@ const JOB_IMAGES = [
 ];
 
 /**
- * Helper: robustly resolve the best image for the card
+ * Helper: robustly resolve the best image for the card and OPTIMIZE IT
  */
-const getCardImage = (listing) => {
+const getCardImage = (listing, width = 600) => {
     if (!listing) return null;
 
-    // DEBUG: Log the data inspection to help trace issues
-    const debug = false;
+    // Helper to apply Supabase CDN transformations
+    const optimizeUrl = (url) => {
+        if (!url || !url.includes('supabase')) return url;
+        try {
+            const urlObj = new URL(url);
+            // Add transformation parameters for Supabase CDN
+            urlObj.searchParams.set('width', width);
+            urlObj.searchParams.set('quality', '70');
+            urlObj.searchParams.set('format', 'webp');
+            return urlObj.toString();
+        } catch (e) {
+            return url;
+        }
+    };
 
     // Strict Image Validator
     const isValidUrl = (val) => {
@@ -74,41 +86,54 @@ const getCardImage = (listing) => {
             (val.includes('supabase') && val.includes('image'));
     };
 
+    let rawUrl = null;
+
     // 1. Check 'images' array (Supabase standard)
     if (Array.isArray(listing.images) && listing.images.length > 0) {
         const first = listing.images[0];
-        if (isValidUrl(first)) return first;
-        if (typeof first === 'object' && isValidUrl(first?.url)) return first.url;
+        if (isValidUrl(first)) rawUrl = first;
+        else if (typeof first === 'object' && isValidUrl(first?.url)) rawUrl = first.url;
     }
 
     // 2. Check 'image' string
-    if (listing.image && isValidUrl(listing.image)) return listing.image;
+    if (!rawUrl && listing.image && isValidUrl(listing.image)) rawUrl = listing.image;
 
     // 3. Check 'media_urls' (New Schema Support)
-    if (Array.isArray(listing.media_urls) && listing.media_urls.length > 0) {
+    if (!rawUrl && Array.isArray(listing.media_urls) && listing.media_urls.length > 0) {
         const validMedia = listing.media_urls.find(m => m.type === 'image' && isValidUrl(m.url));
-        if (validMedia) return validMedia.url;
+        if (validMedia) rawUrl = validMedia.url;
     }
 
     // 4. Scan Custom Fields
-    if (listing.custom_fields && typeof listing.custom_fields === 'object') {
+    if (!rawUrl && listing.custom_fields && typeof listing.custom_fields === 'object') {
         const cf = listing.custom_fields;
         const keys = Object.keys(cf);
         const imageKeys = keys.filter(k => /image|photo|picture|cover|thumb/i.test(k));
 
         for (const key of imageKeys) {
             const val = cf[key];
-            if (isLikelyImage(val)) return val;
+            if (isLikelyImage(val)) {
+                rawUrl = val;
+                break;
+            }
             if (Array.isArray(val) && val.length > 0) {
                 const first = val[0];
-                if (isLikelyImage(first)) return first;
-                if (typeof first === 'object' && isLikelyImage(first?.url)) return first.url;
+                if (isLikelyImage(first)) {
+                    rawUrl = first;
+                    break;
+                }
+                if (typeof first === 'object' && isLikelyImage(first?.url)) {
+                    rawUrl = first.url;
+                    break;
+                }
             }
         }
     }
 
-    // ❌ No user image found -> USE FALLBACK (ONLY for Jobs)
+    // If we found a raw URL, optimize it!
+    if (rawUrl) return optimizeUrl(rawUrl);
 
+    // ❌ No user image found -> USE FALLBACK (ONLY for Jobs)
     // Determine category slug to identify jobs
     let categorySlug = 'default';
     if (listing.category) {

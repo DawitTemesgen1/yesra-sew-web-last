@@ -5,6 +5,7 @@ import { Box } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
 import { Toaster } from 'react-hot-toast';
+import apiService, { supabase } from './services/api';
 import { AuthProvider } from './context/AuthContext';
 import { AdminAuthProvider } from './context/AdminAuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
@@ -130,11 +131,19 @@ const prefetchRoutes = () => {
 const AnimatedRoutes = () => {
     const location = useLocation();
 
-    // Trigger prefetch on first load
+    // Trigger prefetch and data buffering on first load
     React.useEffect(() => {
         const timer = setTimeout(() => {
-            prefetchRoutes();
-        }, 2000); // Start prefetching 2s after app load
+            // 1. Prefetch heavy route bundles when idle
+            if ('requestIdleCallback' in window) {
+                window.requestIdleCallback(() => prefetchRoutes());
+            } else {
+                prefetchRoutes();
+            }
+
+            // 2. Eagerly buffer categories to memory (Fixed "sluggish Post Ad" issue)
+            apiService.getCategories().catch(err => console.debug('Category buffer error:', err));
+        }, 4000);
         return () => clearTimeout(timer);
     }, []);
 

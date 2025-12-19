@@ -648,6 +648,11 @@ class ApiService {
 
   // --- Public Data Methods ---
   async getCategories() {
+    // 1. Optimized Cache Check
+    if (window._categoryCache && window._categoryCache.length > 0) {
+      return { success: true, categories: window._categoryCache, data: { categories: window._categoryCache } };
+    }
+
     try {
       const { data, error } = await supabase
         .from('categories')
@@ -655,10 +660,14 @@ class ApiService {
         .order('display_order', { ascending: true });
 
       if (error) throw error;
-      return { success: true, categories: data, data: { categories: data } }; // Return specific structure to match what pages expect
+
+      // Store in memory
+      window._categoryCache = data || [];
+
+      return { success: true, categories: data, data: { categories: data } };
     } catch (error) {
       console.error('Error fetching categories:', error);
-      return { success: false, categories: [], data: { categories: [] } };
+      return { success: false, categories: window._categoryCache || [], data: { categories: window._categoryCache || [] } };
     }
   }
 

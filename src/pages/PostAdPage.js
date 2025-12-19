@@ -14,6 +14,7 @@ import adminService from '../services/adminService';
 import apiService, { supabase } from '../services/api';
 import DynamicField from '../components/DynamicField';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 import SEO from '../components/SEO';
 import { useQueryClient } from 'react-query';
 
@@ -127,22 +128,20 @@ const PostAdPage = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const editListingId = searchParams.get('edit');
+  const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
-
   const [activeStep, setActiveStep] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [categories, setCategories] = useState([]);
-  const [userProfile, setUserProfile] = useState(null);
+  const [categories, setCategories] = useState(window._categoryCache || []);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [template, setTemplate] = useState(null);
   const [steps, setSteps] = useState([]);
   const [formData, setFormData] = useState({});
   const [errors, setErrors] = useState({});
 
-  // Fetch categories and user profile on mount
+  // Fetch categories on mount
   useEffect(() => {
     fetchCategories();
-    fetchUserProfile();
   }, []);
 
   // Fetch Listing for Edit if ID exists
@@ -152,35 +151,22 @@ const PostAdPage = () => {
     }
   }, [editListingId, categories]);
 
-  const fetchUserProfile = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-        setUserProfile(profile);
-      }
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-    }
-  };
-
   const fetchCategories = async () => {
     try {
+      // If we already have categories, don't set loading to true to avoid flicker
+      if (!categories || categories.length === 0) {
+        setLoading(true);
+      }
+
       const response = await apiService.getCategories();
       if (response && response.categories) {
         setCategories(response.categories);
-      } else {
-        // Fallback or empty
-        setCategories([]);
-        console.warn('No categories returned', response);
       }
     } catch (error) {
       console.error('Error fetching categories:', error);
       toast.error(t.failedToLoadCategories);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -237,15 +223,18 @@ const PostAdPage = () => {
 
   // Fetch template when category is selected
   const handleCategorySelect = async (category, clearForm = true) => {
-    // Permission Check Logic (Same as before)
+    // Permission Check Logic
     const isRestricted = category.restricted || ['jobs', 'tenders', 'job', 'tender'].some(slug =>
       category.slug?.toLowerCase().includes(slug) ||
       category.name?.toLowerCase().includes(slug)
     );
 
     if (isRestricted) {
-      const isVerifiedCompany = userProfile?.account_type === 'company' && userProfile?.verification_status === 'verified';
-      const isAdmin = userProfile?.role === 'admin' || userProfile?.is_admin;
+      // Use currentUser metadata from AuthContext for faster check
+      const metadata = currentUser?.user_metadata || {};
+      const isVerifiedCompany = metadata.account_type === 'company' && metadata.verification_status === 'verified';
+      const isAdmin = metadata.role === 'admin' || metadata.is_admin;
+
       if (!isVerifiedCompany && !isAdmin) {
         toast.error('Only verified companies and admins can post Jobs and Tenders.');
         return;
@@ -267,21 +256,16 @@ const PostAdPage = () => {
             icon: '🔒',
           }
         );
-        // Optional: Redirect to pricing
         if (window.confirm(`You have 0 remaining posts for ${category.name}. Would you like to upgrade your plan?`)) {
-          navigate(`/pricing/${category.slug}`); // assuming routing works like this or /pricing
+          navigate(`/pricing/${category.slug}`);
         }
         return;
       }
     } else {
-      // Not logged in - Redirect to auth?
-      // Let the existing flow handle auth requirement later or now?
-      // Usually Post Ad requires login immediately.
       toast.error("Please login to post an ad.");
       navigate('/auth', { state: { from: '/post-ad' } });
       return;
     }
-    // --------------------------------
 
     setSelectedCategory(category);
     setLoading(true);
@@ -309,11 +293,10 @@ const PostAdPage = () => {
           const typeFieldExists = validatedSteps.some(s => s.fields.some(f => f.field_name === 'type'));
 
           if (!typeFieldExists && validatedSteps.length > 0) {
-            // Add to the first step
             const typeField = {
               id: 'injected-type',
               field_name: 'type',
-              field_label: 'Listing Type', // Could use translation if I had it here, but English default ok for now
+              field_label: 'Listing Type',
               field_type: 'select',
               options: ['sale', 'rent'],
               is_required: true,
@@ -321,7 +304,6 @@ const PostAdPage = () => {
               width: 6,
               placeholder: 'Select Type (Sale/Rent)'
             };
-            // Prepend to fields of first step
             validatedSteps[0].fields.unshift(typeField);
           }
         }
@@ -358,14 +340,9 @@ const PostAdPage = () => {
   };
 
   const validateStep = (stepIndex) => {
-    // ... (This function remains mostly the same, ensuring fields are validated)
-    // If it's the category selection step (0), it's valid if category is selected
     if (stepIndex === 0) return !!selectedCategory;
 
-    // Adjust index for template steps (step 1 is template step 0)
     const templateStepIndex = stepIndex - 1;
-
-    // If it's the review step (last step), it's valid
     if (templateStepIndex >= steps.length) return true;
 
     const currentStep = steps[templateStepIndex];
@@ -375,7 +352,6 @@ const PostAdPage = () => {
     currentStep.fields?.forEach(field => {
       if (field.is_required && field.is_visible) {
         const value = formData[field.field_name];
-        // Only validate if value is strictly missing/null/empty string
         if ((value === undefined || value === null || value === '') || (Array.isArray(value) && value.length === 0)) {
           newErrors[field.field_name] = t.fieldRequired;
           isValid = false;
@@ -403,25 +379,17 @@ const PostAdPage = () => {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
+      if (!currentUser) throw new Error('User not authenticated');
 
-      // Separate standard fields from custom fields
-      // NOTE: We reduced this list to avoid "column not found" errors. 
-      // 'location', 'city', 'specific_location' will now go into custom_fields unless/until the schema is updated.
-      // 'location', 'city', 'specific_location' will now go into custom_fields unless/until the schema is updated.
       const standardFields = ['title', 'description', 'price', 'type'];
-
-      // Calculate expiration date (default 30 days) if new
       const expirationDate = new Date();
       expirationDate.setDate(expirationDate.getDate() + 30);
 
       const dbData = {
         category_id: selectedCategory.id,
         template_id: template.id,
-        user_id: user.id,
-        status: 'pending', // Reset to pending solely if editing? No, maybe keep logic: if edit, check if critical fields changed? For now, re-approval might be safer. Or keep existing status.
-        // If editing, we shouldn't overwrite created_at. Only updated_at (which is automatic usually or we set it)
+        user_id: currentUser.id,
+        status: 'pending',
         custom_fields: {
           expires_at: expirationDate.toISOString()
         },
@@ -432,135 +400,55 @@ const PostAdPage = () => {
         dbData.created_at = new Date().toISOString();
       }
 
-      // Process form data
       Object.entries(formData).forEach(([key, value]) => {
         if (standardFields.includes(key)) {
           dbData[key] = value;
         } else if (key === 'images' || key === 'video') {
-          // Handle media separately? Logic below handles parsing formData via step fields
+          // Handled via media_urls logic
         } else {
           dbData.custom_fields[key] = value;
         }
       });
 
-      // Ensure required fields have values (fallback logic)
+      // Simple Title Fallback
       if (!dbData.title) {
-        // Try to find a title-like field
-        const titleField = Object.keys(formData).find(key =>
-          key.toLowerCase().includes('title') ||
-          key.toLowerCase().includes('name') ||
-          key.toLowerCase().includes('heading') ||
-          key.toLowerCase().includes('subject')
-        );
-        if (titleField && formData[titleField]) {
-          dbData.title = formData[titleField];
-        } else {
-          // Use first non-empty text value as title
-          const firstValue = Object.values(formData).find(v =>
-            typeof v === 'string' && v.trim().length > 0
-          );
-          if (firstValue) {
-            dbData.title = firstValue.substring(0, 100); // Limit to 100 chars
-          } else {
-            // Last resort: use category name + timestamp
-            const timestamp = new Date().toLocaleDateString();
-            dbData.title = `${selectedCategory.name} ${t.listing} - ${timestamp}`;
-          }
-        }
+        dbData.title = Object.values(formData).find(v => typeof v === 'string' && v.length > 3) || `${selectedCategory.name} Ad`;
       }
 
-      // Ensure description exists
+      // Simple Description Fallback
       if (!dbData.description) {
-        const descField = Object.keys(formData).find(key =>
-          key.toLowerCase().includes('description') ||
-          key.toLowerCase().includes('details') ||
-          key.toLowerCase().includes('info')
-        );
-        if (descField && formData[descField]) {
-          dbData.description = formData[descField];
-        } else {
-          // Use any available text field or create a basic description
-          const textValues = Object.entries(formData)
-            .filter(([key, value]) => typeof value === 'string' && value.trim().length > 0)
-            .map(([key, value]) => `${key}: ${value}`)
-            .join(', ');
-
-          dbData.description = textValues || `${selectedCategory.name} listing posted on ${new Date().toLocaleDateString()}`;
-        }
+        dbData.description = dbData.title;
       }
 
-      // Ensure price is a number
-      if (dbData.price) {
-        dbData.price = parseFloat(dbData.price) || 0;
-      }
+      if (dbData.price) dbData.price = parseFloat(dbData.price) || 0;
 
-      // Handle Media Uploads (if they are Files)
-      // Note: In this implementation, DynamicField handles uploads and returns URLs directly
-      // So formData should already contain URLs for 'file', 'image', 'video' types
-
-      // Collect all media URLs with safety checks
-      const mediaFields = steps
-        .filter(s => s && s.fields && Array.isArray(s.fields))
-        .flatMap(s => s.fields)
-        .filter(f => f && f.field_type && ['image', 'video', 'file'].includes(f.field_type));
-
+      // Map media fields
+      const mediaFields = steps.flatMap(s => s.fields || []).filter(f => ['image', 'video', 'file'].includes(f.field_type));
       mediaFields.forEach(field => {
         const url = formData[field.field_name];
         if (url) {
-          dbData.media_urls.push({
-            type: field.field_type,
-            url: url,
-            field_name: field.field_name
-          });
+          dbData.media_urls.push({ type: field.field_type, url: url, field_name: field.field_name });
         }
       });
 
-      // Backward Compatibility: Populate 'images' array and 'image' string
-      // NOTE: We are disabling direct column assignment for 'image' and 'images' 
-      // because the schema might not have these columns anymore (moved to media_urls JSONB or similar).
-      /*
-      const imageMedia = dbData.media_urls.filter(m => m.type === 'image');
-      if (imageMedia.length > 0) {
-        // Only set these if you are SURE the columns exist. 
-        // If getting "Could not find column", keep these commented out.
-        // dbData.image = imageMedia[0].url; 
-        // dbData.images = imageMedia.map(m => m.url);
-      }
-      */
-
-      // Insert or Update using listingService (Node.js Backend)
+      const listingService = (await import('../services/listing-service')).default;
       let result;
       if (editListingId) {
-        // Update
-        // Remove fields that shouldn't be updated or cause issues
         const updateData = { ...dbData };
         delete updateData.status;
         delete updateData.created_at;
-        delete updateData.user_id; // Usually don't update user_id
-
-        const listingService = (await import('../services/listing-service')).default;
+        delete updateData.user_id;
         result = await listingService.updateListing(editListingId, updateData);
       } else {
-        // Insert
-        const listingService = (await import('../services/listing-service')).default;
         result = await listingService.createListing(dbData);
       }
 
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to save listing');
-      }
+      if (!result.success) throw new Error(result.error);
 
       toast.success(editListingId ? "Listing updated successfully!" : t.adPostedSuccessfully);
-
-      // Invalidate queries to ensure ProfilePage and other lists refresh
       queryClient.invalidateQueries(['userListings']);
       queryClient.invalidateQueries(['listings']);
 
-      // USAGE TRACKING: 
-      // We switched to "Row Counting" strategy. 
-      // So we don't need to manually increment usage. The new row in 'listings' counts as usage automatically.
-
-      // Navigate based on previous location or default to profile
       const from = location.state?.from || '/profile';
       navigate(from);
     } catch (error) {
@@ -572,96 +460,130 @@ const PostAdPage = () => {
   };
 
   // Render Category Selection Step
-  const renderCategorySelection = () => (
-    <Grid container spacing={{ xs: 2, sm: 2, md: 3 }}>
-      {categories.map((category) => (
-        <Grid item xs={6} sm={4} md={3} lg={2.4} key={category.id}>
-          <Card
-            component={motion.div}
-            whileHover={{ scale: 1.05, y: -4 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => handleCategorySelect(category)}
-            sx={{
-              cursor: 'pointer',
-              height: '100%',
-              minHeight: { xs: 140, sm: 160 },
-              border: selectedCategory?.id === category.id ? `3px solid ${BRAND_COLORS.gold}` : `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-              bgcolor: selectedCategory?.id === category.id ? alpha(BRAND_COLORS.gold, 0.08) : 'background.paper',
-              borderRadius: 3,
-              transition: 'all 0.3s ease',
-              boxShadow: selectedCategory?.id === category.id ? `0 8px 24px ${alpha(BRAND_COLORS.gold, 0.25)}` : 1,
-              '&:hover': {
-                boxShadow: 4,
-                borderColor: selectedCategory?.id === category.id ? BRAND_COLORS.gold : alpha(BRAND_COLORS.blue, 0.3)
-              }
-            }}
-          >
-            <CardContent sx={{
-              textAlign: 'center',
-              py: { xs: 2, sm: 2.5 },
-              px: { xs: 1.5, sm: 2 },
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              <Box
-                sx={{
-                  width: { xs: 48, sm: 56 },
-                  height: { xs: 48, sm: 56 },
-                  borderRadius: '50%',
-                  bgcolor: selectedCategory?.id === category.id
-                    ? alpha(BRAND_COLORS.gold, 0.15)
-                    : alpha(category.color || BRAND_COLORS.blue, 0.1),
-                  color: selectedCategory?.id === category.id
-                    ? BRAND_COLORS.gold
-                    : (category.color || BRAND_COLORS.blue),
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  mx: 'auto',
-                  mb: { xs: 1, sm: 1.5 },
-                  transition: 'all 0.3s ease'
-                }}
-              >
-                <Category fontSize={isMobile ? "medium" : "large"} />
-              </Box>
-              <Typography
-                variant={isMobile ? "body2" : "subtitle1"}
-                fontWeight="bold"
-                gutterBottom
-                sx={{
-                  fontSize: { xs: '0.875rem', sm: '1rem' },
-                  lineHeight: 1.2,
-                  mb: 0.5
-                }}
-              >
-                {category.name}
-              </Typography>
-              {!isMobile && category.description && (
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
+  const renderCategorySelection = () => {
+    if (loading && categories.length === 0) {
+      return (
+        <Grid container spacing={{ xs: 2, sm: 2, md: 3 }}>
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
+            <Grid item xs={6} sm={4} md={3} lg={2.4} key={i}>
+              <Card sx={{
+                height: 160, borderRadius: 3, bgcolor: 'background.paper',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', p: 2
+              }}>
+                <Box sx={{
+                  width: 56, height: 56, borderRadius: '50%', mb: 2,
+                  background: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                  animation: 'pulse 1.5s infinite'
+                }} />
+                <Box sx={{
+                  width: '80%', height: 20, borderRadius: 1,
+                  background: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                  animation: 'pulse 1.5s infinite 0.2s'
+                }} />
+              </Card>
+            </Grid>
+          ))}
+          <style>{`
+            @keyframes pulse {
+              0%, 100% { opacity: 0.8; }
+              50% { opacity: 0.4; }
+            }
+          `}</style>
+        </Grid>
+      );
+    }
+
+    return (
+      <Grid container spacing={{ xs: 2, sm: 2, md: 3 }}>
+        {categories.map((category) => (
+          <Grid item xs={6} sm={4} md={3} lg={2.4} key={category.id}>
+            <Card
+              component={motion.div}
+              whileHover={{ scale: 1.05, y: -4 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => handleCategorySelect(category)}
+              sx={{
+                cursor: 'pointer',
+                height: '100%',
+                minHeight: { xs: 140, sm: 160 },
+                border: selectedCategory?.id === category.id ? `3px solid ${BRAND_COLORS.gold}` : `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                bgcolor: selectedCategory?.id === category.id ? alpha(BRAND_COLORS.gold, 0.08) : 'background.paper',
+                borderRadius: 3,
+                transition: 'all 0.3s ease',
+                boxShadow: selectedCategory?.id === category.id ? `0 8px 24px ${alpha(BRAND_COLORS.gold, 0.25)}` : 1,
+                '&:hover': {
+                  boxShadow: 4,
+                  borderColor: selectedCategory?.id === category.id ? BRAND_COLORS.gold : alpha(BRAND_COLORS.blue, 0.3)
+                }
+              }}
+            >
+              <CardContent sx={{
+                textAlign: 'center',
+                py: { xs: 2, sm: 2.5 },
+                px: { xs: 1.5, sm: 2 },
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <Box
                   sx={{
-                    fontSize: '0.75rem',
-                    lineHeight: 1.3,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical'
+                    width: { xs: 48, sm: 56 },
+                    height: { xs: 48, sm: 56 },
+                    borderRadius: '50%',
+                    bgcolor: selectedCategory?.id === category.id
+                      ? alpha(BRAND_COLORS.gold, 0.15)
+                      : alpha(category.color || BRAND_COLORS.blue, 0.1),
+                    color: selectedCategory?.id === category.id
+                      ? BRAND_COLORS.gold
+                      : (category.color || BRAND_COLORS.blue),
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    mx: 'auto',
+                    mb: { xs: 1, sm: 1.5 },
+                    transition: 'all 0.3s ease'
                   }}
                 >
-                  {category.description}
+                  <Category fontSize={isMobile ? "medium" : "large"} />
+                </Box>
+                <Typography
+                  variant={isMobile ? "body2" : "subtitle1"}
+                  fontWeight="bold"
+                  gutterBottom
+                  sx={{
+                    fontSize: { xs: '0.875rem', sm: '1rem' },
+                    lineHeight: 1.2,
+                    mb: 0.5
+                  }}
+                >
+                  {category.name}
                 </Typography>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
-      ))}
-    </Grid>
-  );
+                {!isMobile && category.description && (
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{
+                      fontSize: '0.75rem',
+                      lineHeight: 1.3,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical'
+                    }}
+                  >
+                    {category.description}
+                  </Typography>
+                )}
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+    );
+  };
 
   // Helper to convert DB text width to Grid numeric width
   const getColumnWidth = (width) => {

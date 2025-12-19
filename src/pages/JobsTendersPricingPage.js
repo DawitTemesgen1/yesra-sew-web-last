@@ -174,20 +174,28 @@ const JobsTendersPricingPage = ({ category = 'jobs' }) => {
             console.log('Plans fetched:', allPlans?.length);
 
             const filteredPlans = (allPlans || []).filter(p => {
-                const limit = p.category_limits?.[category];
+                if (!p) return false;
+
+                // Robust check for posting limits
+                const catLimits = p.category_limits || {};
+                const limit = catLimits[category];
+
+                // Robust check for view access
                 const permissions = p.permissions || {};
-                const viewAccess = permissions.view_access?.[category];
+                const viewAccessObj = permissions.view_access || {};
+                const viewAccess = viewAccessObj[category];
 
                 const hasPosting = limit !== 0 && limit !== undefined;
-                const hasViewing = viewAccess === true;
+                const hasViewing = viewAccess === true || viewAccess === -1;
 
                 return hasPosting || hasViewing;
             }).map(plan => ({
                 ...plan,
-                features: typeof plan.features === 'string' ? JSON.parse(plan.features) : plan.features,
-                limits: typeof plan.limits === 'string' ? JSON.parse(plan.limits) : plan.limits
+                features: typeof plan.features === 'string' ? JSON.parse(plan.features) : (plan.features || []),
+                limits: typeof plan.limits === 'string' ? JSON.parse(plan.limits) : (plan.limits || {})
             }));
 
+            console.log(`Filtered to ${filteredPlans.length} plans for ${category}`);
             setPlans(filteredPlans);
         } catch (error) {
             console.error('Error fetching plans:', error);

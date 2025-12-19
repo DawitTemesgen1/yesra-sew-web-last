@@ -756,9 +756,13 @@ const adminService = {
 
     // --- Access Control Helper ---
     async checkSubscriptionAccess(userId) {
-        try {
-            if (!userId) return null;
+        if (!userId) return null;
 
+        const cacheKey = `sub_access_${userId}`;
+        const cached = cache.get(cacheKey);
+        if (cached) return cached;
+
+        try {
             // Fetch active subscriptions
             const { data: subs, error } = await supabase
                 .from('user_subscriptions')
@@ -818,6 +822,7 @@ const adminService = {
                 });
             }
 
+            cache.set(cacheKey, permissions, 30 * 1000); // 30 seconds cache for instant multi-card deduplication
             return permissions;
         } catch (error) {
             console.error('Error checking subscription:', error);
@@ -1129,10 +1134,11 @@ const adminService = {
 
     // --- Post Templates Management ---
     async getTemplate(categoryId) {
-        // Disable cache for templates temporarily to ensure fresh fetching while debugging
-        // const cacheKey = `template_${categoryId}`;
-        // const cached = cache.get(cacheKey);
-        // if (cached) return cached;
+        if (!categoryId) return null;
+
+        const cacheKey = `template_${categoryId}`;
+        const cached = cache.get(cacheKey);
+        if (cached) return cached;
 
         try {
             console.log(`fetching template for category: ${categoryId}`);
@@ -1163,7 +1169,9 @@ const adminService = {
                 }
             });
 
-            return { template, steps };
+            const result = { template, steps };
+            cache.set(cacheKey, result, 5 * 60 * 1000); // 5 minute cache
+            return result;
         } catch (error) {
             console.error('Error fetching template:', error);
             // Return null instead of throwing so UI knows to show "Create Template" state

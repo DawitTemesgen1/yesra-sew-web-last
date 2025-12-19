@@ -166,20 +166,26 @@ const HomesCarsPricingPage = ({ category: propCategory }) => {
 
             // Filter plans relevant to this category
             const filteredPlans = (allPlans || []).filter(p => {
-                const limit = p.category_limits?.[category];
+                if (!p) return false;
+
+                // Robust check for posting limits
+                const catLimits = p.category_limits || {};
+                const limit = catLimits[category];
+
+                // Robust check for view access
                 const permissions = p.permissions || {};
-                const viewAccess = permissions.view_access?.[category];
+                const viewAccessObj = permissions.view_access || {};
+                const viewAccess = viewAccessObj[category];
 
                 // Show if posting is allowed OR view access is allowed
-                // If viewAccess is undefined, we rely on limit
                 const canPost = limit !== undefined && limit !== 0;
                 const canView = viewAccess === true || viewAccess === -1 || (typeof viewAccess === 'number' && viewAccess > 0);
 
                 return canPost || canView;
             }).map(plan => ({
                 ...plan,
-                features: typeof plan.features === 'string' ? JSON.parse(plan.features) : plan.features,
-                limits: typeof plan.limits === 'string' ? JSON.parse(plan.limits) : plan.limits
+                features: typeof plan.features === 'string' ? JSON.parse(plan.features) : (plan.features || []),
+                limits: typeof plan.limits === 'string' ? JSON.parse(plan.limits) : (plan.limits || {})
             }));
 
             setPlans(filteredPlans);
