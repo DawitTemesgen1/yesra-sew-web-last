@@ -19,16 +19,12 @@ const getCardImage = (listing) => {
     if (!listing) return null;
 
     // DEBUG: Log the data inspection to help trace issues
-    // Use console.groupCollapsed to keep the console clean but accessible
-    const debug = true;
+    const debug = false; // Set to true if images are missing
     if (debug) console.groupCollapsed(`📷 Card Image Check: ${listing.title?.substring(0, 20)}... (${listing.id})`);
 
-    // Strict Image Validator (Basic syntax check)
+    // Strict Image Validator
     const isValidUrl = (val, source) => {
-        if (!val) {
-            // validation failure silent
-            return false;
-        }
+        if (!val) return false;
         if (typeof val !== 'string') {
             if (debug) console.log(`[${source}] Rejected: Not a string`, val);
             return false;
@@ -38,7 +34,7 @@ const getCardImage = (listing) => {
             return false;
         }
         if (val.includes(' ')) {
-            if (debug) console.log(`[${source}] Rejected: Contains spaces (likely text)`, val);
+            if (debug) console.log(`[${source}] Rejected: Contains spaces`, val);
             return false;
         }
         if (val.length > 500) {
@@ -48,14 +44,13 @@ const getCardImage = (listing) => {
         return true;
     };
 
-    // Check if URL looks like an image (prevents picking PDFs/Docs)
     const isLikelyImage = (val, source) => {
         if (!isValidUrl(val, source)) return false;
 
         const isImg = /\.(jpeg|jpg|gif|png|webp|bmp|svg)$/i.test(val) ||
             (val.includes('supabase') && val.includes('image'));
 
-        if (!isImg && debug) console.log(`[${source}] Rejected: Does not look like an image (no ext/supabase)`, val);
+        if (!isImg && debug) console.log(`[${source}] Rejected: Not image-like`, val);
         if (isImg && debug) console.log(`[${source}] ✅ VALID Candidate:`, val);
         return isImg;
     };
@@ -65,32 +60,32 @@ const getCardImage = (listing) => {
         if (debug) console.log('Checking listing.images array:', listing.images);
         const first = listing.images[0];
 
-        if (isValidUrl(first, 'images[0]')) {
-            if (debug) { console.log('✅ Selected listing.images[0]'); console.groupEnd(); }
-            return first;
-        }
-        if (typeof first === 'object' && isValidUrl(first?.url, 'images[0].url')) {
-            if (debug) { console.log('✅ Selected listing.images[0].url'); console.groupEnd(); }
-            return first.url;
-        }
+        if (isValidUrl(first, 'images[0]')) return first;
+        if (typeof first === 'object' && isValidUrl(first?.url, 'images[0].url')) return first.url;
     }
 
     // 2. Check 'image' string
     if (listing.image) {
         if (debug) console.log('Checking listing.image:', listing.image);
-        if (isValidUrl(listing.image, 'listing.image')) {
-            if (debug) { console.log('✅ Selected listing.image'); console.groupEnd(); }
-            return listing.image;
+        if (isValidUrl(listing.image, 'listing.image')) return listing.image;
+    }
+
+    // 3. Check 'media_urls' (New Schema Support)
+    if (Array.isArray(listing.media_urls) && listing.media_urls.length > 0) {
+        if (debug) console.log('Checking listing.media_urls:', listing.media_urls);
+        const validMedia = listing.media_urls.find(m => m.type === 'image' && isValidUrl(m.url, 'media_urls item'));
+        if (validMedia) {
+            if (debug) { console.log('✅ Selected listing.media_urls item:', validMedia); console.groupEnd(); }
+            return validMedia.url;
         }
     }
 
-    // 3. Scan Custom Fields (Safely & Smartly)
+    // 4. Scan Custom Fields
     if (listing.custom_fields && typeof listing.custom_fields === 'object') {
         const cf = listing.custom_fields;
         if (debug) console.log('Scanning custom_fields:', cf);
         const keys = Object.keys(cf);
 
-        // A. Priority Scan: Check keys that SOUND like images first
         const imageKeys = keys.filter(k => /image|photo|picture|cover|thumb/i.test(k));
 
         for (const key of imageKeys) {
@@ -99,49 +94,57 @@ const getCardImage = (listing) => {
                 if (debug) { console.log(`✅ Selected custom_fields.${key}`); console.groupEnd(); }
                 return val;
             }
-
-            // Handle Array of strings or objects
             if (Array.isArray(val) && val.length > 0) {
                 const first = val[0];
-                if (isLikelyImage(first, `cf.${key}[0]`)) {
-                    if (debug) { console.log(`✅ Selected custom_fields.${key}[0]`); console.groupEnd(); }
-                    return first;
-                }
-                // Handle {url: ...} object in array
-                if (typeof first === 'object' && isLikelyImage(first?.url, `cf.${key}[0].url`)) {
-                    if (debug) { console.log(`✅ Selected custom_fields.${key}[0].url`); console.groupEnd(); }
-                    return first.url;
-                }
+                if (isLikelyImage(first, `cf.${key}[0]`)) return first;
+                if (typeof first === 'object' && isLikelyImage(first?.url, `cf.${key}[0].url`)) return first.url;
             }
         }
 
-        // B. Deep Scan: Check remaining keys for ANY valid image URL
         for (const key of keys) {
             if (imageKeys.includes(key)) continue;
-
             const val = cf[key];
-            if (isLikelyImage(val, `cf.${key} (deep)`)) {
-                if (debug) { console.log(`✅ Selected custom_fields.${key} (deep scan)`); console.groupEnd(); }
-                return val;
-            }
-
+            if (isLikelyImage(val, `cf.${key} (deep)`)) return val;
             if (Array.isArray(val) && val.length > 0) {
                 const first = val[0];
-                if (isLikelyImage(first, `cf.${key}[0] (deep)`)) {
-                    if (debug) { console.log(`✅ Selected custom_fields.${key}[0] (deep scan)`); console.groupEnd(); }
-                    return first;
-                }
-                // Handle {url: ...} object in array
-                if (typeof first === 'object' && isLikelyImage(first?.url, `cf.${key}[0].url (deep)`)) {
-                    if (debug) { console.log(`✅ Selected custom_fields.${key}[0].url (deep scan)`); console.groupEnd(); }
-                    return first.url;
-                }
+                if (isLikelyImage(first, `cf.${key}[0] (deep)`)) return first;
+                if (typeof first === 'object' && isLikelyImage(first?.url, `cf.${key}[0].url (deep)`)) return first.url;
             }
         }
     }
 
     if (debug) { console.log('❌ No valid image found.'); console.groupEnd(); }
     return null;
+};
+
+/**
+ * Helper: Get Summary Fields from Template
+ * Selects the best fields to display on the card based on the template.
+ */
+const getSummaryFields = (template, listing) => {
+    if (!template || !template.steps) return [];
+
+    // Flatten fields from all steps
+    const allFields = template.steps.flatMap(s => s.fields || []);
+
+    // Filter
+    const summaryFields = allFields.filter(f => {
+        // 1. Must be visible
+        if (f.is_visible === false) return false;
+
+        // 2. Exclude complex/large types
+        if (['textarea', 'image', 'video', 'file', 'section_header'].includes(f.field_type)) return false;
+
+        // 3. Exclude core fields already shown elsewhere
+        if (['title', 'description', 'price', 'images', 'location'].includes(f.field_name)) return false;
+
+        // 4. Must have a value
+        const val = listing.custom_fields?.[f.field_name] || listing[f.field_name];
+        return val !== undefined && val !== null && val !== '';
+    });
+
+    // Take top 4
+    return summaryFields.slice(0, 4);
 };
 
 /**
@@ -174,7 +177,8 @@ const DynamicListingCard = ({
     onToggleFavorite,
     isFavorite = false,
     showActions = false,
-    onEdit
+    onEdit,
+    template // New Prop: Admin Template
 }) => {
     const theme = useTheme();
     const navigate = useNavigate();
@@ -185,6 +189,9 @@ const DynamicListingCard = ({
 
     // Flatten attributes for easy access
     const attrs = { ...listing, ...listing.custom_fields };
+
+    // Calculate Summary Fields (if template exists)
+    const summaryFields = useMemo(() => getSummaryFields(template, listing), [template, listing]);
 
     // --- Event Handlers ---
     const handleCardClick = () => {
@@ -212,7 +219,7 @@ const DynamicListingCard = ({
 
     // Responsive Dimensions
     const isList = viewMode === 'list';
-    // const cardHeight = isList ? 200 : 'auto'; // (unused variable, suppressing warning)
+    // const cardHeight = isList ? 200 : 'auto'; 
     const imageWidth = isList ? 280 : '100%';
     const imageHeight = isList ? '100%' : 220;
 
@@ -361,19 +368,39 @@ const DynamicListingCard = ({
 
                     {/* Attributes Grid */}
                     <Stack direction="row" flexWrap="wrap" gap={2} sx={{ mb: 'auto' }}>
-                        {/* Car Attributes */}
-                        {renderAttribute(Speed, attrs.mileage, 'km')}
-                        {renderAttribute(LocalGasStation, attrs.fuel_type)}
-                        {renderAttribute(DirectionsCar, attrs.transmission)}
 
-                        {/* Home Attributes */}
-                        {renderAttribute(Bed, attrs.bedrooms, 'Beds')}
-                        {renderAttribute(Bathtub, attrs.bathrooms, 'Baths')}
-                        {renderAttribute(SquareFoot, attrs.area || attrs.sqft, 'sqft')}
+                        {/* 1. Dynamic Mode (If Template Provided) */}
+                        {template ? (
+                            summaryFields.length > 0 ? (
+                                summaryFields.map((field) => {
+                                    const val = listing.custom_fields?.[field.field_name] || listing[field.field_name];
+                                    return (
+                                        <Stack key={field.id} direction="row" spacing={0.5} alignItems="center" sx={{ color: 'text.secondary' }}>
+                                            <Verified sx={{ fontSize: 16, color: 'primary.light' }} />
+                                            <Typography variant="body2" sx={{ fontSize: '0.8rem', fontWeight: 500 }}>
+                                                <span style={{ opacity: 0.7 }}>{field.field_label}:</span> {val}
+                                            </Typography>
+                                        </Stack>
+                                    );
+                                })
+                            ) : (
+                                <Typography variant="caption" color="text.disabled">No details available</Typography>
+                            )
+                        ) : (
+                            /* 2. Legacy Fallback Mode (Hardcoded Mapping) - ONLY if no template passed */
+                            <>
+                                {renderAttribute(Speed, attrs.mileage, 'km')}
+                                {renderAttribute(LocalGasStation, attrs.fuel_type)}
+                                {renderAttribute(DirectionsCar, attrs.transmission)}
 
-                        {/* Job Attributes */}
-                        {renderAttribute(Work, attrs.job_type)}
-                        {renderAttribute(AccessTime, attrs.deadline ? `Deadline: ${new Date(attrs.deadline).toLocaleDateString()}` : null)}
+                                {renderAttribute(Bed, attrs.bedrooms, 'Beds')}
+                                {renderAttribute(Bathtub, attrs.bathrooms, 'Baths')}
+                                {renderAttribute(SquareFoot, attrs.area || attrs.sqft, 'sqft')}
+
+                                {renderAttribute(Work, attrs.job_type)}
+                                {renderAttribute(AccessTime, attrs.deadline ? `Deadline: ${new Date(attrs.deadline).toLocaleDateString()}` : null)}
+                            </>
+                        )}
                     </Stack>
 
                     {/* Footer / Actions */}
