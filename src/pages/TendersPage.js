@@ -230,7 +230,7 @@ const TendersPage = () => {
       <Box sx={{
         height: isMobile ? 600 : 650,
         position: 'relative',
-        backgroundImage: 'url(https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1080)',
+        backgroundImage: 'url(https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?q=80&w=2072&auto=format&fit=crop)', // Finance/Transaction/Business
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         display: 'flex',
