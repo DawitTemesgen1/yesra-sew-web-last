@@ -1,7 +1,8 @@
 -- ============================================================================
--- PRODUCTION POST TEMPLATES SEED
+-- PRODUCTION POST TEMPLATES SEED (Fixed for Unique Constraint)
 -- ============================================================================
--- Description: Creates standardized post templates for the 4 core categories.
+-- Description: Creates or Updates standardized post templates for the 4 core categories.
+--              Handles existing templates by overwriting them with the professional structure.
 --              Includes professional layouts (main/sidebar) matching the Admin Panel logic.
 -- Usage:       Run in Supabase Query Editor.
 -- ============================================================================
@@ -14,18 +15,17 @@ DECLARE
     v_jobs_id UUID;
     v_tenders_id UUID;
     
-    -- Variables for inserted IDs
+    -- Variables for IDs
     v_tmpl_id UUID;
     v_step_id UUID;
 BEGIN
     -- 1. Resolve Category IDs from Slugs
-    -- Ensure your categories table has these slugs. If not, update slugs accordingly.
     SELECT id INTO v_cars_id FROM categories WHERE slug = 'cars';
     SELECT id INTO v_homes_id FROM categories WHERE slug = 'homes';
     SELECT id INTO v_jobs_id FROM categories WHERE slug = 'jobs';
     SELECT id INTO v_tenders_id FROM categories WHERE slug = 'tenders';
 
-    -- Raise notice for missing categories (helps debugging)
+    -- Raise notice for missing categories
     IF v_cars_id IS NULL THEN RAISE NOTICE 'Warning: Cars category not found (slug=cars)'; END IF;
     IF v_homes_id IS NULL THEN RAISE NOTICE 'Warning: Homes category not found (slug=homes)'; END IF;
     IF v_jobs_id IS NULL THEN RAISE NOTICE 'Warning: Jobs category not found (slug=jobs)'; END IF;
@@ -36,10 +36,17 @@ BEGIN
     -- Layout: Tech specs in Main, Quick facts in Sidebar
     ---------------------------------------------------------------------------
     IF v_cars_id IS NOT NULL THEN
-        -- Create Template (Deactivate old ones manually if needed, or this just adds a new option)
-        INSERT INTO post_templates (category_id, name, is_active, created_at, updated_at)
-        VALUES (v_cars_id, 'Vehicle Sale Standard', true, NOW(), NOW())
+        -- Upsert Template (Update if exists, Insert if new)
+        -- We handle the unique constraint on category_id
+        INSERT INTO post_templates (category_id, name, is_active, updated_at)
+        VALUES (v_cars_id, 'Vehicle Sale Professional', true, NOW())
+        ON CONFLICT (category_id) 
+        DO UPDATE SET name = 'Vehicle Sale Professional', is_active = true, updated_at = NOW()
         RETURNING id INTO v_tmpl_id;
+
+        -- CLEAR OLD STEPS (To ensure clean professional structure)
+        -- This removes existing steps/fields for this template before adding new ones
+        DELETE FROM template_steps WHERE template_id = v_tmpl_id;
 
         -- Step 1: Vehicle Specifications
         INSERT INTO template_steps (template_id, step_number, title, description)
@@ -48,18 +55,18 @@ BEGIN
 
         -- Fields
         INSERT INTO template_fields (step_id, field_name, field_label, field_type, is_required, display_order, options, section, width) VALUES
-        -- Header Section (High Visibility)
+        -- Header Section
         (v_step_id, 'condition', 'Condition', 'select', true, 10, '["New", "Used", "Foreign Used"]', 'header', 'half'),
         (v_step_id, 'make', 'Make', 'select', true, 20, '["Toyota", "Hyundai", "Nissan", "Ford", "Honda", "Mercedes", "BMW", "Volkswagen", "Suzuki", "Isuzu", "Mitsubishi"]', 'header', 'half'),
         
-        -- Main Section (Grid Layout)
+        -- Main Section
         (v_step_id, 'model', 'Model', 'text', true, 30, NULL, 'main', 'half'),
         (v_step_id, 'year', 'Year', 'number', true, 40, NULL, 'main', 'half'),
         (v_step_id, 'transmission', 'Transmission', 'select', true, 50, '["Automatic", "Manual", "Tiptronic", "CVT"]', 'main', 'half'),
         (v_step_id, 'fuel_type', 'Fuel Type', 'select', true, 60, '["Petrol", "Diesel", "Hybrid", "Electric"]', 'main', 'half'),
         (v_step_id, 'mileage', 'Mileage (km)', 'number', true, 70, NULL, 'main', 'full'),
         
-        -- Sidebar Section (Quick Summary)
+        -- Sidebar Section
         (v_step_id, 'color', 'Exterior Color', 'text', false, 80, NULL, 'sidebar', 'full'),
         (v_step_id, 'body_type', 'Body Type', 'select', false, 90, '["Sedan", "SUV", "Truck", "Van", "Coupe", "Hatchback", "Convertible", "Bus"]', 'sidebar', 'full');
     END IF;
@@ -69,9 +76,13 @@ BEGIN
     -- Layout: Core Property listing
     ---------------------------------------------------------------------------
     IF v_homes_id IS NOT NULL THEN
-        INSERT INTO post_templates (category_id, name, is_active, created_at, updated_at)
-        VALUES (v_homes_id, 'Real Estate Listing', true, NOW(), NOW())
+        INSERT INTO post_templates (category_id, name, is_active, updated_at)
+        VALUES (v_homes_id, 'Real Estate Professional', true, NOW())
+        ON CONFLICT (category_id) 
+        DO UPDATE SET name = 'Real Estate Professional', is_active = true, updated_at = NOW()
         RETURNING id INTO v_tmpl_id;
+
+        DELETE FROM template_steps WHERE template_id = v_tmpl_id;
 
         INSERT INTO template_steps (template_id, step_number, title, description)
         VALUES (v_tmpl_id, 1, 'Property Characteristics', 'Key features of the property')
@@ -98,9 +109,13 @@ BEGIN
     -- Layout: Professional HR Standard
     ---------------------------------------------------------------------------
     IF v_jobs_id IS NOT NULL THEN
-        INSERT INTO post_templates (category_id, name, is_active, created_at, updated_at)
-        VALUES (v_jobs_id, 'Job Vacancy', true, NOW(), NOW())
+        INSERT INTO post_templates (category_id, name, is_active, updated_at)
+        VALUES (v_jobs_id, 'Job Vacancy Professional', true, NOW())
+        ON CONFLICT (category_id) 
+        DO UPDATE SET name = 'Job Vacancy Professional', is_active = true, updated_at = NOW()
         RETURNING id INTO v_tmpl_id;
+
+        DELETE FROM template_steps WHERE template_id = v_tmpl_id;
 
         INSERT INTO template_steps (template_id, step_number, title, description)
         VALUES (v_tmpl_id, 1, 'Job Details', 'Define the role and requirements')
@@ -126,9 +141,13 @@ BEGIN
     -- Layout: Procurement Standard
     ---------------------------------------------------------------------------
     IF v_tenders_id IS NOT NULL THEN
-        INSERT INTO post_templates (category_id, name, is_active, created_at, updated_at)
-        VALUES (v_tenders_id, 'Tender Notice', true, NOW(), NOW())
+        INSERT INTO post_templates (category_id, name, is_active, updated_at)
+        VALUES (v_tenders_id, 'Tender Notice Professional', true, NOW())
+        ON CONFLICT (category_id) 
+        DO UPDATE SET name = 'Tender Notice Professional', is_active = true, updated_at = NOW()
         RETURNING id INTO v_tmpl_id;
+
+        DELETE FROM template_steps WHERE template_id = v_tmpl_id;
 
         INSERT INTO template_steps (template_id, step_number, title, description)
         VALUES (v_tmpl_id, 1, 'Tender Details', 'Official tender documentation')
@@ -149,5 +168,5 @@ BEGIN
         (v_step_id, 'reference_no', 'Reference Number', 'text', false, 70, NULL, 'sidebar', 'full');
     END IF;
 
-    RAISE NOTICE 'Seed completed successfully for all valid categories.';
+    RAISE NOTICE 'Seed completed successfully. Templates updated in place.';
 END $$;
