@@ -395,8 +395,11 @@ const DynamicListingCard = ({
             default:
                 // Smart detection for untyped fields
 
-                // Check if it's an image URL
-                if (typeof value === 'string' && (value.includes('supabase') || value.match(/\.(jpeg|jpg|gif|png|webp)$/i))) {
+                // Check if it's an image URL (STRICT CHECK)
+                if (typeof value === 'string' &&
+                    (value.startsWith('http') || value.startsWith('/')) &&
+                    !value.includes(' ') &&
+                    (value.includes('supabase') || value.match(/\.(jpeg|jpg|gif|png|webp)$/i))) {
                     return (
                         <Box key={field.id} sx={{ mt: 1, borderRadius: 1, overflow: 'hidden', width: '100%', height: 150 }}>
                             <UltraOptimizedImage
@@ -448,6 +451,11 @@ const DynamicListingCard = ({
                             </Typography>
                         </Box>
                     );
+                }
+
+                // Safety Check: Hide massive strings or look-alike data dumps
+                if (typeof value === 'string' && (value.length > 150 || value.includes('name:') || value.includes('seller:'))) {
+                    return null;
                 }
 
                 // Context-Based Styling for generic text
@@ -557,20 +565,36 @@ const DynamicListingCard = ({
                             }
                         }
 
-                        // Priority 4 (Ultimate Fallback): Scan ALL data values for something that looks like an image URL
+                        // Priority 4 (Ultimate Fallback): Scan ALL data values for something that looks like an REAL image URL
                         if (!src) {
                             const potentialKeys = Object.keys(coreData);
                             for (const key of potentialKeys) {
                                 const val = coreData[key];
-                                // Check for string URL
-                                if (typeof val === 'string' && (val.includes('supabase') || val.match(/\.(jpeg|jpg|gif|png|webp)$/i))) {
+
+                                // STRICT URL CHECK:
+                                // 1. Must be a string
+                                // 2. Must start with http, https, or / (relative)
+                                // 3. Must NOT contain spaces (this eliminates sentences or stringified objects)
+                                // 4. Must contain 'supabase' OR end with an image extension
+                                if (typeof val === 'string' &&
+                                    (val.startsWith('http') || val.startsWith('/')) &&
+                                    !val.includes(' ') &&
+                                    (val.includes('supabase') || val.match(/\.(jpeg|jpg|gif|png|webp)$/i))) {
+
                                     src = val;
                                     break;
                                 }
-                                // Check for array of URLs
-                                if (Array.isArray(val) && val.length > 0 && typeof val[0] === 'string' && (val[0].includes('supabase') || val[0].match(/\.(jpeg|jpg|gif|png|webp)$/i))) {
-                                    src = val[0];
-                                    break;
+
+                                // Check for array of strings
+                                if (Array.isArray(val) && val.length > 0) {
+                                    const firstVal = val[0];
+                                    if (typeof firstVal === 'string' &&
+                                        (firstVal.startsWith('http') || firstVal.startsWith('/')) &&
+                                        !firstVal.includes(' ') &&
+                                        (firstVal.includes('supabase') || firstVal.match(/\.(jpeg|jpg|gif|png|webp)$/i))) {
+                                        src = firstVal;
+                                        break;
+                                    }
                                 }
                             }
                         }
