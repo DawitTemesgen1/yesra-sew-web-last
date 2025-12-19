@@ -367,135 +367,179 @@ const HomePage = () => {
       {/* Hero Section */}
       <Box sx={{
         position: 'relative',
-        minHeight: { xs: 600, md: 850 },
+        minHeight: { xs: 650, md: 800 },
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         overflow: 'hidden',
         color: 'white',
       }}>
-        {/* Background Image */}
+        {/* Modern Abstract Business Background */}
         <Box
           component={motion.div}
-          initial={{ scale: 1.1 }}
+          initial={{ scale: 1.05 }}
           animate={{ scale: 1 }}
-          transition={{ duration: 10, repeat: Infinity, repeatType: "reverse" }}
+          transition={{ duration: 8, ease: "easeOut" }}
           sx={{
             position: 'absolute',
             top: 0, left: 0, right: 0, bottom: 0,
-            backgroundImage: 'url(https://images.unsplash.com/photo-1572360670003-88c9f5000578?q=80&w=2000&auto=format&fit=crop)', // High quality African/Modern City vibe
+            backgroundImage: 'url(https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop)', // Modern Skyscrapers / Business Abstract
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             zIndex: 0,
           }}
         />
 
-        {/* Gradient Overlay - Modern Dark & Green Tint */}
+        {/* Sophisticated Gradient Overlay */}
         <Box sx={{
           position: 'absolute',
           top: 0, left: 0, right: 0, bottom: 0,
-          background: 'linear-gradient(135deg, rgba(0, 30, 20, 0.92) 0%, rgba(0, 0, 0, 0.6) 100%)',
+          background: 'linear-gradient(105deg, rgba(0, 10, 5, 0.95) 0%, rgba(0, 50, 25, 0.85) 50%, rgba(0, 0, 0, 0.4) 100%)', // Deep Green/Black Gradient
           zIndex: 1
         }} />
 
-        {/* Decorative Circles */}
+        {/* Abstract Geometric Accents */}
         <Box sx={{
           position: 'absolute',
-          top: '-10%',
-          right: '-5%',
-          width: 400,
-          height: 400,
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(0, 166, 81, 0.15) 0%, transparent 70%)',
+          top: -100,
+          left: -100,
+          width: 500,
+          height: 500,
+          background: 'radial-gradient(circle, rgba(0, 166, 81, 0.2) 0%, transparent 70%)',
+          filter: 'blur(80px)',
           zIndex: 1,
-          filter: 'blur(40px)',
+        }} />
+        <Box sx={{
+          position: 'absolute',
+          bottom: -150,
+          right: -100,
+          width: 600,
+          height: 600,
+          background: 'radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, transparent 70%)',
+          filter: 'blur(100px)',
+          zIndex: 1,
         }} />
 
-        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 2, textAlign: 'center' }}>
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-          >
-            {/* Badge / Pill */}
-            <Box sx={{
-              display: 'inline-block',
-              px: 2, py: 0.5,
-              mb: 3,
-              borderRadius: 50,
-              bgcolor: 'rgba(255, 255, 255, 0.15)',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255, 255, 255, 0.2)'
-            }}>
-              <Typography variant="subtitle2" sx={{ color: '#4caf50', fontWeight: 'bold', letterSpacing: 1 }}>
-                #1 MARKETPLACE IN ETHIOPIA
-              </Typography>
-            </Box>
-
-            <Typography variant={isMobile ? "h3" : "h1"} sx={{
-              fontFamily: 'Playfair Display, serif',
-              fontWeight: 800,
-              letterSpacing: '-0.02em',
-              mb: 2,
-              color: '#FFFFFF',
-              textShadow: '0 10px 30px rgba(0,0,0,0.3)',
-              lineHeight: 1.1
-            }}>
-              {t.landing.hero.title}
-            </Typography>
-
-            <Typography variant={isMobile ? "h5" : "h4"} sx={{
-              fontFamily: 'Inter, sans-serif',
-              fontWeight: 300,
-              color: 'rgba(255, 255, 255, 0.9)',
-              mb: 6,
-              maxWidth: 800,
-              mx: 'auto',
-              lineHeight: 1.5
-            }}>
-              {t.landing.hero.subtitle} <span style={{ color: '#4caf50', fontWeight: 600 }}>.</span>
-            </Typography>
-
-            {/* Smart Search Container with Glassmorphism */}
-            <Box sx={{
-              maxWidth: 750,
-              mx: 'auto',
-              p: { xs: 1, md: 1.5 },
-              borderRadius: 4,
-              bgcolor: 'rgba(255, 255, 255, 0.2)',
-              backdropFilter: 'blur(12px)',
-              border: '1px solid rgba(255, 255, 255, 0.3)',
-              boxShadow: '0 20px 40px rgba(0,0,0,0.2)'
-            }}>
-              <SmartSearch
-                enableNavigation={true}
-                category="all"
-                placeholder={t.common.search}
-              />
-            </Box>
-
-            {/* Quick Links / Tags Below Search */}
-            <Stack direction="row" spacing={2} justifyContent="center" sx={{ mt: 4, flexWrap: 'wrap', gap: 1 }}>
-              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', mt: 1 }}>
-                Popular:
-              </Typography>
-              {['Apartments', 'Toyota', 'Software Jobs', 'Government Tenders'].map((tag) => (
-                <Box key={tag} sx={{
-                  px: 1.5, py: 0.5,
-                  borderRadius: 2,
-                  bgcolor: 'rgba(255,255,255,0.1)',
-                  cursor: 'pointer',
-                  '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' },
-                  transition: 'all 0.2s',
-                  mt: 1
-                }} onClick={() => navigate(`/search?q=${tag}`)}>
-                  <Typography variant="caption" color="white">
-                    {tag}
+        <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 2 }}>
+          <Grid container alignItems="center" spacing={4}>
+            {/* Left Content (Text & Search) */}
+            <Grid item xs={12} md={8} lg={7}>
+              <motion.div
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+              >
+                {/* Brand Badge */}
+                <Box sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  px: 2, py: 0.8,
+                  mb: 4,
+                  borderRadius: 50,
+                  bgcolor: 'rgba(255, 255, 255, 0.1)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  backdropFilter: 'blur(10px)'
+                }}>
+                  <VerifiedUser sx={{ fontSize: 16, color: '#00A651' }} />
+                  <Typography variant="caption" sx={{ color: '#fff', fontWeight: 600, letterSpacing: 1.2 }}>
+                    TRUSTED BY 10,000+ USERS
                   </Typography>
                 </Box>
-              ))}
-            </Stack>
-          </motion.div>
+
+                <Typography variant={isMobile ? "h3" : "h1"} sx={{
+                  fontFamily: 'Playfair Display, serif',
+                  fontWeight: 800,
+                  lineHeight: 1.1,
+                  mb: 3,
+                  background: 'linear-gradient(45deg, #FFFFFF 30%, #4caf50 90%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  textShadow: '0 20px 40px rgba(0,0,0,0.1)'
+                }}>
+                  {t.landing.hero.title}
+                </Typography>
+
+                <Typography variant="h5" sx={{
+                  fontWeight: 300,
+                  color: 'rgba(255, 255, 255, 0.85)',
+                  mb: 6,
+                  maxWidth: 600,
+                  fontSize: { xs: '1.1rem', md: '1.35rem' },
+                  lineHeight: 1.6
+                }}>
+                  {t.landing.hero.subtitle}
+                </Typography>
+
+                {/* Search Bar - Modern Card Style */}
+                <Box sx={{
+                  background: 'rgba(255, 255, 255, 0.95)',
+                  p: 1,
+                  borderRadius: 3,
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+                  mb: 5,
+                  maxWidth: 700
+                }}>
+                  <SmartSearch
+                    enableNavigation={true}
+                    category="all"
+                    placeholder={t.common.search}
+                  />
+                </Box>
+
+                {/* Stats / Trust Indicators */}
+                <Stack direction="row" spacing={4} sx={{ display: { xs: 'none', md: 'flex' } }}>
+                  {[
+                    { label: 'Active Listings', value: '5,000+' },
+                    { label: 'Weekly Visits', value: '12k' },
+                    { label: 'Categories', value: '4 Major' },
+                  ].map((stat, i) => (
+                    <Box key={i}>
+                      <Typography variant="h6" fontWeight="bold" sx={{ color: '#00A651' }}>
+                        {stat.value}
+                      </Typography>
+                      <Typography variant="body2" color="rgba(255,255,255,0.6)">
+                        {stat.label}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Stack>
+              </motion.div>
+            </Grid>
+
+            {/* Right Content (Floating Cards / Visuals - Hidden on Mobile for clean look) */}
+            <Grid item xs={12} mid={4} lg={5} sx={{ display: { xs: 'none', md: 'block' } }}>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 1, delay: 0.3 }}
+                style={{ position: 'relative', height: 400 }}
+              >
+                {/* Floating Glass Cards representing categories */}
+                <GlassCard
+                  icon={<Work sx={{ color: '#fff' }} />}
+                  title="Dream Jobs"
+                  subtitle="Find your career"
+                  top={20} right={80}
+                  delay={0.5}
+                />
+                <GlassCard
+                  icon={<Apartment sx={{ color: '#fff' }} />}
+                  title="Modern Homes"
+                  subtitle="Rent or Buy"
+                  top={140} left={40}
+                  delay={0.7}
+                />
+                <GlassCard
+                  icon={<DirectionsCar sx={{ color: '#fff' }} />}
+                  title="Vehicles"
+                  subtitle="Best deals"
+                  bottom={40} right={120}
+                  delay={0.9}
+                />
+              </motion.div>
+            </Grid>
+          </Grid>
         </Container>
       </Box>
 
@@ -793,6 +837,46 @@ const InsightItem = ({ title, value, desc, color }) => (
       <Typography variant="body1" fontWeight="medium">{desc}</Typography>
     </Card>
   </Grid>
+);
+
+const GlassCard = ({ icon, title, subtitle, top, left, right, bottom, delay }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 30 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.6, delay: delay, type: "spring" }}
+    style={{ position: 'absolute', top, left, right, bottom, zIndex: 10 }}
+  >
+    <Box sx={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: 2,
+      p: 2,
+      borderRadius: 4,
+      background: 'rgba(255, 255, 255, 0.1)',
+      backdropFilter: 'blur(16px)',
+      border: '1px solid rgba(255, 255, 255, 0.2)',
+      boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+      minWidth: 200,
+    }}>
+      <Box sx={{
+        p: 1.5,
+        borderRadius: '50%',
+        background: 'linear-gradient(135deg, #00A651 0%, #00d26a 100%)',
+        boxShadow: '0 4px 12px rgba(0, 166, 81, 0.3)',
+        display: 'flex'
+      }}>
+        {icon}
+      </Box>
+      <Box>
+        <Typography variant="body1" fontWeight="bold" color="white" sx={{ lineHeight: 1.2 }}>
+          {title}
+        </Typography>
+        <Typography variant="caption" color="rgba(255,255,255,0.7)">
+          {subtitle}
+        </Typography>
+      </Box>
+    </Box>
+  </motion.div>
 );
 
 export default HomePage;
