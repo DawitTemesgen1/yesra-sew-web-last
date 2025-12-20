@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:html' as html;
-import 'dart:ui' as ui;
+import 'dart:ui_web' as ui_web;
 
 class WebViewScreen extends StatefulWidget {
   const WebViewScreen({super.key});
@@ -11,6 +11,8 @@ class WebViewScreen extends StatefulWidget {
 
 class _WebViewScreenState extends State<WebViewScreen> {
   bool _isLoading = true;
+  final String viewType =
+      'yesrasew-iframe-${DateTime.now().millisecondsSinceEpoch}';
 
   @override
   void initState() {
@@ -20,10 +22,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
 
   void _registerIframeView() {
     // Register iframe for web platform
-    // ignore: undefined_prefixed_name
-    ui.platformViewRegistry.registerViewFactory('yesrasew-iframe', (
-      int viewId,
-    ) {
+    ui_web.platformViewRegistry.registerViewFactory(viewType, (int viewId) {
       final iframe = html.IFrameElement()
         ..src = 'https://yesrasewsolution.com'
         ..style.border = 'none'
@@ -49,7 +48,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          const HtmlElementView(viewType: 'yesrasew-iframe'),
+          HtmlElementView(viewType: viewType),
           if (_isLoading)
             const Center(
               child: CircularProgressIndicator(color: Color(0xFF00A651)),
