@@ -17,8 +17,20 @@ const LanguageContext = createContext();
 
 export const useLanguage = () => {
     const context = useContext(LanguageContext);
+    // Fallback in case of context loss (e.g. lazy loading islands)
     if (!context) {
-        throw new Error('useLanguage must be used within a LanguageProvider');
+        return {
+            language: 'en',
+            changeLanguage: () => { },
+            t: (key) => key,
+            languages: [
+                { code: 'en', name: 'English', nativeName: 'English' },
+                { code: 'am', name: 'Amharic', nativeName: 'አማርኛ' },
+                { code: 'ti', name: 'Tigrinya', nativeName: 'ትግርኛ' },
+                { code: 'om', name: 'Afaan Oromoo', nativeName: 'Afaan Oromoo' }
+            ],
+            currentLanguage: { code: 'en', name: 'English', nativeName: 'English' }
+        };
     }
     return context;
 };

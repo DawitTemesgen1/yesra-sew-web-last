@@ -437,7 +437,13 @@ const ListingDetailPage = () => {
       <Paper sx={{ position: 'sticky', top: 0, zIndex: 1100, borderRadius: 0 }} elevation={2}>
         <Container maxWidth="lg">
           <Stack direction="row" alignItems="center" spacing={2} sx={{ p: 1.5 }}>
-            <IconButton onClick={() => navigate(-1)}>
+            <IconButton onClick={() => {
+              if (window.history.length > 1 && document.referrer) {
+                navigate(-1);
+              } else {
+                navigate('/');
+              }
+            }}>
               <ArrowBack />
             </IconButton>
             {loadingListing ? (

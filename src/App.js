@@ -62,7 +62,7 @@ const Layout = ({ children }) => {
     const isAuthPage = location.pathname === '/auth' || location.pathname === '/login' || location.pathname === '/register';
     const isProfilePage = location.pathname === '/profile';
     const isAdminPage = location.pathname.startsWith('/admin-panel') || location.pathname === '/admin-login';
-    const isChatPage = location.pathname === '/chat';
+    const isChatPage = location.pathname.startsWith('/chat');
     const hideNavFooter = isAuthPage || isProfilePage || isAdminPage || isChatPage;
 
     // Initialize GA4 (Placeholder)

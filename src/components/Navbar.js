@@ -21,7 +21,7 @@ import { useCustomTheme } from '../contexts/ThemeContext';
 const translations = {
   en: {
     navbar: {
-      logoSubtitle: "Connecting Technology and Careers",
+      logoSubtitle: "Digital Solution",
       home: "Home",
       tenders: "Tenders",
       jobs: "Jobs",
@@ -54,7 +54,7 @@ const translations = {
   },
   am: {
     navbar: {
-      logoSubtitle: "ቴክኖሎጂ እና ስራን ያገናኛል",
+      logoSubtitle: "ዲጂታል መፍትሄ",
       home: "መነሻ",
       tenders: "ጨረታዎች",
       jobs: "ስራዎች",
@@ -87,7 +87,7 @@ const translations = {
   },
   om: {
     navbar: {
-      logoSubtitle: "Warqee Qulqulluu",
+      logoSubtitle: "Furmaata Dijitaalaa",
       home: "Fuula Jalqabaa",
       tenders: "Caalbaasiiwwan",
       jobs: "Hojiiwwan",
@@ -120,13 +120,13 @@ const translations = {
   },
   ti: {
     navbar: {
-      logoSubtitle: "ንጹህ ወርቂ",
+      logoSubtitle: "ዲጂታል ፍታሕ",
       home: "መበገሲ",
       tenders: "ጨረታታት",
       jobs: "ስራሕቲ",
       homes: "ኣባይቲ",
       cars: "መካይን",
-      postAd: "መ ಜಾወቂያ ለጥፉ",
+      postAd: "ማስታወቂያ ለጥፉ",
       login: "እቶ",
       register: "ተመዝገቡ",
       dashboard: "ዳሽቦርድ",
@@ -257,7 +257,9 @@ const Navbar = ({ activeTab, setActiveTab }) => {
   const renderLanguageMenu = (
     <Menu anchorEl={languageMenuAnchor} open={Boolean(languageMenuAnchor)} onClose={handleLanguageMenuClose} PaperProps={{ elevation: 4, sx: { borderRadius: 3, mt: 1.5, minWidth: 220 } }}>
       {['en', 'am', 'om', 'ti'].map(lang => (
-        <MenuItem key={lang} onClick={() => handleLanguageChange(lang)} selected={language === lang}><Typography>{t.languages[lang]}</Typography></MenuItem>
+        <MenuItem key={lang} onClick={() => handleLanguageChange(lang)} selected={language === lang}>
+          <Typography>{lang === 'en' ? 'English' : lang === 'am' ? 'አማርኛ' : lang === 'om' ? 'Afaan Oromoo' : 'ትግርኛ'}</Typography>
+        </MenuItem>
       ))}
     </Menu>
   );
