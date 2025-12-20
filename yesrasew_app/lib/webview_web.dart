@@ -24,7 +24,8 @@ class _WebViewScreenState extends State<WebViewScreen> {
     // Register iframe for web platform
     ui_web.platformViewRegistry.registerViewFactory(viewType, (int viewId) {
       final iframe = html.IFrameElement()
-        ..src = 'https://yesrasewsolution.com'
+        ..src =
+            'http://localhost:3000' // Load from local React dev server
         ..style.border = 'none'
         ..style.height = '100%'
         ..style.width = '100%';

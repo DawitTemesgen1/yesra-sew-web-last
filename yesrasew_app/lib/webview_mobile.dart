@@ -62,7 +62,9 @@ class _WebViewScreenState extends State<WebViewScreen> {
           },
         ),
       )
-      ..loadRequest(Uri.parse('https://yesrasewsolution.com'));
+      ..loadRequest(
+        Uri.parse('http://localhost:3000'),
+      ); // Load from local React dev server
   }
 
   @override
