@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-// Conditional import based on platform
-import 'webview_web.dart' if (dart.library.io) 'webview_mobile.dart';
+import 'splash_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -21,7 +20,7 @@ class MyApp extends StatelessWidget {
         ), // Ethiopian Green
         useMaterial3: true,
       ),
-      home: const WebViewScreen(),
+      home: const SplashScreen(),
     );
   }
 }

@@ -3,7 +3,9 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class WebViewScreen extends StatefulWidget {
-  const WebViewScreen({super.key});
+  final WebViewController? controller; // ADDED: Optional controller
+
+  const WebViewScreen({super.key, this.controller});
 
   @override
   State<WebViewScreen> createState() => _WebViewScreenState();
@@ -16,55 +18,59 @@ class _WebViewScreenState extends State<WebViewScreen> {
   @override
   void initState() {
     super.initState();
-    _controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(Colors.white)
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onProgress: (int progress) {
-            // Optional: Update a progress bar
-          },
-          onPageStarted: (String url) {
-            if (mounted) {
-              setState(() {
-                _isLoading = true;
-              });
-            }
-          },
-          onPageFinished: (String url) {
-            if (mounted) {
-              setState(() {
-                _isLoading = false;
-              });
-            }
-          },
-          onWebResourceError: (WebResourceError error) {
-            debugPrint('Web resource error: ${error.description}');
-            if (mounted) {
-              setState(() {
-                _isLoading = false;
-              });
-            }
-          },
-          onNavigationRequest: (NavigationRequest request) async {
-            final Uri uri = Uri.parse(request.url);
-            if (uri.scheme == 'tel' ||
-                uri.scheme == 'mailto' ||
-                uri.scheme == 'sms' ||
-                uri.scheme == 'whatsapp' ||
-                request.url.contains('wa.me')) {
-              if (await canLaunchUrl(uri)) {
-                await launchUrl(uri, mode: LaunchMode.externalApplication);
+    // Use passed controller if available, otherwise create new
+    if (widget.controller != null) {
+      _controller = widget.controller!;
+      _isLoading = false; // Assume pre-loaded if controller passed
+    } else {
+      _controller = WebViewController()
+        ..setJavaScriptMode(JavaScriptMode.unrestricted)
+        ..setBackgroundColor(Colors.white)
+        ..setNavigationDelegate(
+          NavigationDelegate(
+            onProgress: (int progress) {
+              // Optional: Update a progress bar
+            },
+            onPageStarted: (String url) {
+              if (mounted) {
+                setState(() {
+                  _isLoading = true;
+                });
               }
-              return NavigationDecision.prevent;
-            }
-            return NavigationDecision.navigate;
-          },
-        ),
-      )
-      ..loadRequest(
-        Uri.parse('http://localhost:3000'),
-      ); // Load from local React dev server
+            },
+            onPageFinished: (String url) {
+              if (mounted) {
+                setState(() {
+                  _isLoading = false;
+                });
+              }
+            },
+            onWebResourceError: (WebResourceError error) {
+              debugPrint('Web resource error: ${error.description}');
+              if (mounted) {
+                setState(() {
+                  _isLoading = false;
+                });
+              }
+            },
+            onNavigationRequest: (NavigationRequest request) async {
+              final Uri uri = Uri.parse(request.url);
+              if (uri.scheme == 'tel' ||
+                  uri.scheme == 'mailto' ||
+                  uri.scheme == 'sms' ||
+                  uri.scheme == 'whatsapp' ||
+                  request.url.contains('wa.me')) {
+                if (await canLaunchUrl(uri)) {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                }
+                return NavigationDecision.prevent;
+              }
+              return NavigationDecision.navigate;
+            },
+          ),
+        )
+        ..loadRequest(Uri.parse('https://www.yesrasewsolution.com'));
+    }
   }
 
   @override
@@ -78,6 +84,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
         return true;
       },
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         backgroundColor: Colors.white,
         body: SafeArea(
           child: Stack(
