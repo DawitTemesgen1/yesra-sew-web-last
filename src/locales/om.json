@@ -242,6 +242,8 @@
         "madeInEthiopia": "Itoophiyaa keessatti hojjetame ❤️"
     },
     "messages": {
+        "title": "Ergaawwan",
+        "searchPlaceholder": "Fayyadamoota barbaadi...",
         "success": {
             "saved": "Milkaa'inaan olkaa'ame",
             "deleted": "Milkaa'inaan haqame",
@@ -256,5 +258,11 @@
             "unauthorized": "Eeyyama hin qabu",
             "validation": "Mee galtee keessan mirkaneessaa"
         }
+    },
+    "chat": {
+        "title": "Chat",
+        "placeholder": "Ergaa barreessi...",
+        "welcomeTitle": "Salphaatti wal qunnamaa",
+        "welcomeSubtitle": "Ergaa erguuf bitaa irraa marii tokko filadhaa. Nageenya isaa kan eeggame, ariifataa fi ogummaa kan qabu."
     }
 }

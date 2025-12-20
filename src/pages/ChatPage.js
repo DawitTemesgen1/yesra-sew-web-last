@@ -18,7 +18,9 @@ import {
     useMediaQuery,
     CircularProgress, AppBar, Toolbar, InputAdornment, Stack
 } from '@mui/material';
-import { Send, ArrowBack, Search, MoreVert, Phone, Videocam } from '@mui/icons-material';
+import { Send, ArrowBack, Search, MoreVert, Phone, Videocam, Flag, Block as BlockIcon } from '@mui/icons-material';
+import ReportDialog from '../components/ReportDialog';
+import BlockUserDialog from '../components/BlockUserDialog';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import toast from 'react-hot-toast';
@@ -40,6 +42,9 @@ const ChatPage = () => {
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(true);
     const [sending, setSending] = useState(false);
+    const [reportDialogOpen, setReportDialogOpen] = useState(false);
+    const [blockDialogOpen, setBlockDialogOpen] = useState(false);
+    const [isParticipantBlocked, setIsParticipantBlocked] = useState(false);
 
     const messagesEndRef = useRef(null);
 
@@ -128,14 +133,43 @@ const ChatPage = () => {
     }, [conversations, paramRecipientId, location.state, user, loading]);
 
     useEffect(() => {
-        if (selectedConversation && !selectedConversation.isNew) {
-            fetchMessages(selectedConversation.id);
-            const interval = setInterval(() => fetchMessages(selectedConversation.id), 5000); // Poll messages every 5s
-            return () => clearInterval(interval);
-        } else if (selectedConversation?.isNew) {
-            setMessages([]);
+        if (selectedConversation) {
+            checkBlockedStatus();
+            if (!selectedConversation.isNew) {
+                fetchMessages(selectedConversation.id);
+                const interval = setInterval(() => fetchMessages(selectedConversation.id), 5000); // Poll messages every 5s
+                return () => clearInterval(interval);
+            } else {
+                setMessages([]);
+            }
         }
     }, [selectedConversation]);
+
+    const checkBlockedStatus = async () => {
+        if (!selectedConversation) return;
+        const other = getOtherParticipant(selectedConversation);
+        if (other?.id) {
+            try {
+                const blocked = await apiService.isUserBlocked(other.id);
+                setIsParticipantBlocked(blocked);
+            } catch (error) {
+                console.error('Error checking blocked status:', error);
+            }
+        }
+    };
+
+    const handleUnblock = async () => {
+        const other = getOtherParticipant(selectedConversation);
+        if (!other?.id) return;
+
+        try {
+            await apiService.unblockUser(other.id);
+            toast.success(`Unblocked ${other.fullName}`);
+            setIsParticipantBlocked(false);
+        } catch (error) {
+            toast.error('Failed to unblock user');
+        }
+    };
 
     useEffect(() => {
         scrollToBottom();
@@ -280,7 +314,7 @@ const ChatPage = () => {
                                 fullWidth
                                 variant="outlined"
                                 size="small"
-                                placeholder={t('searchPlaceholder') || 'Search users...'}
+                                placeholder={t('messages.searchPlaceholder') || 'Search users...'}
                                 InputProps={{
                                     startAdornment: (
                                         <InputAdornment position="start">
@@ -392,12 +426,18 @@ const ChatPage = () => {
                                                 {otherParticipant.isOnline ? 'Online' : 'Offline'}
                                             </Typography>
                                         </Box>
-                                        <IconButton color="primary" sx={{ display: { xs: 'none', sm: 'block' } }}>
-                                            <Phone />
+                                        <IconButton color="primary" onClick={() => setReportDialogOpen(true)} title="Report User">
+                                            <Flag />
                                         </IconButton>
-                                        <IconButton color="primary" sx={{ display: { xs: 'none', sm: 'block' } }}>
-                                            <Videocam />
-                                        </IconButton>
+                                        {isParticipantBlocked ? (
+                                            <IconButton color="success" onClick={handleUnblock} title="Unblock User">
+                                                <BlockIcon sx={{ color: theme.palette.success.main }} />
+                                            </IconButton>
+                                        ) : (
+                                            <IconButton color="primary" onClick={() => setBlockDialogOpen(true)} title="Block User">
+                                                <BlockIcon />
+                                            </IconButton>
+                                        )}
                                         <IconButton>
                                             <MoreVert />
                                         </IconButton>
@@ -521,6 +561,26 @@ const ChatPage = () => {
                     </Box>
                 </Paper>
             </Container>
+
+            {/* Safety Feature Dialogs */}
+            <ReportDialog
+                open={reportDialogOpen}
+                onClose={() => setReportDialogOpen(false)}
+                type="user"
+                targetId={otherParticipant?.id}
+                targetName={otherParticipant?.fullName}
+            />
+
+            <BlockUserDialog
+                open={blockDialogOpen}
+                onClose={() => setBlockDialogOpen(false)}
+                userId={otherParticipant?.id}
+                userName={otherParticipant?.fullName}
+                onBlocked={() => {
+                    setSelectedConversation(null);
+                    fetchConversations();
+                }}
+            />
         </Box>
     );
 };

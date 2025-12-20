@@ -1,4 +1,4 @@
-package com.example.yesrasew_app
+package com.yesrasewsolution.app
 
 import io.flutter.embedding.android.FlutterActivity
 

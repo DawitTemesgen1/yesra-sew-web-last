@@ -77,27 +77,39 @@ class _SplashScreenState extends State<SplashScreen>
     _mainController.forward();
 
     // Navigation Logic
+    bool hasNavigated = false;
     Timer(const Duration(milliseconds: 4500), () {
-      _pageLoadCompleter.future.then((_) => _navigateToNextScreen());
-      // Timeout fallback
-      Future.delayed(const Duration(seconds: 2), _navigateToNextScreen);
+      _pageLoadCompleter.future.then((_) {
+        if (!hasNavigated) {
+          hasNavigated = true;
+          _navigateToNextScreen();
+        }
+      });
+
+      // Safety timeout after 5.5 seconds total if page is slow
+      Future.delayed(const Duration(seconds: 1), () {
+        if (!hasNavigated) {
+          hasNavigated = true;
+          _navigateToNextScreen();
+        }
+      });
     });
   }
 
   void _initializeBackgroundWebView() {
     _preloadedController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(Colors.black) // Match theme
+      ..setBackgroundColor(Colors.white) // Match website background
       ..setNavigationDelegate(
         NavigationDelegate(
-          onPageFinished: (_) {
+          onPageFinished: (url) {
+            // Signal that high-priority loading is done
             if (!_pageLoadCompleter.isCompleted) _pageLoadCompleter.complete();
           },
           onWebResourceError: (_) {
             if (!_pageLoadCompleter.isCompleted) _pageLoadCompleter.complete();
           },
-          onNavigationRequest: (NavigationRequest request) async {
-            // ...
+          onNavigationRequest: (NavigationRequest request) {
             return NavigationDecision.navigate;
           },
         ),

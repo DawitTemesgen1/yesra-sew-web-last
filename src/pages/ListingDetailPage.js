@@ -14,10 +14,13 @@ import { alpha } from '@mui/material/styles';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useQuery, useMutation, useQueryClient } from 'react-query'; // Added imports
-import apiService, { supabase } from '../services/api'; /* Added supabase export in apiService or import directly if available? Usually apiService is default. We need supabase client for RPC. */
+import apiService, { supabase } from '../services/api';
 import adminService from '../services/adminService';
 import toast from 'react-hot-toast';
 import { useLanguage } from '../contexts/LanguageContext';
+import ReportDialog from '../components/ReportDialog';
+import BlockUserDialog from '../components/BlockUserDialog';
+import { Flag, Block as BlockIcon } from '@mui/icons-material';
 
 const translations = {
   en: {
@@ -218,6 +221,8 @@ const ListingDetailPage = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [comment, setComment] = useState('');
   const [isFavorite, setIsFavorite] = useState(false);
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [blockDialogOpen, setBlockDialogOpen] = useState(false);
 
   // 1. Fetch Listing & Comments in Parallel
   const { data: listing, isLoading: loadingListing, error } = useQuery(
@@ -463,9 +468,14 @@ const ListingDetailPage = () => {
                 </Typography>
               )}
             </Box>
-            <IconButton>
-              <MoreVert />
-            </IconButton>
+            <Stack direction="row" spacing={0.5}>
+              <IconButton onClick={() => setReportDialogOpen(true)} color="error" title="Report">
+                <Flag />
+              </IconButton>
+              <IconButton onClick={() => setBlockDialogOpen(true)} title="Block User">
+                <BlockIcon />
+              </IconButton>
+            </Stack>
           </Stack>
         </Container>
       </Paper>
@@ -817,6 +827,23 @@ const ListingDetailPage = () => {
           </Button>
         </Stack>
       </Paper>
+      <ReportDialog
+        open={reportDialogOpen}
+        onClose={() => setReportDialogOpen(false)}
+        type="listing"
+        targetId={id}
+        targetName={listing?.title}
+      />
+
+      <BlockUserDialog
+        open={blockDialogOpen}
+        onClose={() => setBlockDialogOpen(false)}
+        userId={listing?.author_id || listing?.user_id}
+        userName={sellerName}
+        onBlocked={() => {
+          navigate(-1);
+        }}
+      />
     </Box>
   );
 };

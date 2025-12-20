@@ -237,6 +237,8 @@
         "madeInEthiopia": "ኣብ ኢትዮጵያ ተሰሪሑ ❤️"
     },
     "messages": {
+        "title": "መልእኽትታት",
+        "searchPlaceholder": "ተጠቀምቲ ድለ...",
         "success": {
             "saved": "ብዓወት ተዓቂቡ",
             "deleted": "ብዓወት ተደምሲሱ",
@@ -251,5 +253,11 @@
             "unauthorized": "ዘይተፈቐደ መእተዊ",
             "validation": "በጃኹም እታውኩም ኣረጋግጹ"
         }
+    },
+    "chat": {
+        "title": "ውይይት",
+        "placeholder": "መልእኽቲ ጸሓፍ...",
+        "welcomeTitle": "ብቐሊሉ ተራኸቡ",
+        "welcomeSubtitle": "መልእኽቲ ንምልውዋጥ ካብ ጸጋም ዘለዉ ዕላል ሓደ ምረጹ። ውሑስ፣ ቅልጡፍን ሞያውን።"
     }
 }

@@ -1076,6 +1076,211 @@ class ApiService {
     return { success: true };
   }
 
+  // ============================================================
+  // SAFETY FEATURES - Reports & Blocking
+  // ============================================================
+
+  /**
+   * Report a listing for inappropriate content
+   */
+  async reportListing(listingId, reason, description = '') {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Must be logged in to report');
+
+      const { data, error } = await supabase
+        .from('reports')
+        .insert({
+          reporter_id: user.id, // Explicitly pass the ID
+          reported_listing_id: listingId,
+          report_type: 'listing',
+          target_type: 'listing', // Sync with generic schema
+          target_id: listingId,    // Sync with generic schema
+          reason,
+          description,
+          status: 'pending'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error reporting listing:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Report a user for inappropriate behavior
+   */
+  async reportUser(userId, reason, description = '') {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Must be logged in to report');
+
+      const { data, error } = await supabase
+        .from('reports')
+        .insert({
+          reporter_id: user.id,
+          reported_user_id: userId,
+          report_type: 'user',
+          target_type: 'user', // Sync with generic schema
+          target_id: userId,    // Sync with generic schema
+          reason,
+          description,
+          status: 'pending'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error reporting user:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Block a user
+   */
+  async blockUser(userId, reason = '') {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Must be logged in to block users');
+
+      const { data, error } = await supabase
+        .from('blocked_users')
+        .insert({
+          blocker_id: user.id,
+          blocked_id: userId,
+          reason
+        })
+        .select()
+        .single();
+
+      if (error) {
+        if (error.code === '23505') { // Unique constraint violation
+          throw new Error('User is already blocked');
+        }
+        throw error;
+      }
+      return data;
+    } catch (error) {
+      console.error('Error blocking user:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Unblock a user
+   */
+  async unblockUser(userId) {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Must be logged in to unblock users');
+
+      const { error } = await supabase
+        .from('blocked_users')
+        .delete()
+        .eq('blocker_id', user.id)
+        .eq('blocked_id', userId);
+
+      if (error) throw error;
+      return { success: true };
+    } catch (error) {
+      console.error('Error unblocking user:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get list of blocked users
+   */
+  async getBlockedUsers() {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+
+      const { data, error } = await supabase
+        .from('blocked_users')
+        .select(`
+          *,
+          blocked:blocked_id (
+            id,
+            email,
+            full_name,
+            avatar_url
+          )
+        `)
+        .eq('blocker_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error getting blocked users:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Check if a user is blocked
+   */
+  async isUserBlocked(userId) {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return false;
+
+      const { data, error } = await supabase
+        .from('blocked_users')
+        .select('id')
+        .eq('blocker_id', user.id)
+        .eq('blocked_id', userId)
+        .maybeSingle();
+
+      if (error) throw error;
+      return !!data;
+    } catch (error) {
+      console.error('Error checking if user is blocked:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Get user's reports (for viewing their own reports)
+   */
+  async getMyReports() {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+
+      const { data, error } = await supabase
+        .from('reports')
+        .select(`
+          *,
+          reported_user:reported_user_id (
+            id,
+            email,
+            full_name
+          ),
+          reported_listing:reported_listing_id (
+            id,
+            title
+          )
+        `)
+        .eq('reporter_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error getting reports:', error);
+      return [];
+    }
+  }
+
 
   // Aliases
   async register(d) { return this.auth.registerEmail(d); }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/services.dart';
 
 class WebViewScreen extends StatefulWidget {
   final WebViewController? controller; // ADDED: Optional controller
@@ -86,13 +87,28 @@ class _WebViewScreenState extends State<WebViewScreen> {
       child: Scaffold(
         resizeToAvoidBottomInset: false,
         backgroundColor: Colors.white,
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(0),
+          child: AppBar(
+            elevation: 0,
+            backgroundColor: Colors.white,
+            systemOverlayStyle: const SystemUiOverlayStyle(
+              statusBarColor: Colors.white,
+              statusBarIconBrightness: Brightness.dark,
+              statusBarBrightness: Brightness.light,
+            ),
+          ),
+        ),
         body: SafeArea(
           child: Stack(
             children: [
               WebViewWidget(controller: _controller),
               if (_isLoading)
-                const Center(
-                  child: CircularProgressIndicator(color: Color(0xFF00A651)),
+                Container(
+                  color: Colors.white,
+                  child: const Center(
+                    child: CircularProgressIndicator(color: Color(0xFF00A651)),
+                  ),
                 ),
             ],
           ),

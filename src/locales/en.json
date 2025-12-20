@@ -256,6 +256,8 @@
         "madeInEthiopia": "Made with ❤️ in Ethiopia"
     },
     "messages": {
+        "title": "Messages",
+        "searchPlaceholder": "Search users...",
         "success": {
             "saved": "Saved successfully",
             "deleted": "Deleted successfully",
@@ -270,5 +272,11 @@
             "unauthorized": "Unauthorized access",
             "validation": "Please check your input"
         }
+    },
+    "chat": {
+        "title": "Chat",
+        "placeholder": "Type a message...",
+        "welcomeTitle": "Connect with ease",
+        "welcomeSubtitle": "Select a conversation from the left to start messaging. Secure, fast, and professional."
     }
 }

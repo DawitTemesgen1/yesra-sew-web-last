@@ -242,6 +242,8 @@
         "madeInEthiopia": "በኢትዮጵያ ተሰርቷል ❤️"
     },
     "messages": {
+        "title": "መልዕክቶች",
+        "searchPlaceholder": "ተጠቃሚዎችን ፈልግ...",
         "success": {
             "saved": "በተሳካ ሁኔታ ተቀምጧል",
             "deleted": "በተሳካ ሁኔታ ተሰርዟል",
@@ -256,5 +258,11 @@
             "unauthorized": "ያልተፈቀደ መዳረሻ",
             "validation": "እባክዎ ግብዓትዎን ያረጋግጡ"
         }
+    },
+    "chat": {
+        "title": "ውይይት",
+        "placeholder": "መልዕክት ይጻፉ...",
+        "welcomeTitle": "በቀላሉ ይገናኙ",
+        "welcomeSubtitle": "መልዕክት ለመለዋወጥ ከግራ ካሉት ውይይቶች አንዱን ይምረጡ። ደህንነቱ የተጠበቀ፣ ፈጣን እና ሙያዊ።"
     }
 }
