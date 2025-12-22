@@ -365,6 +365,54 @@ const adminService = {
         }
     },
 
+    async getListingById(id) {
+        try {
+            const { data, error } = await supabase
+                .from('listings')
+                .select('*')
+                .eq('id', id)
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error('Error fetching listing by ID:', error);
+            throw error;
+        }
+    },
+
+    async getUserById(id) {
+        try {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', id)
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error('Error fetching user by ID:', error);
+            throw error;
+        }
+    },
+
+    async deleteUser(id) {
+        try {
+            const { error } = await supabase
+                .from('profiles')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+            cache.clear('users');
+            return true;
+        } catch (error) {
+            console.error('Error deleting user:', error);
+            throw error;
+        }
+    },
+
     // --- Report Management ---
     async getReports(filters = {}) {
         try {
@@ -562,7 +610,7 @@ const adminService = {
 
     async initializePaymentProviders() {
         try {
-            console.log('Initializing payment providers...');
+
 
             const providers = [
                 {
@@ -593,7 +641,7 @@ const adminService = {
                 }
             ];
 
-            console.log('Attempting to insert providers:', providers);
+
 
             // Use upsert to handle both insert and update cases
             const { data, error } = await supabase
@@ -609,7 +657,7 @@ const adminService = {
                 throw new Error(`Database error: ${error.message}. ${error.hint || ''}`);
             }
 
-            console.log('Payment providers initialized successfully:', data);
+
             cache.clear('payment_providers');
             return data;
         } catch (error) {
@@ -1141,7 +1189,7 @@ const adminService = {
         if (cached) return cached;
 
         try {
-            console.log(`fetching template for category: ${categoryId}`);
+
             const { data: template, error: templateError } = await supabase
                 .from('post_templates')
                 .select('*')
@@ -1726,3 +1774,4 @@ const adminService = {
 };
 
 export default adminService;
+

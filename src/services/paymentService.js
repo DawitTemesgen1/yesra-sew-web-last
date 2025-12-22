@@ -182,7 +182,7 @@ const paymentService = {
      */
     async initiateChapaPayment(paymentData) {
         try {
-            console.log('Initiating Chapa payment with data:', paymentData);
+            
 
             // Call Supabase Edge Function
             const { data: result, error: fnError } = await supabase.functions.invoke('payment-handler', {
@@ -194,8 +194,8 @@ const paymentService = {
                 }
             });
 
-            console.log('Payment Handler Response:', { result, fnError });
-            console.log('Result JSON:', JSON.stringify(result, null, 2));
+            
+            );
 
             // Check for network/invocation errors first
             if (fnError) {
@@ -488,3 +488,4 @@ const paymentService = {
 };
 
 export default paymentService;
+

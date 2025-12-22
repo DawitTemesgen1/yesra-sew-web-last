@@ -157,7 +157,7 @@ const JobsTendersPricingPage = ({ category = 'jobs' }) => {
     const fetchPlans = async () => {
         try {
             setLoading(true);
-            console.log('Fetching plans for category:', category);
+            
 
             // Fetch directly using the shared supabase client (handles public/user auth correctly)
             const { data: allPlans, error } = await supabase
@@ -171,7 +171,7 @@ const JobsTendersPricingPage = ({ category = 'jobs' }) => {
                 throw error;
             }
 
-            console.log('Plans fetched:', allPlans?.length);
+            
 
             const filteredPlans = (allPlans || []).filter(p => {
                 if (!p) return false;
@@ -195,7 +195,7 @@ const JobsTendersPricingPage = ({ category = 'jobs' }) => {
                 limits: typeof plan.limits === 'string' ? JSON.parse(plan.limits) : (plan.limits || {})
             }));
 
-            console.log(`Filtered to ${filteredPlans.length} plans for ${category}`);
+            
             setPlans(filteredPlans);
         } catch (error) {
             console.error('Error fetching plans:', error);
@@ -566,3 +566,4 @@ const JobsTendersPricingPage = ({ category = 'jobs' }) => {
 };
 
 export default JobsTendersPricingPage;
+

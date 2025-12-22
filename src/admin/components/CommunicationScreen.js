@@ -377,3 +377,4 @@ const CommunicationScreen = ({ t, handleRefresh, refreshing, searchTerm, setSear
 };
 
 export default CommunicationScreen;
+

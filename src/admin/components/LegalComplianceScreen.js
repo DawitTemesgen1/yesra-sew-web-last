@@ -253,7 +253,7 @@ const LegalComplianceScreen = ({ t, handleRefresh, refreshing, searchTerm, setSe
   };
 
   const handleBulkAction = (action) => {
-    console.log(`Bulk action: ${action} on documents:`, selectedItems);
+    
   };
 
   const handleTabChange = (event, newValue) => {
@@ -620,3 +620,4 @@ const LegalComplianceScreen = ({ t, handleRefresh, refreshing, searchTerm, setSe
 };
 
 export default LegalComplianceScreen;
+

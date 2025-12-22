@@ -18,3 +18,4 @@ export const StrictModeDroppable = ({ children, ...props }) => {
 
     return <Droppable {...props}>{children}</Droppable>;
 };
+

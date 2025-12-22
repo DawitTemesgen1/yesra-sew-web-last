@@ -100,7 +100,7 @@ const optimizedListingService = {
             // Check cache first
             const cached = getCached(cacheKey);
             if (cached) {
-                console.log('✅ Cache hit for listings');
+                
                 return cached;
             }
 
@@ -226,7 +226,7 @@ const optimizedListingService = {
             const cacheKey = `listing_${id}`;
             const cached = getCached(cacheKey);
             if (cached) {
-                console.log('✅ Cache hit for listing detail');
+                
                 return cached;
             }
 
@@ -541,3 +541,4 @@ const optimizedListingService = {
 };
 
 export default optimizedListingService;
+

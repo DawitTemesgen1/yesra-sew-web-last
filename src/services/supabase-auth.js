@@ -462,3 +462,4 @@ const supabaseAuthService = {
 };
 
 export default supabaseAuthService;
+

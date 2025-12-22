@@ -314,3 +314,4 @@ const MobileAppScreen = ({ t, handleRefresh, refreshing, searchTerm, setSearchTe
 const isAllSelected = (items, selected) => items.length > 0 && items.every(i => selected.includes(i.id));
 
 export default MobileAppScreen;
+

@@ -136,7 +136,7 @@ const SupportScreen = ({ t, handleRefresh, refreshing, searchTerm, setSearchTerm
   };
 
   const handleBulkAction = (action) => {
-    console.log(`Bulk action: ${action} on tickets:`, selectedItems);
+    
   };
 
   const handleTabChange = (event, newValue) => {
@@ -144,11 +144,11 @@ const SupportScreen = ({ t, handleRefresh, refreshing, searchTerm, setSearchTerm
   };
 
   const handleAssignTicket = (ticketId, agent) => {
-    console.log(`Assign ticket ${ticketId} to ${agent}`);
+    
   };
 
   const handleReplyTicket = (ticketId) => {
-    console.log(`Reply to ticket: ${ticketId}`);
+    
     setReplyDialog(true);
   };
 
@@ -532,3 +532,4 @@ const SupportScreen = ({ t, handleRefresh, refreshing, searchTerm, setSearchTerm
 };
 
 export default SupportScreen;
+

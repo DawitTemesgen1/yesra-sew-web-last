@@ -358,3 +358,4 @@ const PricingPlansManagement = () => {
 };
 
 export default PricingPlansManagement;
+

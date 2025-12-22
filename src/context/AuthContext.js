@@ -13,18 +13,18 @@ export const AuthProvider = ({ children }) => {
     // 1. Get initial session
     const initSession = async () => {
       try {
-        console.log("🔐 AuthProvider: Initializing session...");
-        console.log("   -> Current URL Hash:", window.location.hash);
+
+
 
         const { data: { session }, error } = await supabase.auth.getSession();
 
         if (error) {
           console.error("❌ AuthProvider: Error getting session:", error);
         } else if (session) {
-          console.log("✅ AuthProvider: Session found via getSession");
-          console.log("   -> User:", session.user.email);
+
+
         } else {
-          console.log("ℹ️ AuthProvider: getSession returned null.");
+
         }
 
         setSession(session);
@@ -40,19 +40,52 @@ export const AuthProvider = ({ children }) => {
 
     // 2. Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log(`🔔 Auth State Changed: [${_event}]`);
+
       if (session) {
-        console.log("   -> Session found in Listener");
-        console.log("   -> User:", session.user.email);
+
+
       } else {
-        console.log("   -> No session in Listener");
+
       }
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    // 3. Expose Native Login Handler (For Mobile App)
+    window.handleNativeGoogleLogin = async (token, metaDataStr) => {
+      console.log("📱 Native Native Google Login Triggered");
+      try {
+        const metaData = metaDataStr ? JSON.parse(metaDataStr) : {};
+        // Access login function by re-using the logic inside the provider isn't clean directly 
+        // because 'login' is defined in the 'value' object below.
+        // We will call the internal internal login logic or supabase directly.
+        // Better: Use the supabase client directly here for the specific ID Token flow
+
+        const { data, error } = await supabase.auth.signInWithIdToken({
+          provider: 'google',
+          token: token,
+          options: { data: metaData }
+        });
+
+        if (error) throw error;
+
+        // Update local state - AuthStateChange should handle it, but being explicit helps
+        if (data.session) {
+          setSession(data.session);
+          setUser(data.session.user);
+          return JSON.stringify({ success: true });
+        }
+      } catch (err) {
+        console.error("Native Login Failed:", err);
+        return JSON.stringify({ success: false, error: err.message });
+      }
+    };
+
+    return () => {
+      subscription.unsubscribe();
+      delete window.handleNativeGoogleLogin;
+    };
   }, []);
 
   const value = {
@@ -83,9 +116,9 @@ export const AuthProvider = ({ children }) => {
           });
         } else if (isWebOAuth) {
           // Handle Standard Web OAuth (Browser)
-          console.log('Starting Web OAuth flow...');
+
           const redirectUrl = window.location.origin;
-          console.log('Redirect URL:', redirectUrl);
+
 
           result = await supabase.auth.signInWithOAuth({
             provider: 'google',
@@ -144,3 +177,4 @@ export const useAuth = () => {
 };
 
 export default AuthContext;
+

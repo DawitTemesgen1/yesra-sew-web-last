@@ -132,7 +132,7 @@ const SecurityScreen = ({ t, handleRefresh, refreshing, searchTerm, setSearchTer
   };
 
   const handleBulkAction = (action) => {
-    console.log(`Bulk action: ${action} on events:`, selectedItems);
+    
   };
 
   const handleTabChange = (event, newValue) => {
@@ -140,11 +140,11 @@ const SecurityScreen = ({ t, handleRefresh, refreshing, searchTerm, setSearchTer
   };
 
   const handleBlockIP = (ipAddress) => {
-    console.log(`Block IP: ${ipAddress}`);
+    
   };
 
   const handleUnlockAccount = (userId) => {
-    console.log(`Unlock account: ${userId}`);
+    
   };
 
   return (
@@ -504,3 +504,4 @@ const SecurityScreen = ({ t, handleRefresh, refreshing, searchTerm, setSearchTer
 };
 
 export default SecurityScreen;
+

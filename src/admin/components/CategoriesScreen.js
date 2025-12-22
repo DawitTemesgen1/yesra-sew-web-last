@@ -434,3 +434,4 @@ const CategoriesScreen = ({ t }) => {
 };
 
 export default CategoriesScreen;
+

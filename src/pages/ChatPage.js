@@ -94,7 +94,7 @@ const ChatPage = () => {
                                 otherUser.avatarUrl = profile.avatar_url;
                             }
                         } catch (err) {
-                            console.log("Could not fetch recipient profile", err);
+                            
                         }
                     }
 
@@ -586,3 +586,4 @@ const ChatPage = () => {
 };
 
 export default ChatPage;
+

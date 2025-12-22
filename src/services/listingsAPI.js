@@ -232,3 +232,4 @@ class ListingsAPIService {
 }
 
 export default new ListingsAPIService();
+

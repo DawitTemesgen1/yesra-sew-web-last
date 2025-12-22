@@ -188,3 +188,4 @@ const VideoUploader = ({ value, onChange, maxSize = 50, maxDuration = 60 }) => {
 };
 
 export default VideoUploader;
+

@@ -22,6 +22,7 @@ import {
 import adminService from '../../services/adminService';
 import toast from 'react-hot-toast';
 import { formatDistanceToNow } from '../../utils/dateUtils';
+import UserDetailDialog from './UserDetailDialog';
 
 const UserManagementScreen = ({ t, handleRefresh: propHandleRefresh, refreshing: propRefreshing, searchTerm, setSearchTerm, filterStatus, setFilterStatus }) => {
   const navigate = useNavigate();
@@ -31,6 +32,8 @@ const UserManagementScreen = ({ t, handleRefresh: propHandleRefresh, refreshing:
   const [activeTab, setActiveTab] = useState(0);
   const [userDialog, setUserDialog] = useState(false);
   const [roleDialog, setRoleDialog] = useState(false);
+  const [userDetailOpen, setUserDetailOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState(null);
 
   // State for dynamic data from Supabase
   const [userStats, setUserStats] = useState({
@@ -146,7 +149,7 @@ const UserManagementScreen = ({ t, handleRefresh: propHandleRefresh, refreshing:
   };
 
   const handleBulkAction = (action) => {
-    console.log(`Bulk action: ${action} on users:`, selectedItems);
+    
   };
 
   const handleTabChange = (event, newValue) => {
@@ -187,16 +190,8 @@ const UserManagementScreen = ({ t, handleRefresh: propHandleRefresh, refreshing:
   };
 
   const handleViewProfile = (userId) => {
-    // Navigate to profile page (assuming we have a public profile viewer or passing ID to profile page)
-    // If not, we can navigate to listings?user_id=... or a specific admin profile view
-    // For now, let's assume we have a admin profile view or redirect to public profile
-    // Or we stick to user's listings if no dedicated profile page
-    // Best option for admin: navigate(`/admin-panel/users/${userId}`) if exists, 
-    // or just `/profile` but that usually shows *my* profile.
-    // Let's assume we navigate to their public profile view if implemented, or just toast for now if not ready.
-    // Actually, looking at the app, we probably want to see their listings.
-    // But user asked for "take too users profile".
-    navigate(`/profile/${userId}`);
+    setSelectedUserId(userId);
+    setUserDetailOpen(true);
   };
 
   const handleDeleteUser = async (userId) => {
@@ -529,8 +524,22 @@ const UserManagementScreen = ({ t, handleRefresh: propHandleRefresh, refreshing:
           <Button onClick={() => setRoleDialog(false)}>Close</Button>
         </DialogActions>
       </Dialog>
+
+      {/* User Detail Dialog */}
+      <UserDetailDialog
+        open={userDetailOpen}
+        onClose={() => {
+          setUserDetailOpen(false);
+          setSelectedUserId(null);
+        }}
+        userId={selectedUserId}
+        onUpdate={() => {
+          fetchUsers();
+        }}
+      />
     </Box>
   );
 };
 
 export default UserManagementScreen;
+

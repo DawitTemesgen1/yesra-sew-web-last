@@ -9,7 +9,7 @@ export { supabase };
 // DIAGNOSTIC: Immediate Connection Check
 (async () => {
   try {
-    console.log("🔍 DIAGNOSTIC: Testing Supabase Connection...");
+
     const start = Date.now();
     const { data, error } = await supabase.from('listings').select('count', { count: 'exact', head: true }).limit(1);
     const duration = Date.now() - start;
@@ -18,7 +18,7 @@ export { supabase };
       console.error("❌ DIAGNOSTIC: Connection FAILED!", error);
       console.error("  -> Possible causes: Invalid credentials, Row Level Security blocking generic select, or Network firewall.");
     } else {
-      console.log(`✅ DIAGNOSTIC: Connection SUCCESS! (Took ${duration}ms)`);
+      console.log(`✅ DIAGNOSTIC: Connection OK (${duration}ms)`);
     }
   } catch (err) {
     console.error("❌ DIAGNOSTIC: Network Error or Crash:", err);
@@ -1072,7 +1072,7 @@ class ApiService {
 
   async startConversation(sellerId) {
     // Placeholder for chat functionality
-    console.log('Starting conversation with seller:', sellerId);
+
     return { success: true };
   }
 
@@ -1297,3 +1297,4 @@ export const listings = apiService.listings;
 export const users = apiService.users;
 export const adminService = apiService.admin;
 export default apiService;
+

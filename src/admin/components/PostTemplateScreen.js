@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 // v2.1 - Fixed null safety checks for steps and fields
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import {
     Box, Typography, Button, Card, CardContent, TextField, Dialog, DialogTitle,
     DialogContent, DialogActions, IconButton, Stack, Grid, Paper, Chip, Alert,
@@ -50,7 +50,8 @@ const FIELD_TYPES = [
 
 const PostTemplateScreen = () => {
     const { categoryId } = useParams();
-    const [loading, setLoading] = useState(true);
+    const location = useLocation();
+    const [loading, setLoading] = useState(false);
     const [categories, setCategories] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState(categoryId || '');
     const [template, setTemplate] = useState(null);
@@ -78,6 +79,15 @@ const PostTemplateScreen = () => {
     }, []);
 
     useEffect(() => {
+        // If categoryId is in URL params or location state, set it
+        if (categoryId) {
+            setSelectedCategory(categoryId);
+        } else if (location.state?.category?.id) {
+            setSelectedCategory(location.state.category.id);
+        }
+    }, [categoryId, location.state]);
+
+    useEffect(() => {
         if (selectedCategory) {
             loadTemplate();
         }
@@ -86,8 +96,9 @@ const PostTemplateScreen = () => {
     const loadCategories = async () => {
         try {
             const data = await adminService.getCategories();
-            setCategories(data);
+            setCategories(data || []);
         } catch (error) {
+            console.error('Error loading categories:', error);
             toast.error('Failed to load categories');
         }
     };
@@ -221,10 +232,25 @@ const PostTemplateScreen = () => {
         setFieldDialogOpen(true);
     };
 
+    // Map UI field types to database-compatible field types
+    const mapFieldTypeToDatabase = (uiFieldType) => {
+        const fieldTypeMap = {
+            'price': 'number',        // Price is stored as number
+            'currency': 'number',     // Currency is stored as number
+            'boolean': 'checkbox',    // Boolean/Yes-No toggle maps to checkbox
+            // All other types pass through as-is
+        };
+        return fieldTypeMap[uiFieldType] || uiFieldType;
+    };
+
     const handleSaveField = async () => {
         try {
+            // Map the field type to database-compatible value
+            const dbFieldType = mapFieldTypeToDatabase(fieldForm.field_type);
+
             const fieldData = {
                 ...fieldForm,
+                field_type: dbFieldType, // Use mapped field type
                 field_name: fieldForm.field_name || fieldForm.field_label.toLowerCase().replace(/\s+/g, '_'),
                 step_id: currentStepId,
                 width: fieldForm.width || 'full', // DB expects text: 'full', 'half', 'third', 'quarter'
@@ -242,7 +268,7 @@ const PostTemplateScreen = () => {
             loadTemplate();
         } catch (error) {
             console.error('Save field error:', error);
-            toast.error('Failed to save field');
+            toast.error(`Failed to save field: ${error.message || 'Unknown error'}`);
         }
     };
 
@@ -1421,6 +1447,7 @@ const PostTemplateScreen = () => {
 };
 
 export default PostTemplateScreen;
+
 
 
 

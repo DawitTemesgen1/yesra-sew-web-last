@@ -36,7 +36,7 @@ const PaymentIntegrationScreen = ({ t }) => {
                 adminService.getPaymentProviders(),
                 adminService.getAllTransactions({ limit: 50 })
             ]);
-            console.log('Fetched providers:', providersData);
+            
             setProviders(providersData || []);
             setTransactions(transactionsData || []);
         } catch (error) {
@@ -53,7 +53,7 @@ const PaymentIntegrationScreen = ({ t }) => {
             setInitializing(true);
             setFetchError(null);
             const result = await adminService.initializePaymentProviders();
-            console.log('Initialization result:', result);
+            
             toast.success('Payment providers initialized successfully!');
             await fetchData();
         } catch (error) {
@@ -482,3 +482,4 @@ const PaymentIntegrationScreen = ({ t }) => {
 };
 
 export default PaymentIntegrationScreen;
+

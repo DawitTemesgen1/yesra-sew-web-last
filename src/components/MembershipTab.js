@@ -328,3 +328,4 @@ const EmptyState = ({ navigate }) => (
 );
 
 export default MembershipTab;
+

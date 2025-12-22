@@ -295,3 +295,4 @@ const GamificationRewards = ({ userId }) => {
 };
 
 export default GamificationRewards;
+

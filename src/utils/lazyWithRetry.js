@@ -20,7 +20,7 @@ const lazyWithRetry = (componentImport) =>
             if (!pageHasAlreadyBeenForceRefreshed) {
                 // Assuming that the user is not running the latest version of the application.
                 // Let's reload the page immediately.
-                console.log('ChunkLoadError detected, reloading page to fetch new chunks...');
+                
                 window.sessionStorage.setItem('page-has-been-force-refreshed', 'true');
                 window.location.reload();
 
@@ -34,3 +34,4 @@ const lazyWithRetry = (componentImport) =>
     });
 
 export default lazyWithRetry;
+

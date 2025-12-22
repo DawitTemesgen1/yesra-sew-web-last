@@ -142,11 +142,11 @@ const HomepageManagementScreen = ({ t, handleRefresh, refreshing, searchTerm, se
   };
 
   const handleBulkAction = (action) => {
-    console.log(`Bulk action: ${action} on sections:`, selectedItems);
+    
   };
 
   const handleVisibilityToggle = (sectionId) => {
-    console.log(`Toggle visibility for section: ${sectionId}`);
+    
   };
 
   return (
@@ -382,3 +382,4 @@ const HomepageManagementScreen = ({ t, handleRefresh, refreshing, searchTerm, se
 };
 
 export default HomepageManagementScreen;
+

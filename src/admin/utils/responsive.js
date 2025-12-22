@@ -197,3 +197,4 @@ export const breakpoints = {
   lg: 1200,
   xl: 1536,
 };
+

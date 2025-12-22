@@ -667,3 +667,4 @@ const CompaniesScreen = ({ t, handleRefresh, refreshing, searchTerm, setSearchTe
 };
 
 export default CompaniesScreen;
+

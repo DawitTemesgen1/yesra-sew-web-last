@@ -27,14 +27,14 @@
 //   const [useMockData, setUseMockData] = useState(false);
 //   const [dataFetched, setDataFetched] = useState(false);
 
-//   console.log('AdminDashboard component rendering...', { loading, dataFetched, useMockData });
+//   
 
 //   // Fetch data from backend
 //   useEffect(() => {
-//     console.log('AdminDashboard useEffect running...', { dataFetched, useMockData });
+//     
 //     // Only fetch once on component mount or when useMockData changes
 //     if (dataFetched && !useMockData) {
-//       console.log('Skipping fetch - data already fetched');
+//       
 //       return;
 //     }
     
@@ -85,7 +85,7 @@
 //         console.error('Error fetching dashboard data:', error);
 //         toast.error(t('failedToLoadData'));
 //       } finally {
-//         console.log('Fetch completed, setting loading to false');
+//         
 //         setLoading(false);
 //         setDataFetched(true);
 //       }
@@ -4337,3 +4337,4 @@
 // };
 
 // export default AdminDashboard;
+

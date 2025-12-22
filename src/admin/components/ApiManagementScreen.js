@@ -330,7 +330,7 @@ const ApiManagementScreen = ({ t, handleRefresh, refreshing, searchTerm, setSear
   };
 
   const handleBulkAction = (action) => {
-    console.log(`Bulk action: ${action} on keys:`, selectedItems);
+    
   };
 
   const handleTabChange = (event, newValue) => {
@@ -338,15 +338,15 @@ const ApiManagementScreen = ({ t, handleRefresh, refreshing, searchTerm, setSear
   };
 
   const handleRegenerateKey = (keyId) => {
-    console.log(`Regenerate key: ${keyId}`);
+    
   };
 
   const handleSuspendKey = (keyId) => {
-    console.log(`Suspend key: ${keyId}`);
+    
   };
 
   const handleActivateKey = (keyId) => {
-    console.log(`Activate key: ${keyId}`);
+    
   };
 
   return (
@@ -794,3 +794,4 @@ const ApiManagementScreen = ({ t, handleRefresh, refreshing, searchTerm, setSear
 };
 
 export default ApiManagementScreen;
+

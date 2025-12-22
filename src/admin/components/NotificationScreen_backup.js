@@ -379,7 +379,7 @@ const NotificationScreen = ({ t, handleRefresh, refreshing, searchTerm, setSearc
   };
 
   const handleBulkAction = (action) => {
-    console.log(`Bulk action: ${action} on notifications:`, selectedItems);
+    
   };
 
   const handleTabChange = (event, newValue) => {
@@ -387,11 +387,11 @@ const NotificationScreen = ({ t, handleRefresh, refreshing, searchTerm, setSearc
   };
 
   const handleSendNotification = (notificationId) => {
-    console.log(`Send notification: ${notificationId}`);
+    
   };
 
   const handleScheduleNotification = (notificationId) => {
-    console.log(`Schedule notification: ${notificationId}`);
+    
   };
 
   return (
@@ -847,3 +847,4 @@ const NotificationScreen = ({ t, handleRefresh, refreshing, searchTerm, setSearc
 };
 
 export default NotificationScreen;
+

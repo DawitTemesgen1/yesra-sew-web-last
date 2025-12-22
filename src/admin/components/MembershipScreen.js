@@ -251,7 +251,7 @@ const MembershipScreen = ({ t, handleRefresh, refreshing, searchTerm, setSearchT
   };
 
   const handleBulkAction = (action) => {
-    console.log(`Bulk action: ${action} on members:`, selectedItems);
+    
   };
 
   const handleTabChange = (event, newValue) => {
@@ -259,11 +259,11 @@ const MembershipScreen = ({ t, handleRefresh, refreshing, searchTerm, setSearchT
   };
 
   const handleUpgrade = (memberId) => {
-    console.log(`Upgrade member: ${memberId}`);
+    
   };
 
   const handleDowngrade = (memberId) => {
-    console.log(`Downgrade member: ${memberId}`);
+    
   };
 
   return (
@@ -611,3 +611,4 @@ const MembershipScreen = ({ t, handleRefresh, refreshing, searchTerm, setSearchT
 };
 
 export default MembershipScreen;
+

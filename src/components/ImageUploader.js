@@ -241,3 +241,4 @@ const ImageUploader = ({ value, onChange, maxSize = 50, multiple = false }) => {
 };
 
 export default ImageUploader;
+

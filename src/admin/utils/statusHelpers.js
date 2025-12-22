@@ -34,3 +34,4 @@ export const formatDate = (date) => {
 export const formatNumber = (number) => {
   return number.toLocaleString();
 };
+

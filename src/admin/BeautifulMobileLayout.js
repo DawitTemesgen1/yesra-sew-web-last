@@ -615,3 +615,4 @@ const BeautifulMobileLayout = ({
 };
 
 export default BeautifulMobileLayout;
+

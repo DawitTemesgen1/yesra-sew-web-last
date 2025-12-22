@@ -69,3 +69,4 @@ export const STATUS_COLORS = {
   failed: 'error',
   processing: 'info',
 };
+

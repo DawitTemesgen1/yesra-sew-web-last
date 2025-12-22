@@ -696,3 +696,4 @@ const AnalyticsScreen = ({ t }) => {
 };
 
 export default AnalyticsScreen;
+

@@ -803,3 +803,4 @@ const MembershipPlansScreen = ({ t }) => {
 };
 
 export default MembershipPlansScreen;
+

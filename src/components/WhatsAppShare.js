@@ -159,3 +159,4 @@ ${listing.description ? `${listing.description.substring(0, 200)}...` : ''}
 };
 
 export default WhatsAppShare;
+

@@ -292,7 +292,7 @@ const ListingDetailPage = () => {
     if (navigator.share) {
       try {
         await navigator.share({ title: listing.title, text: `Check out ${listing.title}`, url: window.location.href });
-      } catch (err) { console.log(t.shareCancelled); }
+      } catch (err) {  }
     } else {
       navigator.clipboard.writeText(window.location.href);
       toast.success(t.linkCopied);

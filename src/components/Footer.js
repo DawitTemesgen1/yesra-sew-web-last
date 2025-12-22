@@ -103,7 +103,7 @@ const Footer = () => {
 
     // Listen for settings updates
     const handleSettingsUpdate = () => {
-      console.log('Footer: Settings updated, refetching...');
+      
       fetchSettings();
     };
 

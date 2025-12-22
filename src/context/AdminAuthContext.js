@@ -12,7 +12,7 @@ export const AdminAuthProvider = ({ children }) => {
     const verifyAdminRole = async (userId, userMetadata = null) => {
         // 1. Check user_metadata first (if provided) - it's faster and no DB query
         if (userMetadata?.role === 'admin' || userMetadata?.role === 'super_admin') {
-            console.log("🛡️ AdminAuthContext: Role verified via user_metadata ->", userMetadata.role);
+            
             return true;
         }
 
@@ -21,7 +21,7 @@ export const AdminAuthProvider = ({ children }) => {
         // unless they are specifically hitting an admin route (which can be checked elsewhere)
         // or we have a forced check.
         if (userMetadata && userMetadata.role && !['admin', 'super_admin'].includes(userMetadata.role)) {
-            console.log("🛡️ AdminAuthContext: User is clearly not admin based on metadata. Skipping DB check.");
+            
             return false;
         }
 
@@ -57,7 +57,7 @@ export const AdminAuthProvider = ({ children }) => {
         };
 
         const start = Date.now();
-        console.log(`🛡️ [${start}] AdminAuthContext: Verifying role for User ID: ${userId}`);
+        
 
         // For non-admin metadata users, only try ONCE to avoid hanging the app
         const maxAttempts = (userMetadata && !userMetadata.role) ? 1 : 2;
@@ -67,14 +67,14 @@ export const AdminAuthProvider = ({ children }) => {
                 const profile = await fetchRoleWithTimeout();
 
                 const duration = Date.now() - start;
-                console.log(`🛡️ [${duration}ms] AdminAuthContext: DB Query complete.`);
+                
 
                 if (profile?.role === 'admin' || profile?.role === 'super_admin') {
                     return true;
                 }
 
                 // If they are not admin, cache it for this session to avoid re-checking
-                console.log("🛡️ AdminAuthContext: User is not admin. Caching state.");
+                
                 sessionStorage.setItem(cacheKey, 'true');
                 return false;
 
@@ -93,7 +93,7 @@ export const AdminAuthProvider = ({ children }) => {
         let mounted = true;
 
         const initializeAuth = async () => {
-            console.log("🛡️ AdminAuthContext: Initializing...");
+            
             try {
                 // 1. Get current session
                 const { data: { session }, error } = await supabase.auth.getSession();
@@ -142,7 +142,7 @@ export const AdminAuthProvider = ({ children }) => {
         // 3. Listen for Auth Changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
             if (!mounted) return;
-            console.log(`🛡️ AdminAuthContext: Auth State Change [${event}]`);
+            
 
             if (event === 'SIGNED_OUT') {
                 setAdminUser(null);
@@ -179,7 +179,7 @@ export const AdminAuthProvider = ({ children }) => {
                 if (session) {
                     // Refresh the session
                     await supabase.auth.refreshSession();
-                    console.log('🔄 Admin session refreshed');
+                    
                 }
             } catch (error) {
                 console.error('Error refreshing session:', error);
@@ -198,7 +198,7 @@ export const AdminAuthProvider = ({ children }) => {
 
     const signIn = async (email, password) => {
         try {
-            console.log("🛡️ AdminAuthContext: Exectuting signIn...");
+            
 
             // 1. Perform Login
             // We await this directly. If network is slow, it will wait.
@@ -224,7 +224,7 @@ export const AdminAuthProvider = ({ children }) => {
             // SELF-HEALING: If we verified they are admin (likely via DB), ensure metadata is in sync
             // This ensures future page reloads are fast and resilient to RLS issues
             if (data.user?.user_metadata?.role !== 'admin' && data.user?.user_metadata?.role !== 'super_admin') {
-                console.log("🛠️ AdminAuthContext: Syncing admin role to user_metadata...");
+                
                 const { error: updateError } = await supabase.auth.updateUser({
                     data: { role: 'admin' }
                 });
@@ -278,3 +278,4 @@ export const useAdminAuth = () => {
 };
 
 export default AdminAuthContext;
+

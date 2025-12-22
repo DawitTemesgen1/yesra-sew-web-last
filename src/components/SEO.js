@@ -43,3 +43,4 @@ const SEO = ({ title, description, keywords, image, url }) => {
 };
 
 export default SEO;
+

@@ -100,7 +100,7 @@ const AdvancedAnalyticsScreen = ({ t, handleRefresh, refreshing, searchTerm, set
   };
 
   const handleBulkAction = (action) => {
-    console.log(`Bulk action: ${action} on metrics:`, selectedItems);
+    
   };
 
   const handleTabChange = (event, newValue) => {
@@ -108,7 +108,7 @@ const AdvancedAnalyticsScreen = ({ t, handleRefresh, refreshing, searchTerm, set
   };
 
   const handleExportReport = (format) => {
-    console.log(`Export report in ${format} format`);
+    
   };
 
   return (
@@ -538,3 +538,4 @@ const AdvancedAnalyticsScreen = ({ t, handleRefresh, refreshing, searchTerm, set
 };
 
 export default AdvancedAnalyticsScreen;
+

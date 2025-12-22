@@ -284,3 +284,4 @@ const UserReviews = ({ userId, userType = 'seller' }) => {
 };
 
 export default UserReviews;
+

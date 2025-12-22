@@ -28,20 +28,20 @@ const QuickActionsToolbar = ({ listing, user, onAction }) => {
         navigate('/post-ad');
         break;
       case 'scan':
-        console.log('Camera feature coming soon!');
+        
         break;
       case 'call':
         if (listing?.phone_number) {
           window.location.href = `tel:${listing.phone_number}`;
         } else {
-          console.log('Phone number not available');
+          
         }
         break;
       case 'chat':
         if (listing?.author_id) {
           navigate(`/chat/${listing.author_id}`);
         } else {
-          console.log('Chat not available');
+          
         }
         break;
       case 'share':
@@ -53,7 +53,7 @@ const QuickActionsToolbar = ({ listing, user, onAction }) => {
           });
         } else {
           navigator.clipboard.writeText(window.location.href);
-          console.log('Link copied to clipboard!');
+          
         }
         break;
       case 'favorite':
@@ -66,7 +66,7 @@ const QuickActionsToolbar = ({ listing, user, onAction }) => {
         if (listing?.location) {
           window.open(`https://maps.google.com/?q=${encodeURIComponent(listing.location)}`);
         } else {
-          console.log('Location not available');
+          
         }
         break;
       case 'review':
@@ -93,7 +93,7 @@ const QuickActionsToolbar = ({ listing, user, onAction }) => {
         if (listing?.id) {
           navigate(`/report/listing/${listing.id}`);
         } else {
-          console.log('Report not available');
+          
         }
         break;
       case 'help':
@@ -422,3 +422,4 @@ export const QuickActionButton = ({
 };
 
 export default QuickActionsToolbar;
+

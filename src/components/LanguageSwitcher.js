@@ -73,3 +73,4 @@ const LanguageSwitcher = ({ variant = 'button' }) => {
 };
 
 export default LanguageSwitcher;
+

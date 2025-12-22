@@ -98,7 +98,7 @@ const WorkflowScreen = ({ t, handleRefresh, refreshing, searchTerm, setSearchTer
   };
 
   const handleBulkAction = (action) => {
-    console.log(`Bulk action: ${action} on workflows:`, selectedItems);
+    
   };
 
   const handleTabChange = (event, newValue) => {
@@ -106,15 +106,15 @@ const WorkflowScreen = ({ t, handleRefresh, refreshing, searchTerm, setSearchTer
   };
 
   const handleRunWorkflow = (workflowId) => {
-    console.log(`Run workflow: ${workflowId}`);
+    
   };
 
   const handlePauseWorkflow = (workflowId) => {
-    console.log(`Pause workflow: ${workflowId}`);
+    
   };
 
   const handleStopWorkflow = (workflowId) => {
-    console.log(`Stop workflow: ${workflowId}`);
+    
   };
 
   return (
@@ -503,3 +503,4 @@ const WorkflowScreen = ({ t, handleRefresh, refreshing, searchTerm, setSearchTer
 };
 
 export default WorkflowScreen;
+

@@ -67,3 +67,4 @@ const LiveActivityIndicators = ({ listing, compact = false }) => {
 };
 
 export default LiveActivityIndicators;
+

@@ -54,3 +54,4 @@ const SmartSearch = ({ onSearch, placeholder = "Search...", enableNavigation = f
 };
 
 export default SmartSearch;
+

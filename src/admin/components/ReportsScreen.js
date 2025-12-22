@@ -256,3 +256,4 @@ const ReportsScreen = ({ t }) => {
 };
 
 export default ReportsScreen;
+

@@ -330,7 +330,7 @@ const IntegrationScreen = ({ t, handleRefresh, refreshing, searchTerm, setSearch
   };
 
   const handleBulkAction = (action) => {
-    console.log(`Bulk action: ${action} on integrations:`, selectedItems);
+    
   };
 
   const handleTabChange = (event, newValue) => {
@@ -338,11 +338,11 @@ const IntegrationScreen = ({ t, handleRefresh, refreshing, searchTerm, setSearch
   };
 
   const handleTestIntegration = (integrationId) => {
-    console.log(`Test integration: ${integrationId}`);
+    
   };
 
   const handleSyncIntegration = (integrationId) => {
-    console.log(`Sync integration: ${integrationId}`);
+    
   };
 
   return (
@@ -784,3 +784,4 @@ const IntegrationScreen = ({ t, handleRefresh, refreshing, searchTerm, setSearch
 };
 
 export default IntegrationScreen;
+

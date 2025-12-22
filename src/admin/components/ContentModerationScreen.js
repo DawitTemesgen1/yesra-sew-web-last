@@ -395,3 +395,4 @@ const ContentModerationScreen = ({ t, handleRefresh, refreshing, searchTerm, set
 };
 
 export default ContentModerationScreen;
+

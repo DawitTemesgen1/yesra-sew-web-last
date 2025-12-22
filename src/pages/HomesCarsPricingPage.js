@@ -524,3 +524,4 @@ const HomesCarsPricingPage = ({ category: propCategory }) => {
 };
 
 export default HomesCarsPricingPage;
+

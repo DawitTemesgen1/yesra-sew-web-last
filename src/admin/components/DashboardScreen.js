@@ -301,3 +301,4 @@ const DashboardScreen = ({ t, showBackendWarning, stats = {} }) => {
 };
 
 export default DashboardScreen;
+

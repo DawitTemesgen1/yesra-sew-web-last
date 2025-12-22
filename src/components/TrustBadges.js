@@ -328,3 +328,4 @@ const TrustBadges = ({ user, showActions = true }) => {
 };
 
 export default TrustBadges;
+

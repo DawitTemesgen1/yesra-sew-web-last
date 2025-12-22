@@ -129,7 +129,7 @@ const BackupScreen = ({ t, handleRefresh, refreshing, searchTerm, setSearchTerm,
   };
 
   const handleBulkAction = (action) => {
-    console.log(`Bulk action: ${action} on backups:`, selectedItems);
+    
   };
 
   const handleTabChange = (event, newValue) => {
@@ -137,15 +137,15 @@ const BackupScreen = ({ t, handleRefresh, refreshing, searchTerm, setSearchTerm,
   };
 
   const handleRunBackup = (backupId) => {
-    console.log(`Run backup: ${backupId}`);
+    
   };
 
   const handleRestoreBackup = (backupId) => {
-    console.log(`Restore backup: ${backupId}`);
+    
   };
 
   const handleDownloadBackup = (backupId) => {
-    console.log(`Download backup: ${backupId}`);
+    
   };
 
   return (
@@ -526,3 +526,4 @@ const BackupScreen = ({ t, handleRefresh, refreshing, searchTerm, setSearchTerm,
 };
 
 export default BackupScreen;
+

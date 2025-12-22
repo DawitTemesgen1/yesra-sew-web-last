@@ -295,3 +295,4 @@ const CompanyVerificationForm = ({ userId, onVerificationSubmitted }) => {
 };
 
 export default CompanyVerificationForm;
+

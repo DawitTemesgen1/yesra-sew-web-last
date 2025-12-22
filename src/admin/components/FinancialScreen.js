@@ -298,3 +298,4 @@ const FinancialScreen = ({ t, stats }) => {
 };
 
 export default FinancialScreen;
+

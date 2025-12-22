@@ -140,7 +140,7 @@ const AnimatedRoutes = () => {
             }
 
             // 2. Eagerly buffer categories to memory (Fixed "sluggish Post Ad" issue)
-            apiService.getCategories().catch(err => console.debug('Category buffer error:', err));
+            apiService.getCategories().catch(err => console.error(err));
         }, 4000);
         return () => clearTimeout(timer);
     }, []);
@@ -239,3 +239,4 @@ function App() {
 }
 
 export default App;
+

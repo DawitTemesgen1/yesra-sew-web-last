@@ -631,3 +631,4 @@ const PagesManagementScreen = ({ t }) => {
 };
 
 export default PagesManagementScreen;
+

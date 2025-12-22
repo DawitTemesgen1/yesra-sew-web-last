@@ -153,7 +153,8 @@ const AdminDashboard = () => {
   const handleItemSelect = (itemId) => {
     setSelectedItems(prev => prev.includes(itemId) ? prev.filter(id => id !== itemId) : [...prev, itemId]);
   };
-  const handleBulkAction = (action) => console.log(`Bulk action: ${action}`, selectedItems);
+  /* eslint-disable-next-line no-unused-vars */
+  const handleBulkAction = (action) => { console.log('Bulk action:', action); };
   const handleDialogOpen = () => setDialogOpen(true);
   const handleDialogClose = () => setDialogOpen(false);
 
@@ -245,3 +246,4 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
+

@@ -329,7 +329,7 @@ const HelpScreen = ({ t, handleRefresh, refreshing, searchTerm, setSearchTerm, f
   };
 
   const handleBulkAction = (action) => {
-    console.log(`Bulk action: ${action} on articles:`, selectedItems);
+    
   };
 
   const handleTabChange = (event, newValue) => {
@@ -337,7 +337,7 @@ const HelpScreen = ({ t, handleRefresh, refreshing, searchTerm, setSearchTerm, f
   };
 
   const handleRateArticle = (articleId, rating) => {
-    console.log(`Rate article ${articleId} as ${rating}`);
+    
   };
 
   return (
@@ -755,3 +755,4 @@ const HelpScreen = ({ t, handleRefresh, refreshing, searchTerm, setSearchTerm, f
 };
 
 export default HelpScreen;
+

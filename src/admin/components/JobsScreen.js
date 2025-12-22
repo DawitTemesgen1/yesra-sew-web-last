@@ -12,6 +12,7 @@ import {
 } from '@mui/icons-material';
 import adminService from '../../services/adminService';
 import toast from 'react-hot-toast';
+import ListingDetailDialog from './ListingDetailDialog';
 
 const JobsScreen = ({ t, handleRefresh: parentRefresh, refreshing: parentRefreshing, searchTerm, setSearchTerm, filterStatus, setFilterStatus }) => {
   const navigate = useNavigate();
@@ -19,6 +20,8 @@ const JobsScreen = ({ t, handleRefresh: parentRefresh, refreshing: parentRefresh
   const [loading, setLoading] = useState(false);
   const [selectedItems, setSelectedItems] = useState([]);
   const [error, setError] = useState(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedListingId, setSelectedListingId] = useState(null);
 
   const fetchJobs = useCallback(async () => {
     try {
@@ -312,6 +315,17 @@ const JobsScreen = ({ t, handleRefresh: parentRefresh, refreshing: parentRefresh
                     <TableCell>{job.views || 0}</TableCell>
                     <TableCell>
                       <Box sx={{ display: 'flex', gap: 1 }}>
+                        <IconButton
+                          size="small"
+                          color="info"
+                          onClick={() => {
+                            setSelectedListingId(job.id);
+                            setDetailDialogOpen(true);
+                          }}
+                          title="View Details"
+                        >
+                          <Visibility />
+                        </IconButton>
                         <IconButton size="small" color="success" onClick={() => handleAction(job.id, 'approve')} title="Approve (Standard)">
                           <CheckCircle />
                         </IconButton>
@@ -342,8 +356,31 @@ const JobsScreen = ({ t, handleRefresh: parentRefresh, refreshing: parentRefresh
           </TableContainer>
         </CardContent>
       </Card>
+
+      {/* Listing Detail Dialog */}
+      <ListingDetailDialog
+        open={detailDialogOpen}
+        onClose={() => {
+          setDetailDialogOpen(false);
+          setSelectedListingId(null);
+        }}
+        listingId={selectedListingId}
+        onApprove={async (id) => {
+          await handleAction(id, 'approve');
+          setDetailDialogOpen(false);
+        }}
+        onReject={async (id) => {
+          await handleAction(id, 'reject');
+          setDetailDialogOpen(false);
+        }}
+        onDelete={async (id) => {
+          await handleAction(id, 'delete');
+          setDetailDialogOpen(false);
+        }}
+      />
     </Box>
   );
 };
 
 export default JobsScreen;
+
