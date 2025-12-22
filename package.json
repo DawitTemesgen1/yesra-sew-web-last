@@ -2,6 +2,7 @@
   "name": "yesrasew-web",
   "version": "1.0.0",
   "description": "Yesra Sew Ethiopian Classifieds - React Web App",
+  "homepage": "https://www.yesrasewsolution.com",
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.14.0",
