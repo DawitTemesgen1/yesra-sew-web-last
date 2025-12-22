@@ -7,7 +7,7 @@ import {
 } from '@mui/material';
 import {
   ArrowBack, Favorite, FavoriteBorder, Share, LocationOn,
-  Phone, Chat, Send, MoreVert, Verified, Lock
+  Phone, Chat, Send, MoreVert, Verified, Lock, ArrowForwardIos, ArrowBackIosNew
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { alpha } from '@mui/material/styles';
@@ -436,6 +436,16 @@ const ListingDetailPage = () => {
   const mainFields = getFieldsBySection('main');
   const sidebarFields = getFieldsBySection('sidebar');
 
+  const handleNextImage = (e) => {
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => (prev + 1) % images.length);
+  };
+
+  const handlePrevImage = (e) => {
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
+
   return (
     <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', pb: isMobile ? 16 : 4 }}>
       {/* Header */}
@@ -516,6 +526,40 @@ const ListingDetailPage = () => {
                       e.target.src = 'https://via.placeholder.com/800x600?text=Image+Not+Found';
                     }}
                   />
+
+                  {/* Navigation Arrows */}
+                  {images.length > 1 && (
+                    <>
+                      <IconButton
+                        onClick={handlePrevImage}
+                        sx={{
+                          position: 'absolute',
+                          left: 16,
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          bgcolor: 'rgba(0,0,0,0.5)',
+                          color: 'white',
+                          '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' }
+                        }}
+                      >
+                        <ArrowBackIosNew />
+                      </IconButton>
+                      <IconButton
+                        onClick={handleNextImage}
+                        sx={{
+                          position: 'absolute',
+                          right: 16,
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          bgcolor: 'rgba(0,0,0,0.5)',
+                          color: 'white',
+                          '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' }
+                        }}
+                      >
+                        <ArrowForwardIos />
+                      </IconButton>
+                    </>
+                  )}
 
                   {/* Image Dots */}
                   {images.length > 1 && (

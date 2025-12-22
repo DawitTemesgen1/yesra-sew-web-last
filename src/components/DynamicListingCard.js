@@ -7,7 +7,8 @@ import {
     LocationOn, AccessTime, Favorite, FavoriteBorder,
     Edit, Visibility, Verified, DirectionsCar,
     Bathtub, Bed, SquareFoot, Work, AttachMoney,
-    Tungsten, House, Speed, LocalGasStation
+    Tungsten, House, Speed, LocalGasStation,
+    ArrowForwardIos, ArrowBackIosNew
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -54,15 +55,14 @@ const JOB_IMAGES = [
 /**
  * Helper: robustly resolve the best image for the card and OPTIMIZE IT
  */
-const getCardImage = (listing, width = 600) => {
-    if (!listing) return null;
+const getCardImages = (listing, width = 600) => {
+    if (!listing) return [];
 
     // Helper to apply Supabase CDN transformations
     const optimizeUrl = (url) => {
         if (!url || !url.includes('supabase')) return url;
         try {
             const urlObj = new URL(url);
-            // Add transformation parameters for Supabase CDN
             urlObj.searchParams.set('width', width);
             urlObj.searchParams.set('quality', '70');
             urlObj.searchParams.set('format', 'webp');
@@ -72,7 +72,6 @@ const getCardImage = (listing, width = 600) => {
         }
     };
 
-    // Strict Image Validator
     const isValidUrl = (val) => {
         if (!val || typeof val !== 'string') return false;
         if (!val.startsWith('http') && !val.startsWith('/')) return false;
@@ -86,55 +85,50 @@ const getCardImage = (listing, width = 600) => {
             (val.includes('supabase') && val.includes('image'));
     };
 
-    let rawUrl = null;
+    let collected = [];
 
-    // 1. Check 'images' array (Supabase standard)
-    if (Array.isArray(listing.images) && listing.images.length > 0) {
-        const first = listing.images[0];
-        if (isValidUrl(first)) rawUrl = first;
-        else if (typeof first === 'object' && isValidUrl(first?.url)) rawUrl = first.url;
+    // 1. Check 'images' array
+    if (Array.isArray(listing.images)) {
+        listing.images.forEach(img => {
+            const url = typeof img === 'object' ? img?.url : img;
+            if (isValidUrl(url)) collected.push(url);
+        });
     }
 
     // 2. Check 'image' string
-    if (!rawUrl && listing.image && isValidUrl(listing.image)) rawUrl = listing.image;
+    if (listing.image && isValidUrl(listing.image)) collected.push(listing.image);
 
-    // 3. Check 'media_urls' (New Schema Support)
-    if (!rawUrl && Array.isArray(listing.media_urls) && listing.media_urls.length > 0) {
-        const validMedia = listing.media_urls.find(m => m.type === 'image' && isValidUrl(m.url));
-        if (validMedia) rawUrl = validMedia.url;
+    // 3. Check 'media_urls'
+    if (Array.isArray(listing.media_urls)) {
+        listing.media_urls.forEach(m => {
+            if (m.type === 'image' && isValidUrl(m.url)) collected.push(m.url);
+        });
     }
 
     // 4. Scan Custom Fields
-    if (!rawUrl && listing.custom_fields && typeof listing.custom_fields === 'object') {
+    if (listing.custom_fields && typeof listing.custom_fields === 'object') {
         const cf = listing.custom_fields;
-        const keys = Object.keys(cf);
-        const imageKeys = keys.filter(k => /image|photo|picture|cover|thumb/i.test(k));
-
-        for (const key of imageKeys) {
-            const val = cf[key];
-            if (isLikelyImage(val)) {
-                rawUrl = val;
-                break;
-            }
-            if (Array.isArray(val) && val.length > 0) {
-                const first = val[0];
-                if (isLikelyImage(first)) {
-                    rawUrl = first;
-                    break;
-                }
-                if (typeof first === 'object' && isLikelyImage(first?.url)) {
-                    rawUrl = first.url;
-                    break;
+        Object.keys(cf).forEach(key => {
+            if (/image|photo|picture|cover|thumb/i.test(key)) {
+                const val = cf[key];
+                if (Array.isArray(val)) {
+                    val.forEach(v => {
+                        const url = typeof v === 'object' ? v?.url : v;
+                        if (isLikelyImage(url)) collected.push(url);
+                    });
+                } else if (isLikelyImage(val)) {
+                    collected.push(val);
                 }
             }
-        }
+        });
     }
 
-    // If we found a raw URL, optimize it!
-    if (rawUrl) return optimizeUrl(rawUrl);
+    // Deduplicate & Optimize
+    collected = [...new Set(collected)].map(optimizeUrl);
+
+    if (collected.length > 0) return collected;
 
     // ❌ No user image found -> USE FALLBACK (ONLY for Jobs)
-    // Determine category slug to identify jobs
     let categorySlug = 'default';
     if (listing.category) {
         if (typeof listing.category === 'string') categorySlug = listing.category.toLowerCase();
@@ -142,15 +136,13 @@ const getCardImage = (listing, width = 600) => {
         else if (listing.category.name) categorySlug = listing.category.name.toLowerCase();
     }
 
-    // Only apply fallback for Jobs
     if (categorySlug.includes('job') || categorySlug.includes('vacan')) {
-        // Rotate 5 images deterministically based on ID or Title
         const hash = (listing.id || listing.title || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
         const index = hash % JOB_IMAGES.length;
-        return JOB_IMAGES[index];
+        return [JOB_IMAGES[index]];
     }
 
-    return null;
+    return [];
 };
 
 /**
@@ -234,8 +226,12 @@ const DynamicListingCard = ({
     const { language } = useLanguage();
     const t = translations[language] || translations.en;
 
+    const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
+    const [isHovered, setIsHovered] = React.useState(false);
+
     // --- Data Preparation ---
-    const imageUrl = useMemo(() => getCardImage(listing), [listing]);
+    const images = useMemo(() => getCardImages(listing), [listing]);
+    const imageUrl = images[currentImageIndex];
     const isPremium = listing?.is_premium;
 
     // Flatten attributes for easy access
@@ -270,6 +266,16 @@ const DynamicListingCard = ({
         if (onToggleFavorite) onToggleFavorite(listing.id);
     };
 
+    const handleNextImage = (e) => {
+        e.stopPropagation();
+        setCurrentImageIndex((prev) => (prev + 1) % images.length);
+    };
+
+    const handlePrevImage = (e) => {
+        e.stopPropagation();
+        setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
+    };
+
     // --- Attributes Rendering Helper ---
     const renderAttribute = (icon, value, suffix = '') => {
         if (!value) return null;
@@ -299,6 +305,8 @@ const DynamicListingCard = ({
         >
             <Card
                 onClick={handleCardClick}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
                 sx={{
                     height: '100%',
                     position: 'relative', // Ensure Overlay covers card
@@ -345,6 +353,69 @@ const DynamicListingCard = ({
                         />
                     ) : null}
 
+                    {/* Navigation Arrows for Card */}
+                    {images.length > 1 && isHovered && (
+                        <>
+                            <IconButton
+                                size="small"
+                                onClick={handlePrevImage}
+                                sx={{
+                                    position: 'absolute',
+                                    left: 4,
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    bgcolor: 'rgba(255,255,255,0.8)',
+                                    boxShadow: 1,
+                                    zIndex: 2,
+                                    '&:hover': { bgcolor: 'white' }
+                                }}
+                            >
+                                <ArrowBackIosNew fontSize="small" />
+                            </IconButton>
+                            <IconButton
+                                size="small"
+                                onClick={handleNextImage}
+                                sx={{
+                                    position: 'absolute',
+                                    right: 4,
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    bgcolor: 'rgba(255,255,255,0.8)',
+                                    boxShadow: 1,
+                                    zIndex: 2,
+                                    '&:hover': { bgcolor: 'white' }
+                                }}
+                            >
+                                <ArrowForwardIos fontSize="small" />
+                            </IconButton>
+                            {/* Dots Indicator */}
+                            <Stack
+                                direction="row"
+                                spacing={0.5}
+                                sx={{
+                                    position: 'absolute',
+                                    bottom: 8,
+                                    left: '50%',
+                                    transform: 'translateX(-50%)',
+                                    zIndex: 2
+                                }}
+                            >
+                                {images.slice(0, 5).map((_, idx) => (
+                                    <Box
+                                        key={idx}
+                                        sx={{
+                                            width: 6,
+                                            height: 6,
+                                            borderRadius: '50%',
+                                            bgcolor: currentImageIndex === idx ? 'primary.main' : 'rgba(255,255,255,0.8)',
+                                            boxShadow: 1
+                                        }}
+                                    />
+                                ))}
+                            </Stack>
+                        </>
+                    )}
+
                     {/* Fallback / No Image Placeholder */}
                     <Box sx={{
                         display: imageUrl ? 'none' : 'flex',
@@ -377,7 +448,8 @@ const DynamicListingCard = ({
                             position: 'absolute', top: 12, right: 12,
                             bgcolor: 'rgba(255,255,255,0.9)',
                             width: 32, height: 32,
-                            '&:hover': { bgcolor: 'white' }
+                            '&:hover': { bgcolor: 'white' },
+                            zIndex: 3
                         }}
                     >
                         {isFavorite ? <Favorite color="error" sx={{ fontSize: 18 }} /> : <FavoriteBorder sx={{ fontSize: 18 }} />}
@@ -458,25 +530,21 @@ const DynamicListingCard = ({
                     {/* Attributes Grid */}
                     <Stack direction="row" flexWrap="wrap" gap={2} sx={{ mb: 'auto' }}>
 
-                        {/* 1. Dynamic Mode (If Template Provided) */}
-                        {template ? (
-                            summaryFields.length > 0 ? (
-                                summaryFields.map((field) => {
-                                    const val = listing.custom_fields?.[field.field_name] || listing[field.field_name];
-                                    return (
-                                        <Stack key={field.id} direction="row" spacing={0.5} alignItems="center" sx={{ color: 'text.secondary' }}>
-                                            <Verified sx={{ fontSize: 16, color: 'primary.light' }} />
-                                            <Typography variant="body2" sx={{ fontSize: '0.8rem', fontWeight: 500 }}>
-                                                <span style={{ opacity: 0.7 }}>{field.field_label}:</span> {val}
-                                            </Typography>
-                                        </Stack>
-                                    );
-                                })
-                            ) : (
-                                <Typography variant="caption" color="text.disabled">No details available</Typography>
-                            )
+                        {/* 1. Dynamic Mode (If Template Provided AND Fields Found) */}
+                        {(template && summaryFields.length > 0) ? (
+                            summaryFields.map((field) => {
+                                const val = listing.custom_fields?.[field.field_name] || listing[field.field_name];
+                                return (
+                                    <Stack key={field.id} direction="row" spacing={0.5} alignItems="center" sx={{ color: 'text.secondary' }}>
+                                        <Verified sx={{ fontSize: 16, color: 'primary.light' }} />
+                                        <Typography variant="body2" sx={{ fontSize: '0.8rem', fontWeight: 500 }}>
+                                            <span style={{ opacity: 0.7 }}>{field.field_label}:</span> {val}
+                                        </Typography>
+                                    </Stack>
+                                );
+                            })
                         ) : (
-                            /* 2. Legacy Fallback Mode (Hardcoded Mapping) - ONLY if no template passed */
+                            /* 2. Legacy Fallback Mode (Hardcoded Mapping) - If no template OR no dynamic data found */
                             <>
                                 {renderAttribute(Speed, attrs.mileage, 'km')}
                                 {renderAttribute(LocalGasStation, attrs.fuel_type)}

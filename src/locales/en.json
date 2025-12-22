@@ -278,5 +278,13 @@
         "placeholder": "Type a message...",
         "welcomeTitle": "Connect with ease",
         "welcomeSubtitle": "Select a conversation from the left to start messaging. Secure, fast, and professional."
+    },
+    "welcome": {
+        "title": "YESRA SEW SOLUTION",
+        "subtitle": "Your Number One Digital Marketplace",
+        "description": "Discover massive opportunities in Jobs, Homes, Cars, and Tenders. Join thousands of users in Ethiopia's growing digital ecosystem.",
+        "getStarted": "Get Started",
+        "signIn": "Sign In",
+        "signUp": "Create Account"
     }
 }

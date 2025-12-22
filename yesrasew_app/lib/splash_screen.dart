@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+// import 'package:webview_flutter/webview_flutter.dart';
 
 import 'webview_web.dart' if (dart.library.io) 'webview_mobile.dart';
 
@@ -24,15 +24,14 @@ class _SplashScreenState extends State<SplashScreen>
   late Animation<double> _textOpacity;
   late Animation<double> _lineProgress;
 
-  // Preloading
-  late WebViewController _preloadedController;
-  final Completer<void> _pageLoadCompleter = Completer<void>();
+  // Preloading removed to support InAppWebView
+  // final Completer<void> _pageLoadCompleter = Completer<void>();
 
   @override
   void initState() {
     super.initState();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-    _initializeBackgroundWebView();
+    // _initializeBackgroundWebView(); // Removed
 
     _mainController = AnimationController(
       vsync: this,
@@ -77,45 +76,12 @@ class _SplashScreenState extends State<SplashScreen>
     _mainController.forward();
 
     // Navigation Logic
-    bool hasNavigated = false;
     Timer(const Duration(milliseconds: 4500), () {
-      _pageLoadCompleter.future.then((_) {
-        if (!hasNavigated) {
-          hasNavigated = true;
-          _navigateToNextScreen();
-        }
-      });
-
-      // Safety timeout after 5.5 seconds total if page is slow
-      Future.delayed(const Duration(seconds: 1), () {
-        if (!hasNavigated) {
-          hasNavigated = true;
-          _navigateToNextScreen();
-        }
-      });
+      _navigateToNextScreen();
     });
   }
 
-  void _initializeBackgroundWebView() {
-    _preloadedController = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(Colors.white) // Match website background
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onPageFinished: (url) {
-            // Signal that high-priority loading is done
-            if (!_pageLoadCompleter.isCompleted) _pageLoadCompleter.complete();
-          },
-          onWebResourceError: (_) {
-            if (!_pageLoadCompleter.isCompleted) _pageLoadCompleter.complete();
-          },
-          onNavigationRequest: (NavigationRequest request) {
-            return NavigationDecision.navigate;
-          },
-        ),
-      )
-      ..loadRequest(Uri.parse('https://www.yesrasewsolution.com'));
-  }
+  // _initializeBackgroundWebView removed
 
   void _navigateToNextScreen() {
     if (!mounted) return;
@@ -126,8 +92,7 @@ class _SplashScreenState extends State<SplashScreen>
 
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
-        pageBuilder: (_, __, ___) =>
-            WebViewScreen(controller: _preloadedController),
+        pageBuilder: (_, __, ___) => const WebViewScreen(),
         transitionsBuilder: (_, animation, __, child) {
           return FadeTransition(opacity: animation, child: child);
         },

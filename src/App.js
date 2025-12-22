@@ -1,12 +1,12 @@
 import React, { useState, useMemo, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { CustomThemeProvider } from './contexts/ThemeContext';
 import { Box } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
 import { Toaster } from 'react-hot-toast';
 import apiService, { supabase } from './services/api';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { AdminAuthProvider } from './context/AdminAuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import Navbar from './components/Navbar';
@@ -19,8 +19,6 @@ import { AnimatePresence } from 'framer-motion';
 import CookieConsent from './components/CookieConsent';
 import NotFoundPage from './pages/NotFoundPage';
 import { HelmetProvider } from 'react-helmet-async';
-
-// Core Data & State
 import { QueryClientProvider } from 'react-query';
 import { queryClient } from './lib/react-query';
 
@@ -39,6 +37,7 @@ const HomesPage = React.lazy(() => import('./pages/HomesPage'));
 const CarsPage = React.lazy(() => import('./pages/CarsPage'));
 
 // Lazy Load Secondary Pages
+const WelcomePage = React.lazy(() => import('./pages/WelcomePage'));
 const EnhancedAuthPage = React.lazy(() => import('./pages/EnhancedAuthPage'));
 const ChatPage = React.lazy(() => import('./pages/ChatPage'));
 const AdminLoginPage = React.lazy(() => import('./pages/AdminLoginPage'));
@@ -59,7 +58,7 @@ const AboutUs = React.lazy(() => import('./pages/AboutUs'));
 const Layout = ({ children }) => {
     const location = useLocation();
     const [activeTab, setActiveTab] = useState(0);
-    const isAuthPage = location.pathname === '/auth' || location.pathname === '/login' || location.pathname === '/register';
+    const isAuthPage = location.pathname === '/auth' || location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/welcome';
     const isProfilePage = location.pathname === '/profile';
     const isAdminPage = location.pathname.startsWith('/admin-panel') || location.pathname === '/admin-login';
     const isChatPage = location.pathname.startsWith('/chat');
@@ -82,8 +81,6 @@ const Layout = ({ children }) => {
         </Box>
     );
 };
-
-
 
 
 const RedirectHandler = () => {
@@ -130,6 +127,7 @@ const prefetchRoutes = () => {
 
 const AnimatedRoutes = () => {
     const location = useLocation();
+    const { isAuthenticated, loading } = useAuth();
 
     // Trigger prefetch and data buffering on first load
     React.useEffect(() => {
@@ -147,10 +145,22 @@ const AnimatedRoutes = () => {
         return () => clearTimeout(timer);
     }, []);
 
+    // While checking auth status, show loader or nothing
+    if (loading) return <RouteLoader />;
+
     return (
         <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
-                <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+                {/* Public Welcome Page */}
+                <Route path="/welcome" element={<WelcomePage />} />
+
+                {/* Root: If authenticated -> Home, else -> Welcome */}
+                <Route path="/" element={
+                    isAuthenticated ?
+                        <ProtectedRoute><HomePage /></ProtectedRoute> :
+                        <Navigate to="/welcome" replace />
+                } />
+
                 <Route path="/tenders" element={<ProtectedRoute><TendersPage /></ProtectedRoute>} />
                 <Route path="/jobs" element={<ProtectedRoute><JobsPage /></ProtectedRoute>} />
                 <Route path="/homes" element={<ProtectedRoute><HomesPage /></ProtectedRoute>} />
@@ -160,6 +170,7 @@ const AnimatedRoutes = () => {
                 <Route path="/login" element={<EnhancedAuthPage />} />
                 <Route path="/register" element={<EnhancedAuthPage />} />
                 <Route path="/auth" element={<EnhancedAuthPage />} />
+                <Route path="/auth/callback" element={<EnhancedAuthPage />} />
                 {/* Redirect /dashboard to /profile */}
                 <Route path="/dashboard" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />

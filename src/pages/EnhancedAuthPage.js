@@ -3,7 +3,7 @@ import {
     Container, Paper, TextField, Button, Typography, Box, Tabs, Tab,
     InputAdornment, IconButton, ToggleButtonGroup, ToggleButton, Stack,
     Divider, CircularProgress, LinearProgress, Checkbox, FormControlLabel,
-    Fade, Slide, Chip, Alert, useTheme, Menu, MenuItem
+    Fade, Slide, Chip, Alert, useTheme, Menu, MenuItem, Dialog, DialogTitle, DialogContent
 } from '@mui/material';
 import {
     Visibility, VisibilityOff, Email, Phone, Lock, Person, Business,
@@ -14,9 +14,9 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import authService from '../services/supabase-auth';
+import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useCustomTheme } from '../contexts/ThemeContext';
-// import SEO from '../components/SEO'; // Removed due to potential circular dependency
 import { Helmet } from 'react-helmet-async';
 
 const translations = {
@@ -28,6 +28,8 @@ const translations = {
         phoneInvalid: "Phone number must be 9 or 10 digits",
         emailRequired: "Email is required",
         emailInvalid: "Invalid email format",
+        identifierRequired: "Email or Phone number is required",
+        identifierInvalid: "Please enter a valid email or phone number",
         passwordRequired: "Password is required",
         passwordLength: "Password must be at least 6 characters",
         passwordsMismatch: "Passwords do not match",
@@ -56,6 +58,8 @@ const translations = {
         stepVerify: "2. Verify",
         phone: "Phone",
         email: "Email",
+        identifierLabel: "Email or Phone Number",
+        identifierPlaceholder: "Enter email or phone number",
         accountType: "Account Type",
         individual: "Individual",
         company: "Company",
@@ -95,6 +99,8 @@ const translations = {
         phoneInvalid: "ስልክ ቁጥር 9 ወይም 10 አሃዞች መሆን አለበት",
         emailRequired: "ኢሜይል ያስፈልጋል",
         emailInvalid: "ትክክለኛ ያልሆነ ኢሜይል",
+        identifierRequired: "ኢሜይል ወይም ስልክ ቁጥር ያስፈልጋል",
+        identifierInvalid: "እባክዎ ትክክለኛ ኢሜይል ወይም ስልክ ቁጥር ያስገቡ",
         passwordRequired: "የይለፍ ቃል ያስፈልጋል",
         passwordLength: "የይለፍ ቃል ቢያንስ 6 ቁምፊዎች መሆን አለበት",
         passwordsMismatch: "የይለፍ ቃሎች አይዛመዱም",
@@ -123,6 +129,8 @@ const translations = {
         stepVerify: "2. ማረጋገጫ",
         phone: "ስልክ",
         email: "ኢሜይል",
+        identifierLabel: "ኢሜይል ወይም ስልክ ቁጥር",
+        identifierPlaceholder: "ኢሜይል ወይም ስልክ ቁጥር ያስገቡ",
         accountType: "የመለያ አይነት",
         individual: "ግለሰብ",
         company: "ድርጅት",
@@ -162,6 +170,8 @@ const translations = {
         phoneInvalid: "Lakkoofsi bilbilaa dijitii 9 ykn 10 ta'uu qaba",
         emailRequired: "Iimeeliin ni barbaachisa",
         emailInvalid: "Iimeelii dogoggoraa",
+        identifierRequired: "Imeeliin ykn Bilbilli barbaachisaadha",
+        identifierInvalid: "Maaloo imeelii ykn bilbila sirrii galchaa",
         passwordRequired: "Jechi darbii ni barbaachisa",
         passwordLength: "Jechi darbii yoo xiqqaate qubee 6 ta'uu qaba",
         passwordsMismatch: "Jechi darbii wal hin simne",
@@ -190,6 +200,8 @@ const translations = {
         stepVerify: "2. Mirkaneessuu",
         phone: "Bilbila",
         email: "Iimeelii",
+        identifierLabel: "Imeelii ykn Lakkoofsa Bilbilaa",
+        identifierPlaceholder: "Imeelii ykn bilbila galchaa",
         accountType: "Gosa Akkaawuntii",
         individual: "Dhuunfaa",
         company: "Dhaabbata",
@@ -229,6 +241,8 @@ const translations = {
         phoneInvalid: "ቁጽሪ ስልኪ 9 ወይ 10 ኣሃዛት ክኸውን ኣለዎ",
         emailRequired: "ኢሜይል የድሊ",
         emailInvalid: "ዘይትኽክል ኢሜይል",
+        identifierRequired: "ኢሜይል ወይ ቁጽሪ ስልኪ የድሊ",
+        identifierInvalid: "በጃኹም ቅኑዕ ኢሜይል ወይ ቁጽሪ ስልኪ ኣእትዉ",
         passwordRequired: "መሕለፊ ቃል የድሊ",
         passwordLength: "መሕለፊ ቃል ብውሑዱ 6 ፊደላት ክኸውን ኣለዎ",
         passwordsMismatch: "መሕለፊ ቃላት ኣይሰማምዑን",
@@ -257,6 +271,8 @@ const translations = {
         stepVerify: "2. መረጋገጺ",
         phone: "ስልኪ",
         email: "ኢሜይል",
+        identifierLabel: "ኢሜይል ወይ ቁጽሪ ስልኪ",
+        identifierPlaceholder: "ኢሜይል ወይ ቁጽሪ ስልኪ ኣእትዉ",
         accountType: "ዓይነት ኣካውንት",
         individual: "ውልቀሰብ",
         company: "ትካል",
@@ -293,27 +309,54 @@ const translations = {
 const EnhancedAuthPage = () => {
     const { language, changeLanguage } = useLanguage();
     const { mode: themeMode, toggleTheme } = useCustomTheme();
+    const { isAuthenticated, login } = useAuth(); // Get auth state and login function
     const [languageMenuAnchor, setLanguageMenuAnchor] = useState(null);
     const t = translations[language] || translations.en;
     const navigate = useNavigate();
     const location = useLocation();
     const from = location.state?.from?.pathname || "/profile";
 
-    // Parse URL for initial mode
+    // Auto-redirect if logged in
+    useEffect(() => {
+        if (isAuthenticated) {
+            navigate(from, { replace: true });
+        }
+    }, [isAuthenticated, navigate, from]);
+
+    // Parse URL for initial mode and Error Params (Query or Hash)
     const searchParams = new URLSearchParams(location.search);
+    const hashParams = new URLSearchParams(location.hash.substring(1)); // Remove #
+
     const urlMode = searchParams.get('mode');
 
-    // States - Default to REGISTER for new user acquisition
+    // Check both Query and Hash for errors
+    const errorQuery = searchParams.get('error');
+    const errorDescQuery = searchParams.get('error_description');
+    const errorHash = hashParams.get('error');
+    const errorDescHash = hashParams.get('error_description');
+
+    const finalError = errorQuery || errorHash;
+    const finalErrorDesc = errorDescQuery || errorDescHash;
+
+    useEffect(() => {
+        if (finalError) {
+            toast.error(`Login Error: ${finalErrorDesc || finalError}`, { duration: 8000 });
+            setErrors({ general: `Google Auth Failed: ${finalErrorDesc?.replace(/\+/g, ' ') || finalError}` });
+        }
+    }, [finalError, finalErrorDesc]);
+
+    // States
     const [authMode, setAuthMode] = useState(
         urlMode === 'login' || location.pathname.includes('login') ? 'login' : 'register'
     );
-    const [method, setMethod] = useState('phone');
+    // Removed 'method' state since we unified inputs
     const [accountType, setAccountType] = useState('individual');
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [otpSent, setOtpSent] = useState(false);
     const [rememberMe, setRememberMe] = useState(false);
     const [tempRegData, setTempRegData] = useState(null);
+    const [googleTypeOpen, setGoogleTypeOpen] = useState(false);
 
     // OTP Timer
     const [otpTimer, setOtpTimer] = useState(0);
@@ -322,10 +365,11 @@ const EnhancedAuthPage = () => {
     // Password strength
     const [passwordStrength, setPasswordStrength] = useState(0);
 
-    // Form Data
+    // Unified Form Data
     const [formData, setFormData] = useState({
         firstName: '', lastName: '', companyName: '',
-        email: '', phone: '', password: '', confirmPassword: '', otp: ''
+        identifier: '', // Replaces email and phone
+        password: '', confirmPassword: '', otp: ''
     });
 
     // Validation errors
@@ -355,51 +399,38 @@ const EnhancedAuthPage = () => {
         }
     }, [formData.password]);
 
-    // Format phone as user types
-    const handlePhoneChange = (e) => {
-        let value = e.target.value.replace(/\D/g, '');
-
-        // Remove 251 prefix if pasted
-        if (value.startsWith('251')) {
-            value = value.substring(3);
-        }
-
-        // Allow up to 10 digits (e.g. 0912345678)
-        if (value.length > 10) value = value.substring(0, 10);
-
-        // Format logic
-        // If starts with 0, format as 091 234 5678 (10 digits)
-        // If starts with 9, format as 912 345 678 (9 digits)
-
-        let formatted = value;
-        if (value.length > 0) {
-            if (value.startsWith('0')) {
-                // Format: 091 234 5678
-                if (value.length > 7) {
-                    formatted = value.substring(0, 3) + ' ' + value.substring(3, 6) + ' ' + value.substring(6);
-                } else if (value.length > 3) {
-                    formatted = value.substring(0, 3) + ' ' + value.substring(3);
-                }
-            } else {
-                // Format: 912 345 678
-                if (value.length > 6) {
-                    formatted = value.substring(0, 3) + ' ' + value.substring(3, 6) + ' ' + value.substring(6);
-                } else if (value.length > 3) {
-                    formatted = value.substring(0, 3) + ' ' + value.substring(3);
-                }
-            }
-        }
-
-        setFormData({ ...formData, phone: formatted });
-    };
-
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
-        // Clear error for this field
         if (errors[name]) {
             setErrors({ ...errors, [name]: null });
         }
+    };
+
+    // Helper to detect type
+    const getIdentifierType = (identifier) => {
+        if (/\S+@\S+\.\S+/.test(identifier)) return 'email';
+        return 'phone';
+    };
+
+    // Helper to get formatted phone for backend (if needed)
+    const formatIdentifierForBackend = (identifier) => {
+        const type = getIdentifierType(identifier);
+        if (type === 'phone') {
+            // Basic cleaning and formatting, assume user might enter various formats
+            let clean = identifier.replace(/\D/g, '');
+            // NOTE: Backend service often expects just the number.
+            // If local logic required formatting, do it here. 
+            // Currently passing clean number or let service handle.
+            // Previous logic had specific logic for prefix.
+            // Let's rely on what user typed but cleaned.
+            // If it starts with 09..., make it +251... or keep local logic?
+            // Reusing logic from previous impl:
+            // If length > 10, cut. 
+            // But here we just return the value for the service to handle
+            return identifier;
+        }
+        return identifier;
     };
 
     // Validate form
@@ -414,18 +445,23 @@ const EnhancedAuthPage = () => {
             }
         }
 
-        if (method === 'phone') {
-            const cleanPhone = formData.phone.replace(/\D/g, '');
-            if (!cleanPhone) {
-                newErrors.phone = t.phoneRequired;
-            } else if (cleanPhone.length < 9 || cleanPhone.length > 10) {
-                newErrors.phone = t.phoneInvalid;
-            }
+        // Identifier Validation
+        const id = formData.identifier.trim();
+        const type = getIdentifierType(id);
+
+        if (!id) {
+            newErrors.identifier = t.identifierRequired;
         } else {
-            if (!formData.email) {
-                newErrors.email = t.emailRequired;
-            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-                newErrors.email = t.emailInvalid;
+            if (type === 'email') {
+                if (!/\S+@\S+\.\S+/.test(id)) newErrors.identifier = t.emailInvalid;
+            } else {
+                // Phone validation
+                const cleanPhone = id.replace(/\D/g, '');
+                // Allow +2519... (12 digits), 09... (10 digits), 9... (9 digits)
+                // Just checking basic length for now to be permissive yet safe
+                if (cleanPhone.length < 9) {
+                    newErrors.identifier = t.phoneInvalid; // or generic invalid
+                }
             }
         }
 
@@ -454,41 +490,37 @@ const EnhancedAuthPage = () => {
         setErrors({});
         setFormData({
             firstName: '', lastName: '', companyName: '',
-            email: '', phone: '', password: '', confirmPassword: '', otp: ''
+            identifier: '', password: '', confirmPassword: '', otp: ''
         });
     };
 
     // Resend OTP
     const handleResendOtp = async () => {
         if (!canResendOtp) return;
-
         setCanResendOtp(false);
         setOtpTimer(60);
 
+        const type = getIdentifierType(formData.identifier);
+
         try {
-            if (method === 'phone') {
+            if (type === 'phone') {
                 if (authMode === 'register') {
                     const result = await authService.registerWithPhone({
-                        phone: formData.phone,
+                        phone: formData.identifier,
                         password: formData.password,
                         firstName: formData.firstName,
                         lastName: formData.lastName,
                         accountType: accountType,
                         companyName: accountType === 'company' ? formData.companyName : null
                     });
-                    if (result.success) {
-                        toast.success(t.otpResent);
-                        if (result.devOtp) {
-
-
-                        }
-                    }
+                    if (result.success) toast.success(t.otpResent);
                 } else if (authMode === 'forgot') {
-                    await authService.sendPhonePasswordResetOtp(formData.phone);
+                    await authService.sendPhonePasswordResetOtp(formData.identifier);
                     toast.success(t.otpResent);
                 }
             } else {
-                // Email resend logic
+                // Email
+                // Note: Implement email resend if distinct in service
                 toast.success(t.otpResentEmail);
             }
         } catch (error) {
@@ -498,221 +530,145 @@ const EnhancedAuthPage = () => {
         }
     };
 
-    // Phone Auth Handler
-    const handlePhoneAuth = async (e) => {
+    // Generic Auth Handler (Dispatches to Phone or Email)
+    const handleAuth = async (e) => {
         e.preventDefault();
         if (!validateForm()) return;
 
         setLoading(true);
+        const type = getIdentifierType(formData.identifier);
 
         try {
-            if (authMode === 'login') {
-                const result = await authService.loginWithPhone(formData.phone, formData.password);
-
-                if (result.success) {
-                    if (rememberMe) {
-                        localStorage.setItem('rememberMe', 'true');
-                    }
-                    toast.success(t.welcomeBack);
-                    navigate(from, { replace: true });
-                } else {
-                    throw new Error(result.error);
-                }
-
-            } else if (authMode === 'register') {
-                if (!otpSent) {
-                    toast.loading(t.sendingCode, { id: 'register' });
-
-                    const result = await authService.registerWithPhone({
-                        phone: formData.phone,
-                        password: formData.password,
-                        firstName: formData.firstName,
-                        lastName: formData.lastName,
-                        accountType: accountType,
-                        companyName: accountType === 'company' ? formData.companyName : null
-                    });
-
-                    toast.dismiss('register');
-
+            if (type === 'phone') {
+                // PHONE AUTH LOGIC
+                if (authMode === 'login') {
+                    const result = await authService.loginWithPhone(formData.identifier, formData.password);
                     if (result.success) {
-                        setOtpSent(true);
-                        setOtpTimer(600); // 10 minutes
-                        setTempRegData(result.tempData);
-                        toast.success(t.codeSent);
-                        if (result.devOtp) {
-
-
-                        }
-                    } else {
-                        throw new Error(result.error);
-                    }
-                } else {
-                    if (!formData.otp) throw new Error(t.enterCode);
-
-                    toast.loading("Verifying...", { id: 'verify' });
-
-                    const result = await authService.verifyPhoneOtp(formData.phone, formData.otp, tempRegData);
-
-                    toast.dismiss('verify');
-
-                    if (result.success) {
-                        toast.success(t.accountCreated);
+                        if (rememberMe) localStorage.setItem('rememberMe', 'true');
+                        toast.success(t.welcomeBack);
                         navigate(from, { replace: true });
+                    } else throw new Error(result.error);
+
+                } else if (authMode === 'register') {
+                    if (!otpSent) {
+                        toast.loading(t.sendingCode, { id: 'register' });
+                        const result = await authService.registerWithPhone({
+                            phone: formData.identifier,
+                            password: formData.password,
+                            firstName: formData.firstName,
+                            lastName: formData.lastName,
+                            accountType: accountType,
+                            companyName: accountType === 'company' ? formData.companyName : null
+                        });
+                        toast.dismiss('register');
+                        if (result.success) {
+                            setOtpSent(true);
+                            setOtpTimer(600);
+                            setTempRegData(result.tempData);
+                            toast.success(t.codeSent);
+                        } else throw new Error(result.error);
                     } else {
-                        throw new Error(result.error);
+                        if (!formData.otp) throw new Error(t.enterCode);
+                        toast.loading("Verifying...", { id: 'verify' });
+                        const result = await authService.verifyPhoneOtp(formData.identifier, formData.otp, tempRegData);
+                        toast.dismiss('verify');
+                        if (result.success) {
+                            toast.success(t.accountCreated);
+                            navigate(from, { replace: true });
+                        } else throw new Error(result.error);
+                    }
+                } else if (authMode === 'forgot') {
+                    if (!otpSent) {
+                        toast.loading(t.sendingResetCode, { id: 'reset' });
+                        const result = await authService.sendPhonePasswordResetOtp(formData.identifier);
+                        toast.dismiss('reset');
+                        if (result.success) {
+                            setOtpSent(true);
+                            setOtpTimer(600);
+                            toast.success(t.resetCodeSentSMS);
+                        } else throw new Error(result.error);
+                    } else {
+                        if (!formData.otp) throw new Error(t.enterCode);
+                        if (!formData.password) throw new Error(t.enterNewPassword);
+                        toast.loading(t.resettingPassword, { id: 'reset' });
+                        const result = await authService.verifyPhonePasswordResetOtp(
+                            formData.identifier,
+                            formData.otp,
+                            formData.password
+                        );
+                        toast.dismiss('reset');
+                        if (result.success) {
+                            toast.success(t.passwordResetSuccess);
+                            navigate(from, { replace: true });
+                        } else throw new Error(result.error);
                     }
                 }
-
-            } else if (authMode === 'forgot') {
-                if (!otpSent) {
-                    toast.loading(t.sendingResetCode, { id: 'reset' });
-
-                    const result = await authService.sendPhonePasswordResetOtp(formData.phone);
-
-                    toast.dismiss('reset');
-
+            } else {
+                // EMAIL AUTH LOGIC
+                if (authMode === 'login') {
+                    const result = await authService.loginWithEmail(formData.identifier, formData.password);
                     if (result.success) {
-                        setOtpSent(true);
-                        setOtpTimer(600);
-                        toast.success(t.resetCodeSentSMS);
-                    } else {
-                        throw new Error(result.error);
-                    }
-                } else {
-                    if (!formData.otp) throw new Error(t.enterCode);
-                    if (!formData.password) throw new Error(t.enterNewPassword);
-
-                    toast.loading(t.resettingPassword, { id: 'reset' });
-
-                    const result = await authService.verifyPhonePasswordResetOtp(
-                        formData.phone,
-                        formData.otp,
-                        formData.password
-                    );
-
-                    toast.dismiss('reset');
-
-                    if (result.success) {
-                        toast.success(t.passwordResetSuccess);
+                        if (rememberMe) localStorage.setItem('rememberMe', 'true');
+                        toast.success(t.welcomeBack);
                         navigate(from, { replace: true });
+                    } else throw new Error(result.error);
+
+                } else if (authMode === 'register') {
+                    if (!otpSent) {
+                        toast.loading(t.sendingCode, { id: 'register' });
+                        const result = await authService.registerWithEmail({
+                            email: formData.identifier,
+                            password: formData.password,
+                            firstName: formData.firstName,
+                            lastName: formData.lastName,
+                            accountType: accountType,
+                            companyName: accountType === 'company' ? formData.companyName : null
+                        });
+                        toast.dismiss('register');
+                        if (result.success) {
+                            setOtpSent(true);
+                            setOtpTimer(600);
+                            setTempRegData(result.tempData);
+                            toast.success(t.codeSentEmail);
+                        } else throw new Error(result.error);
                     } else {
-                        throw new Error(result.error);
+                        if (!formData.otp) throw new Error(t.enterCode);
+                        toast.loading("Verifying...", { id: 'verify' });
+                        const result = await authService.verifyEmailOtp(formData.identifier, formData.otp, tempRegData);
+                        toast.dismiss('verify');
+                        if (result.success) {
+                            toast.success(t.accountCreated);
+                            navigate(from, { replace: true });
+                        } else throw new Error(result.error);
+                    }
+                } else if (authMode === 'forgot') {
+                    if (!otpSent) {
+                        toast.loading(t.sendingResetCode, { id: 'reset' });
+                        const result = await authService.sendPasswordResetEmail(formData.identifier);
+                        toast.dismiss('reset');
+                        if (result.success) {
+                            setOtpSent(true);
+                            setOtpTimer(600);
+                            toast.success(t.resetCodeSentEmail);
+                        } else throw new Error(result.error);
+                    } else {
+                        if (!formData.otp) throw new Error(t.enterCode);
+                        if (!formData.password) throw new Error(t.enterNewPassword);
+                        toast.loading(t.resettingPassword, { id: 'reset' });
+                        const result = await authService.verifyEmailPasswordResetOtp(
+                            formData.identifier,
+                            formData.otp,
+                            formData.password
+                        );
+                        toast.dismiss('reset');
+                        if (result.success) {
+                            toast.success(t.passwordResetSuccess);
+                            navigate(from, { replace: true });
+                        } else throw new Error(result.error);
                     }
                 }
             }
-        } catch (error) {
-            toast.error(error.message);
-        } finally {
-            setLoading(false);
-        }
-    };
 
-    // Email Auth Handler
-    const handleEmailAuth = async (e) => {
-        e.preventDefault();
-        if (!validateForm()) return;
-
-        setLoading(true);
-
-        try {
-            if (authMode === 'login') {
-                const result = await authService.loginWithEmail(formData.email, formData.password);
-
-                if (result.success) {
-                    if (rememberMe) {
-                        localStorage.setItem('rememberMe', 'true');
-                    }
-                    toast.success(t.welcomeBack);
-                    navigate(from, { replace: true });
-                } else {
-                    throw new Error(result.error);
-                }
-
-            } else if (authMode === 'register') {
-                if (!otpSent) {
-                    toast.loading(t.sendingCode, { id: 'register' });
-
-                    const result = await authService.registerWithEmail({
-                        email: formData.email,
-                        password: formData.password,
-                        firstName: formData.firstName,
-                        lastName: formData.lastName,
-                        accountType: accountType,
-                        companyName: accountType === 'company' ? formData.companyName : null
-                    });
-
-                    toast.dismiss('register');
-
-                    if (result.success) {
-                        setOtpSent(true);
-                        setOtpTimer(600);
-                        setTempRegData(result.tempData);
-                        toast.success(t.codeSentEmail);
-                        if (result.devOtp) {
-
-
-                        }
-                    } else {
-                        throw new Error(result.error);
-                    }
-                } else {
-                    if (!formData.otp) throw new Error(t.enterCode);
-
-                    toast.loading("Verifying...", { id: 'verify' });
-
-                    const result = await authService.verifyEmailOtp(formData.email, formData.otp, tempRegData);
-
-                    toast.dismiss('verify');
-
-                    if (result.success) {
-                        toast.success(t.accountCreated);
-                        navigate(from, { replace: true });
-                    } else {
-                        throw new Error(result.error);
-                    }
-                }
-
-            } else if (authMode === 'forgot') {
-                if (!otpSent) {
-                    toast.loading(t.sendingResetCode, { id: 'reset' });
-
-                    const result = await authService.sendPasswordResetEmail(formData.email);
-
-                    toast.dismiss('reset');
-
-                    if (result.success) {
-                        setOtpSent(true);
-                        setOtpTimer(600);
-                        toast.success(t.resetCodeSentEmail);
-                        if (result.devOtp) {
-
-
-                        }
-                    } else {
-                        throw new Error(result.error);
-                    }
-                } else {
-                    if (!formData.otp) throw new Error(t.enterCode);
-                    if (!formData.password) throw new Error(t.enterNewPassword);
-
-                    toast.loading(t.resettingPassword, { id: 'reset' });
-
-                    const result = await authService.verifyEmailPasswordResetOtp(
-                        formData.email,
-                        formData.otp,
-                        formData.password
-                    );
-
-                    toast.dismiss('reset');
-
-                    if (result.success) {
-                        toast.success(t.passwordResetSuccess);
-                        navigate(from, { replace: true });
-                    } else {
-                        throw new Error(result.error);
-                    }
-                }
-            }
         } catch (error) {
             toast.error(error.message);
         } finally {
@@ -722,29 +678,37 @@ const EnhancedAuthPage = () => {
 
     // Google Sign In
     const handleGoogleSignIn = async () => {
-        setLoading(true);
-        try {
-            const result = await authService.signInWithGoogle();
+        if (authMode === 'register') {
+            setGoogleTypeOpen(true);
+            return;
+        }
+        processGoogleLogin();
+    };
 
-            if (!result.success) {
+    const processGoogleLogin = async (accountType = null) => {
+        setLoading(true);
+        // Do NOT close dialog here; let it show the loading spinner logic we added
+        // setGoogleTypeOpen(false); 
+
+        const metaData = accountType ? {
+            account_type: accountType,
+            is_ethiopian_phone: false // Google users might not have phone
+        } : null;
+
+        try {
+            const result = await login({ isWebOAuth: true, metaData });
+            if (result.success) {
+                // Success handled by redirect
+            } else {
                 throw new Error(result.error);
             }
         } catch (error) {
             toast.error(error.message);
             setLoading(false);
+            setGoogleTypeOpen(false); // Close on error so user can retry
         }
     };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (method === 'phone') {
-            handlePhoneAuth(e);
-        } else if (method === 'email') {
-            handleEmailAuth(e);
-        }
-    };
-
-    // Get password strength color
     const getPasswordStrengthColor = () => {
         if (passwordStrength < 50) return 'error';
         if (passwordStrength < 75) return 'warning';
@@ -796,6 +760,20 @@ const EnhancedAuthPage = () => {
                 </Menu>
             </Box>
             <Container maxWidth="sm">
+                <AnimatePresence>
+                    {errors.general && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            style={{ marginBottom: 16 }}
+                        >
+                            <Alert severity="error" onClose={() => setErrors({ ...errors, general: null })}>
+                                {errors.general}
+                            </Alert>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -876,14 +854,6 @@ const EnhancedAuthPage = () => {
                             </Box>
                         )}
 
-                        {/* Method Tabs */}
-                        {authMode !== 'forgot' && !otpSent && (
-                            <Tabs value={method} onChange={(e, v) => setMethod(v)} centered sx={{ mb: 3 }}>
-                                <Tab label={t.phone} value="phone" icon={<Phone />} iconPosition="start" />
-                                <Tab label={t.email} value="email" icon={<Email />} iconPosition="start" />
-                            </Tabs>
-                        )}
-
                         {/* Account Type Toggle */}
                         {authMode === 'register' && !otpSent && (
                             <Fade in timeout={500}>
@@ -909,7 +879,7 @@ const EnhancedAuthPage = () => {
                         )}
 
                         {/* Form */}
-                        <form onSubmit={handleSubmit}>
+                        <form onSubmit={handleAuth}>
                             <Stack spacing={2.5}>
                                 <AnimatePresence mode="wait">
                                     {/* Name Fields */}
@@ -978,56 +948,32 @@ const EnhancedAuthPage = () => {
                                         </motion.div>
                                     )}
 
-                                    {/* Phone or Email Input */}
+                                    {/* Unified Identifier Input (Email or Phone) */}
                                     {!otpSent && (
                                         <motion.div
-                                            key="contact-input"
+                                            key="identifier-input"
                                             initial={{ opacity: 0 }}
                                             animate={{ opacity: 1 }}
                                             transition={{ duration: 0.3 }}
                                         >
-                                            {method === 'phone' ? (
-                                                <TextField
-                                                    fullWidth
-                                                    label={t.phoneNumber}
-                                                    name="phone"
-                                                    placeholder="091 234 5678"
-                                                    required
-                                                    value={formData.phone}
-                                                    onChange={handlePhoneChange}
-                                                    error={!!errors.phone}
-                                                    helperText={errors.phone || "Format: 09X XXX XXXX"}
-                                                    InputProps={{
-                                                        startAdornment: (
-                                                            <InputAdornment position="start">
-                                                                <Phone color="action" />
-                                                                <Typography variant="body2" sx={{ ml: 1 }}>
-                                                                    +251
-                                                                </Typography>
-                                                            </InputAdornment>
-                                                        )
-                                                    }}
-                                                />
-                                            ) : (
-                                                <TextField
-                                                    fullWidth
-                                                    label={t.emailAddress}
-                                                    name="email"
-                                                    type="email"
-                                                    required
-                                                    value={formData.email}
-                                                    onChange={handleChange}
-                                                    error={!!errors.email}
-                                                    helperText={errors.email}
-                                                    InputProps={{
-                                                        startAdornment: (
-                                                            <InputAdornment position="start">
-                                                                <Email color="action" />
-                                                            </InputAdornment>
-                                                        )
-                                                    }}
-                                                />
-                                            )}
+                                            <TextField
+                                                fullWidth
+                                                label={t.identifierLabel}
+                                                name="identifier"
+                                                placeholder={t.identifierPlaceholder}
+                                                required
+                                                value={formData.identifier}
+                                                onChange={handleChange}
+                                                error={!!errors.identifier}
+                                                helperText={errors.identifier}
+                                                InputProps={{
+                                                    startAdornment: (
+                                                        <InputAdornment position="start">
+                                                            <Person color="action" />
+                                                        </InputAdornment>
+                                                    )
+                                                }}
+                                            />
                                         </motion.div>
                                     )}
 
@@ -1232,7 +1178,14 @@ const EnhancedAuthPage = () => {
                                 <Button
                                     variant="outlined"
                                     fullWidth
-                                    startIcon={<Google />}
+                                    startIcon={
+                                        <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.84z" fill="#FBBC05" />
+                                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                                        </svg>
+                                    }
                                     onClick={handleGoogleSignIn}
                                     disabled={loading}
                                     sx={{ py: 1.5 }}
@@ -1258,6 +1211,61 @@ const EnhancedAuthPage = () => {
                         )}
                     </Paper>
                 </motion.div>
+                <Dialog
+                    open={googleTypeOpen}
+                    onClose={() => !loading && setGoogleTypeOpen(false)}
+                    PaperProps={{
+                        sx: { borderRadius: 3, p: 2, minWidth: 300 }
+                    }}
+                >
+                    <DialogTitle sx={{ textAlign: 'center', fontWeight: 'bold' }}>
+                        {loading ? "Redirecting..." : t.accountType}
+                    </DialogTitle>
+                    <DialogContent>
+                        {loading ? (
+                            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                                <CircularProgress />
+                            </Box>
+                        ) : (
+                            <Stack spacing={2} sx={{ mt: 1 }}>
+                                <Button
+                                    variant="outlined"
+                                    size="large"
+                                    startIcon={<Person />}
+                                    onClick={() => processGoogleLogin('individual')}
+                                    sx={{
+                                        py: 2,
+                                        justifyContent: 'flex-start',
+                                        borderColor: accountType === 'individual' ? 'primary.main' : 'divider',
+                                        borderWidth: 1,
+                                        '&:hover': { borderWidth: 1, bgcolor: 'primary.action' }
+                                    }}
+                                >
+                                    <Box sx={{ textAlign: 'left', ml: 1 }}>
+                                        <Typography variant="subtitle1" fontWeight="bold">{t.individual}</Typography>
+                                    </Box>
+                                </Button>
+                                <Button
+                                    variant="outlined"
+                                    size="large"
+                                    startIcon={<Business />}
+                                    onClick={() => processGoogleLogin('company')}
+                                    sx={{
+                                        py: 2,
+                                        justifyContent: 'flex-start',
+                                        borderColor: accountType === 'company' ? 'primary.main' : 'divider',
+                                        borderWidth: 1,
+                                        '&:hover': { borderWidth: 1, bgcolor: 'primary.action' }
+                                    }}
+                                >
+                                    <Box sx={{ textAlign: 'left', ml: 1 }}>
+                                        <Typography variant="subtitle1" fontWeight="bold">{t.company}</Typography>
+                                    </Box>
+                                </Button>
+                            </Stack>
+                        )}
+                    </DialogContent>
+                </Dialog>
             </Container>
         </Box>
     );

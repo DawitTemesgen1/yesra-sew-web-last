@@ -264,5 +264,13 @@
         "placeholder": "Ergaa barreessi...",
         "welcomeTitle": "Salphaatti wal qunnamaa",
         "welcomeSubtitle": "Ergaa erguuf bitaa irraa marii tokko filadhaa. Nageenya isaa kan eeggame, ariifataa fi ogummaa kan qabu."
+    },
+    "welcome": {
+        "title": "YESRA SEW SOLUTION",
+        "subtitle": "Bakka Gabaa Diijitaalaa Keessan Isa Jalqabaa",
+        "description": "Hojiwwan, manneen, konkolaattotaa fi caalbaasiiwwan keessatti carraawwan bal'aa argadhaa. Sirna diijitaalaa Itiyoophiyaa guddinarratti jiru keessatti fayyadamtoota kumaataman lakkaa'aman wajjin dabalamaa.",
+        "getStarted": "Eegali",
+        "signIn": "Seeni",
+        "signUp": "Account uumi"
     }
 }

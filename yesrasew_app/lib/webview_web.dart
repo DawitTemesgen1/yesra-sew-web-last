@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'dart:html' as html;
 import 'dart:ui_web' as ui_web;
 
-import 'package:webview_flutter/src/webview_controller.dart';
+// import 'package:webview_flutter/src/webview_controller.dart'; // Removed
 
 class WebViewScreen extends StatefulWidget {
-  const WebViewScreen({super.key, required WebViewController controller});
+  const WebViewScreen({super.key}); // Controller no longer required
 
   @override
   State<WebViewScreen> createState() => _WebViewScreenState();

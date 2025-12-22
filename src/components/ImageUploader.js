@@ -23,10 +23,10 @@ const ImageUploader = ({ value, onChange, maxSize = 50, multiple = false }) => {
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
 
-                    // Calculate new dimensions (max 1200px width for listings)
+                    // Calculate new dimensions (max 1024px width for better mobile performance)
                     let width = img.width;
                     let height = img.height;
-                    const maxWidth = 1200;
+                    const maxWidth = 1024; // Reduced from 1200 for stability
 
                     if (width > maxWidth) {
                         height = (height * maxWidth) / width;
@@ -41,13 +41,18 @@ const ImageUploader = ({ value, onChange, maxSize = 50, multiple = false }) => {
 
                     canvas.toBlob(
                         (blob) => {
+                            // Clear canvas to free memory
+                            ctx.clearRect(0, 0, width, height);
+                            canvas.width = 0;
+                            canvas.height = 0;
+
                             resolve(new File([blob], file.name, {
                                 type: 'image/jpeg',
                                 lastModified: Date.now(),
                             }));
                         },
                         'image/jpeg',
-                        0.85 // 85% quality - good balance between size and quality
+                        0.80 // Reduced to 80% quality for smaller payloads
                     );
                 };
                 img.src = e.target.result;
@@ -91,46 +96,57 @@ const ImageUploader = ({ value, onChange, maxSize = 50, multiple = false }) => {
             let completed = 0;
 
             for (const file of filesToUpload) {
-                // Compress image before upload
-                const compressedFile = await compressImage(file);
+                try {
+                    // Small delay to allow UI update and GC
+                    await new Promise(r => setTimeout(r, 100));
 
-                const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}-${file.name.replace(/[^a-zA-Z0-9.]/g, '')}`;
-                const filePath = `images/${fileName}`;
+                    // Compress image before upload
+                    const compressedFile = await compressImage(file);
 
-                const { error } = await supabase.storage
-                    .from('listing-images')
-                    .upload(filePath, compressedFile, {
-                        cacheControl: '3600',
-                        upsert: false
-                    });
+                    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}-${file.name.replace(/[^a-zA-Z0-9.]/g, '')}`;
+                    const filePath = `images/${fileName}`;
 
-                if (error) throw error;
+                    const { error } = await supabase.storage
+                        .from('listing-images')
+                        .upload(filePath, compressedFile, {
+                            cacheControl: '3600',
+                            upsert: false
+                        });
 
-                const { data: { publicUrl } } = supabase.storage
-                    .from('listing-images')
-                    .getPublicUrl(filePath);
+                    if (error) throw error;
 
-                newUrls.push(publicUrl);
+                    const { data: { publicUrl } } = supabase.storage
+                        .from('listing-images')
+                        .getPublicUrl(filePath);
+
+                    newUrls.push(publicUrl);
+                } catch (innerError) {
+                    console.error('Error uploading specific file:', file.name, innerError);
+                    toast.error(`Failed to upload ${file.name}`);
+                }
+
                 completed++;
                 setProgress(Math.round((completed / filesToUpload.length) * 100));
             }
 
-            // Update State
-            let finalUrls;
-            if (multiple) {
-                finalUrls = [...previewUrls, ...newUrls];
-            } else {
-                finalUrls = [newUrls[0]];
+            if (newUrls.length > 0) {
+                // Update State
+                let finalUrls;
+                if (multiple) {
+                    finalUrls = [...previewUrls, ...newUrls];
+                } else {
+                    finalUrls = [newUrls[0]];
+                }
+
+                setPreviewUrls(finalUrls);
+                // Return array if multiple, string otherwise to maintain backward compatibility
+                onChange(multiple ? finalUrls : finalUrls[0]);
+
+                toast.success(`Successfully uploaded ${newUrls.length} image(s)!`);
             }
-
-            setPreviewUrls(finalUrls);
-            // Return array if multiple, string otherwise to maintain backward compatibility where expected
-            onChange(multiple ? finalUrls : finalUrls[0]);
-
-            toast.success('Images uploaded successfully!');
         } catch (error) {
-            console.error('Error uploading image:', error);
-            toast.error('Failed to upload image');
+            console.error('Error in upload process:', error);
+            toast.error('Upload process failed');
         } finally {
             setUploading(false);
             setProgress(0);
