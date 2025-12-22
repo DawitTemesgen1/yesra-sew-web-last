@@ -216,23 +216,40 @@ const SystemSettingsScreen = ({ t, systemSettings }) => {
                     {t('siteInformation')}
                   </Typography>
 
-                  <TextField
-                    fullWidth
-                    label="Site Url"
-                    value={localSettings.site_url || ''}
-                    onChange={(e) => handleChange('site_url', e.target.value)}
-                    helperText="The site url is the url where you installed Script. Must be add slash / at the end of url like http://example.com/"
-                    sx={{ mb: 2 }}
-                  />
+                  {/* Site Url Block */}
+                  <MuiBox sx={{ mb: 3 }}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                      Site Url
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1, fontStyle: 'italic' }}>
+                      The site url is the url where you installed Script. Must be add slash / at the end of url like http://example.com/
+                    </Typography>
+                    <TextField
+                      fullWidth
+                      variant="outlined"
+                      size="small"
+                      value={localSettings.site_url || ''}
+                      onChange={(e) => handleChange('site_url', e.target.value)}
+                      placeholder="https://example.com/"
+                    />
+                  </MuiBox>
 
-                  <TextField
-                    fullWidth
-                    label="Site Title"
-                    value={localSettings.site_name}
-                    onChange={(e) => handleChange('site_name', e.target.value)}
-                    helperText="The site title is what you would like your website to be known as, this will be used in emails and in the title of your webpages."
-                    sx={{ mb: 2 }}
-                  />
+                  {/* Site Title Block */}
+                  <MuiBox sx={{ mb: 3 }}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                      Site Title
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1, fontStyle: 'italic' }}>
+                      The site title is what you would like your website to be known as, this will be used in emails and in the title of your webpages.
+                    </Typography>
+                    <TextField
+                      fullWidth
+                      variant="outlined"
+                      size="small"
+                      value={localSettings.site_name}
+                      onChange={(e) => handleChange('site_name', e.target.value)}
+                    />
+                  </MuiBox>
 
                   <TextField
                     fullWidth
