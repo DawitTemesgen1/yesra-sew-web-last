@@ -16,6 +16,7 @@ const SystemSettingsScreen = ({ t, systemSettings }) => {
     require_admin_approval: false,
     allow_featured_listings: true,
     max_listings_per_user: 10,
+    site_url: "https://www.yesrasewsolution.com/",
     site_name: "Yesra Sew Solution",
     site_description: "Connecting Technology and Careers in Ethiopia",
     contact_email: "info@yesrasew.com",
@@ -214,13 +215,25 @@ const SystemSettingsScreen = ({ t, systemSettings }) => {
                   <Typography variant="subtitle2" gutterBottom>
                     {t('siteInformation')}
                   </Typography>
+
                   <TextField
                     fullWidth
-                    label={t('siteName')}
-                    value={localSettings.site_name}
-                    onChange={(e) => handleChange('site_name', e.target.value)}
+                    label="Site Url"
+                    value={localSettings.site_url || ''}
+                    onChange={(e) => handleChange('site_url', e.target.value)}
+                    helperText="The site url is the url where you installed Script. Must be add slash / at the end of url like http://example.com/"
                     sx={{ mb: 2 }}
                   />
+
+                  <TextField
+                    fullWidth
+                    label="Site Title"
+                    value={localSettings.site_name}
+                    onChange={(e) => handleChange('site_name', e.target.value)}
+                    helperText="The site title is what you would like your website to be known as, this will be used in emails and in the title of your webpages."
+                    sx={{ mb: 2 }}
+                  />
+
                   <TextField
                     fullWidth
                     multiline
