@@ -167,20 +167,31 @@ const getSummaryFields = (template, listing) => {
             .sort((a, b) => (a.card_priority || 0) - (b.card_priority || 0));
     } else {
         // STRATEGY B: Fallback Heuristic (Automatic Selection)
-        candidates = allFields.filter(f => {
-            // Must be visible and simple
-            if (f.is_visible === false) return false;
-            if (['textarea', 'image', 'video', 'file', 'section_header'].includes(f.field_type)) return false;
-            // Exclude core fields already shown elsewhere
-            if (['title', 'description', 'price', 'images', 'location'].includes(f.field_name)) return false;
-            return true;
-        });
+        candidates = allFields; // We will filter below
     }
+
+    // CRITICAL: Global Cleanup Filter (Applies to BOTH strategies)
+    // Ensures strictly no descriptions, URLs, images, or large text blocks appear on the card
+    candidates = candidates.filter(f => {
+        // 1. Check Types
+        if (['textarea', 'image', 'video', 'file', 'section_header', 'url', 'link'].includes(f.field_type)) return false;
+
+        // 2. Check Names (Strict)
+        if (['title', 'description', 'price', 'images', 'location', 'desc', 'summary'].includes(f.field_name)) return false;
+
+        // 3. For Strategy B only: Check visibility (if we didn't check it above)
+        if (!hasCardConfig && f.is_visible === false) return false;
+
+        return true;
+    });
 
     // Filter candidates that actually have data in the listing
     const summaryFields = candidates.filter(f => {
         const val = listing.custom_fields?.[f.field_name] || listing[f.field_name];
-        return val !== undefined && val !== null && val !== '';
+        // Exclude empty values AND values that look like URLs (if they slipped through as text)
+        if (val === undefined || val === null || val === '') return false;
+        if (typeof val === 'string' && (val.startsWith('http') || val.startsWith('www.') || val.length > 50)) return false;
+        return true;
     });
 
     // Limit to prevent layout breakage (max 6 fields for card)

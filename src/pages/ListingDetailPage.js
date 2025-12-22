@@ -65,6 +65,40 @@ const translations = {
   }
 };
 
+// Helper to render text with clickable links
+// Helper to render text with clickable links
+const renderWithLinks = (text) => {
+  if (typeof text !== 'string') return text;
+
+  // Regex to detect URLs (http, https, www, or raw domain like example.com)
+  const urlRegex = /((?:https?:\/\/|www\.)[^\s]+|[a-zA-Z0-9][a-zA-Z0-9-]+\.[a-z]{2,}(?:\/[^\s]*)?)/g;
+
+  const parts = text.split(urlRegex);
+
+  return parts.map((part, index) => {
+    // Check if valid URL pattern
+    if (part.match(/^(?:https?:\/\/|www\.)[^\s]+$/) || part.match(/^[a-zA-Z0-9][a-zA-Z0-9-]+\.[a-z]{2,}(?:\/[^\s]*)?$/)) {
+      let href = part;
+      if (!part.startsWith('http') && !part.startsWith('//')) {
+        href = `http://${part}`;
+      }
+      return (
+        <a
+          key={index}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: '#1976d2', textDecoration: 'underline', wordBreak: 'break-all' }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {part}
+        </a>
+      );
+    }
+    return part;
+  });
+};
+
 // Dynamic Field Renderer Component
 const DynamicField = ({ field, value, isMobile }) => {
   const theme = useTheme();
@@ -94,7 +128,13 @@ const DynamicField = ({ field, value, isMobile }) => {
       return String(value);
     }
 
-    return String(value);
+    // For standard text fields, allow linking
+    if (field.field_type === 'text' || !field.field_type) {
+      return renderWithLinks(String(value));
+    }
+
+    // Default fallback: Render with links for safety (catches any unhandled string types)
+    return renderWithLinks(String(value));
   };
 
   // Render based on field type and section
@@ -163,6 +203,29 @@ const DynamicField = ({ field, value, isMobile }) => {
     );
   }
 
+  // Explicit URL/Link type handling
+  if (field.field_type === 'url' || field.field_type === 'link') {
+    return (
+      <Paper
+        sx={{
+          p: 2,
+          borderRadius: 2,
+          height: '100%',
+          bgcolor: 'background.paper',
+          border: `1px solid ${theme.palette.divider}`
+        }}
+        variant="outlined"
+      >
+        <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+          {field.field_label}
+        </Typography>
+        <Box sx={{ mt: 0.5 }}>
+          {renderWithLinks(String(value))}
+        </Box>
+      </Paper>
+    );
+  }
+
   if (field.field_type === 'textarea' || field.field_name === 'description') {
     return (
       <Paper
@@ -180,14 +243,15 @@ const DynamicField = ({ field, value, isMobile }) => {
           variant="body1"
           color="text.primary"
           sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.7 }}
+          component="div" // Changed to div to support nested elements from renderWithLinks
         >
-          {value}
+          {renderWithLinks(value)}
         </Typography>
       </Paper>
     );
   }
 
-  // Regular field rendering
+  // Regular field rendering (Text, Number, Date, etc.)
   return (
     <Paper
       sx={{
@@ -202,7 +266,11 @@ const DynamicField = ({ field, value, isMobile }) => {
       <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
         {field.field_label}
       </Typography>
-      <Typography variant={field.section === 'header' ? "h6" : "body1"} fontWeight={field.section === 'header' ? "bold" : "500"}>
+      <Typography
+        variant={field.section === 'header' ? "h6" : "body1"}
+        fontWeight={field.section === 'header' ? "bold" : "500"}
+        component="div" // Changed to div
+      >
         {formatValue()}
       </Typography>
     </Paper>
@@ -292,7 +360,7 @@ const ListingDetailPage = () => {
     if (navigator.share) {
       try {
         await navigator.share({ title: listing.title, text: `Check out ${listing.title}`, url: window.location.href });
-      } catch (err) {  }
+      } catch (err) { }
     } else {
       navigator.clipboard.writeText(window.location.href);
       toast.success(t.linkCopied);
@@ -683,17 +751,20 @@ const ListingDetailPage = () => {
                     </Grid>
                   )}
 
-                  {/* Fallback: Show description if no template */}
-                  {(!steps || steps.length === 0 || mainFields.length === 0) && listing.description && (
-                    <Paper sx={{ p: 3, borderRadius: 2 }} variant="outlined">
-                      <Typography variant="h6" fontWeight="bold" gutterBottom>
-                        Description
-                      </Typography>
-                      <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.7 }}>
-                        {listing.description}
-                      </Typography>
-                    </Paper>
-                  )}
+                  {/* Fallback: Show description if no template or if description field is missing from template */}
+                  {((!steps || steps.length === 0) ||
+                    (!mainFields.some(f => f.field_name === 'description') &&
+                      !sidebarFields.some(f => f.field_name === 'description'))) &&
+                    listing.description && (
+                      <Paper sx={{ p: 3, borderRadius: 2 }} variant="outlined">
+                        <Typography variant="h6" fontWeight="bold" gutterBottom>
+                          Description
+                        </Typography>
+                        <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.7 }} component="div">
+                          {renderWithLinks(listing.description)}
+                        </Typography>
+                      </Paper>
+                    )}
 
                   {/* Desktop Action Buttons */}
                   <Stack spacing={2} sx={{ display: { xs: 'none', md: 'flex' } }}>

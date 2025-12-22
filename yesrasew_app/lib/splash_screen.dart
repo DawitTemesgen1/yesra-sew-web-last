@@ -76,7 +76,7 @@ class _SplashScreenState extends State<SplashScreen>
     _mainController.forward();
 
     // Navigation Logic
-    Timer(const Duration(milliseconds: 4500), () {
+    Timer(const Duration(milliseconds: 3800), () {
       _navigateToNextScreen();
     });
   }
@@ -96,7 +96,7 @@ class _SplashScreenState extends State<SplashScreen>
         transitionsBuilder: (_, animation, __, child) {
           return FadeTransition(opacity: animation, child: child);
         },
-        transitionDuration: const Duration(milliseconds: 800),
+        transitionDuration: const Duration(milliseconds: 400),
       ),
     );
   }
