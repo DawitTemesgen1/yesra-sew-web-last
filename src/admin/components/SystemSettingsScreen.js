@@ -42,7 +42,9 @@ const SystemSettingsScreen = ({ t, systemSettings }) => {
     show_app_footer: true,
     // Legal
     privacy_policy: "",
-    terms_conditions: ""
+    terms_conditions: "",
+    // SEO
+    sitemap_url: "https://www.yesrasewsolution.com/sitemap.xml"
   });
 
   const [loading, setLoading] = useState(false);
@@ -268,6 +270,18 @@ const SystemSettingsScreen = ({ t, systemSettings }) => {
                       <Grid item xs={12}><TextField fullWidth label="Android Play Store URL" value={localSettings.mobile_android} onChange={(e) => handleChange('mobile_android', e.target.value)} size="small" /></Grid>
                     </Grid>
                   )}
+                </MuiBox>
+
+                <MuiBox sx={{ mt: 3, pt: 3, borderTop: 1, borderColor: 'divider' }}>
+                  <Typography variant="subtitle2" gutterBottom>SEO Settings</Typography>
+                  <TextField
+                    fullWidth
+                    label="Sitemap URL"
+                    value={localSettings.sitemap_url}
+                    onChange={(e) => handleChange('sitemap_url', e.target.value)}
+                    helperText="This URL will be used for search engine indexing and footer links."
+                    sx={{ mb: 1 }}
+                  />
                 </MuiBox>
 
                 <MuiBox sx={{ mt: 3, pt: 3, borderTop: 1, borderColor: 'divider', mb: 3 }}>

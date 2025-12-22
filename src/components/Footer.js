@@ -21,6 +21,7 @@ const translations = {
     legal: "Legal Info",
     privacy: "Privacy Policy",
     terms: "Terms of Service",
+    sitemap: "Sitemap",
     copyright: "© {year} {siteName}. All Rights Reserved.",
     links: {
       home: "Home",
@@ -103,7 +104,7 @@ const Footer = () => {
 
     // Listen for settings updates
     const handleSettingsUpdate = () => {
-      
+
       fetchSettings();
     };
 
@@ -306,6 +307,9 @@ const Footer = () => {
           <Stack direction="row" spacing={3}>
             <Link href="/privacy" sx={{ fontSize: '0.75rem', color: 'text.secondary', textDecoration: 'none', '&:hover': { color: BRAND_COLORS.gold } }}>{t.privacy}</Link>
             <Link href="/terms" sx={{ fontSize: '0.75rem', color: 'text.secondary', textDecoration: 'none', '&:hover': { color: BRAND_COLORS.gold } }}>{t.terms}</Link>
+            {settings.sitemap_url && (
+              <Link href={settings.sitemap_url} target="_blank" sx={{ fontSize: '0.75rem', color: 'text.secondary', textDecoration: 'none', '&:hover': { color: BRAND_COLORS.gold } }}>{t.sitemap || 'Sitemap'}</Link>
+            )}
           </Stack>
         </Box>
       </Container>
