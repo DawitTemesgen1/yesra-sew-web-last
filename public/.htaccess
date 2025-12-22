@@ -2,7 +2,12 @@
   RewriteEngine On
   RewriteBase /
 
-  # --- 1. Force HTTPS ---
+  # --- 1. Force WWW & HTTPS ---
+  # Redirect non-www to www (SEO Best Practice)
+  RewriteCond %{HTTP_HOST} ^yesrasewsolution\.com [NC]
+  RewriteRule ^(.*)$ https://www.yesrasewsolution.com/$1 [L,R=301]
+
+  # Force HTTPS
   RewriteCond %{HTTPS} off
   RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
