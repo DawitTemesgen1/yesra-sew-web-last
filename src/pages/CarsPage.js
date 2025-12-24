@@ -123,13 +123,12 @@ const CarsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('ALL');
   const [listingType, setListingType] = useState('ALL'); // 'sale', 'rent', 'ALL'
-  const [templateFields, setTemplateFields] = useState([]);
 
   // Access Control
   const { isListingLocked } = useListingAccess('cars');
 
-  // Fetch Template Fields (Cached)
-  useQuery(['carsTemplate'], async () => {
+  // Fetch Template Fields (Cached) - USE QUERY DATA DIRECTLY
+  const { data: templateFields = [] } = useQuery(['carsTemplate'], async () => {
     try {
       const categories = await apiService.getCategories();
       const carsCat = categories.data?.categories?.find(c => c.slug === 'cars' || c.name === 'Cars');
@@ -138,7 +137,6 @@ const CarsPage = () => {
         const templateData = await adminService.getTemplate(carsCat.id);
         if (templateData && templateData.steps) {
           const fields = templateData.steps.flatMap(s => s.fields || []);
-          setTemplateFields(fields);
           return fields;
         }
       }
@@ -148,7 +146,9 @@ const CarsPage = () => {
     return [];
   }, {
     staleTime: 1000 * 60 * 60, // 1 hour for templates
-    refetchOnWindowFocus: false
+    cacheTime: 1000 * 60 * 120, // Keep in cache for 2 hours
+    refetchOnWindowFocus: false,
+    refetchOnMount: false
   });
 
   // Fetch Cars (Cached)
@@ -166,7 +166,10 @@ const CarsPage = () => {
     },
     {
       staleTime: 1000 * 60 * 5, // 5 minutes
-      keepPreviousData: true
+      cacheTime: 1000 * 60 * 30, // Keep in cache for 30 minutes
+      keepPreviousData: true,
+      refetchOnMount: false,
+      refetchOnWindowFocus: false
     }
   );
 

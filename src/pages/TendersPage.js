@@ -152,13 +152,12 @@ const TendersPage = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [templateFields, setTemplateFields] = useState([]);
 
   // Check listing access for tenders category
   const { hasAccess, loading: accessLoading, isListingLocked } = useListingAccess('tenders');
 
-  // Fetch Template Fields (Cached)
-  useQuery(['tendersTemplate'], async () => {
+  // Fetch Template Fields (Cached) - USE QUERY DATA DIRECTLY
+  const { data: templateFields = [] } = useQuery(['tendersTemplate'], async () => {
     try {
       const allCats = await apiService.getCategories();
       const tendersCat = allCats.data?.categories?.find(c => c.slug === 'tenders' || c.name === 'Tenders');
@@ -167,8 +166,7 @@ const TendersPage = () => {
         const templateData = await adminService.getTemplate(tendersCat.id);
         if (templateData && templateData.steps) {
           const fields = templateData.steps.flatMap(s => s.fields || []);
-          setTemplateFields(fields);
-          return fields;
+          return fields; // Return directly - React Query will cache this
         }
       }
     } catch (err) {
@@ -177,7 +175,9 @@ const TendersPage = () => {
     return [];
   }, {
     staleTime: 1000 * 60 * 60, // 1 hour for templates
-    refetchOnWindowFocus: false
+    cacheTime: 1000 * 60 * 120, // Keep in cache for 2 hours
+    refetchOnWindowFocus: false,
+    refetchOnMount: false
   });
 
   // Fetch Tenders (Cached)
@@ -194,7 +194,10 @@ const TendersPage = () => {
     },
     {
       staleTime: 1000 * 60 * 5, // 5 minutes
-      keepPreviousData: true
+      cacheTime: 1000 * 60 * 30, // Keep in cache for 30 minutes
+      keepPreviousData: true,
+      refetchOnMount: false, // Don't refetch when component mounts if data exists
+      refetchOnWindowFocus: false // Don't refetch when window regains focus
     }
   );
 
@@ -393,7 +396,7 @@ const TendersPage = () => {
                         }}>
                           <DynamicListingCard
                             listing={tender}
-                            templateFields={templateFields}
+                            template={{ steps: [{ fields: templateFields }] }}
                             viewMode="grid"
                           />
                         </Grid>
@@ -419,7 +422,7 @@ const TendersPage = () => {
                         <Grid item xs={12} sm={6} lg={4} key={tender.id}>
                           <DynamicListingCard
                             listing={tender}
-                            templateFields={templateFields}
+                            template={{ steps: [{ fields: templateFields }] }}
                             viewMode="grid"
                           />
                         </Grid>

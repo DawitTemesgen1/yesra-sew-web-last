@@ -18,6 +18,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from '../utils/dateUtils';
 import apiService from '../services/api';
+import adminService from '../services/adminService';
 import { supabase } from '../services/api';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
@@ -302,6 +303,85 @@ const ProfilePage = () => {
     apiService.chat.getConversations,
     { enabled: !!authUser }
   );
+
+  // Fetch Categories for resolving IDs
+  const { data: categoriesData } = useQuery('categories', async () => {
+    const res = await apiService.getCategories();
+    return res.categories || res.data?.categories || [];
+  }, { staleTime: 1000 * 60 * 60 });
+  const fetchedCategories = categoriesData || [];
+
+  // Helper to resolve category object
+  const getCategoryForListing = (listing) => {
+    if (listing.category) return listing.category;
+    if (listing.category_id && fetchedCategories.length > 0) {
+      return fetchedCategories.find(c => c.id === listing.category_id);
+    }
+    return null;
+  };
+
+  // 5. Fetch Templates for All Categories (Cached)
+  const { data: allTemplates = {} } = useQuery(['allTemplatesProfile'], async () => {
+    try {
+      const categories = await apiService.getCategories();
+      const cats = categories.data?.categories || [];
+      const templates = {};
+
+      // Robust mapping for standard categories
+      const categoryMappings = [
+        { key: 'jobs', match: ['jobs', 'job', 'vacancy', 'vacancies'] },
+        { key: 'tenders', match: ['tenders', 'tender', 'bids'] },
+        { key: 'homes', match: ['homes', 'home', 'property', 'properties', 'real estate'] },
+        { key: 'cars', match: ['cars', 'car', 'vehicle', 'vehicles', 'automotive'] }
+      ];
+
+      for (const mapping of categoryMappings) {
+        // Find the category that matches one of the keywords
+        const cat = cats.find(c => {
+          const s = (c.slug || '').toLowerCase();
+          const n = (c.name || '').toLowerCase();
+          return mapping.match.includes(s) || mapping.match.includes(n);
+        });
+
+        if (cat) {
+          try {
+            const templateData = await adminService.getTemplate(cat.id);
+            if (templateData && templateData.steps) {
+              templates[mapping.key] = templateData.steps.flatMap(s => s.fields || []);
+            }
+          } catch (e) {
+            console.warn(`Failed to load template for ${mapping.key}`, e);
+          }
+        }
+      }
+      return templates;
+    } catch (err) {
+      console.error('Error fetching profile templates', err);
+      return {};
+    }
+  }, {
+    staleTime: 1000 * 60 * 60,
+    cacheTime: 1000 * 60 * 120,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false
+  });
+
+  const getTemplateForListing = (listing) => {
+    const cat = getCategoryForListing(listing);
+    if (!cat) return null;
+
+    const rawSlug = (cat.slug || cat.name || '').toLowerCase();
+
+    // Normalize logic to match the keys in allTemplates
+    let key = rawSlug;
+    if (['job', 'jobs', 'vacancy'].some(s => rawSlug.includes(s))) key = 'jobs';
+    else if (['tender', 'tenders', 'bid'].some(s => rawSlug.includes(s))) key = 'tenders';
+    else if (['home', 'homes', 'property'].some(s => rawSlug.includes(s))) key = 'homes';
+    else if (['car', 'cars', 'vehicle'].some(s => rawSlug.includes(s))) key = 'cars';
+
+    const fields = allTemplates[key];
+    return fields ? { steps: [{ fields }] } : null;
+  };
 
   const loading = profileLoading; // Main loading state
   const error = profileError?.message;
@@ -835,7 +915,11 @@ const ProfilePage = () => {
                       {userListings.map((listing) => (
                         <Grid item xs={12} sm={6} md={4} key={listing.id}>
                           <DynamicListingCard
-                            listing={listing}
+                            listing={{
+                              ...listing,
+                              category: getCategoryForListing(listing) || listing.category
+                            }}
+                            template={getTemplateForListing(listing)}
                             showActions={true}
                             onEdit={() => navigate(`/post-ad?edit=${listing.id}`)}
                             onDelete={handleDeleteListing}

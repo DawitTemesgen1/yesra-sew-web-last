@@ -118,7 +118,6 @@ const JobsPage = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('All Jobs');
-  const [templateFields, setTemplateFields] = useState([]);
 
   // Check listing access for jobs category
   const { hasAccess, loading: accessLoading, isListingLocked } = useListingAccess('jobs');
@@ -132,8 +131,8 @@ const JobsPage = () => {
     { value: 'Contract', label: t.filters.contract }
   ];
 
-  // Fetch Template Fields (Cached)
-  useQuery(['jobsTemplate'], async () => {
+  // Fetch Template Fields (Cached) - USE QUERY DATA DIRECTLY
+  const { data: templateFields = [] } = useQuery(['jobsTemplate'], async () => {
     try {
       const allCats = await apiService.getCategories();
       const jobsCat = allCats.data?.categories?.find(c => c.slug === 'jobs' || c.name === 'Jobs');
@@ -142,8 +141,7 @@ const JobsPage = () => {
         const templateData = await adminService.getTemplate(jobsCat.id);
         if (templateData && templateData.steps) {
           const fields = templateData.steps.flatMap(s => s.fields || []);
-          setTemplateFields(fields);
-          return fields;
+          return fields; // Return directly - React Query will cache this
         }
       }
     } catch (err) {
@@ -152,7 +150,9 @@ const JobsPage = () => {
     return [];
   }, {
     staleTime: 1000 * 60 * 60, // 1 hour for templates
-    refetchOnWindowFocus: false
+    cacheTime: 1000 * 60 * 120, // Keep in cache for 2 hours
+    refetchOnWindowFocus: false,
+    refetchOnMount: false
   });
 
   // Fetch Jobs (Cached)
@@ -169,7 +169,10 @@ const JobsPage = () => {
     },
     {
       staleTime: 1000 * 60 * 5, // 5 minutes
-      keepPreviousData: true
+      cacheTime: 1000 * 60 * 30, // Keep in cache for 30 minutes
+      keepPreviousData: true,
+      refetchOnMount: false, // Don't refetch when component mounts if data exists
+      refetchOnWindowFocus: false // Don't refetch when window regains focus
     }
   );
 
@@ -331,7 +334,7 @@ const JobsPage = () => {
                         }}>
                           <DynamicListingCard
                             listing={job}
-                            templateFields={templateFields}
+                            template={{ steps: [{ fields: templateFields }] }}
                             viewMode="grid"
                           />
                         </Grid>
@@ -357,7 +360,7 @@ const JobsPage = () => {
                         <Grid item xs={12} md={6} lg={4} key={job.id}>
                           <DynamicListingCard
                             listing={job}
-                            templateFields={templateFields}
+                            template={{ steps: [{ fields: templateFields }] }}
                             viewMode="grid"
                           />
                         </Grid>

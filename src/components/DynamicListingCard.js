@@ -52,10 +52,19 @@ const JOB_IMAGES = [
     'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80'
 ];
 
+// --- FALLBACK IMAGES (Beautiful Placeholders for Tenders) ---
+const TENDER_IMAGES = [
+    'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=800&q=80', // Business/Finance
+    'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=800&q=80', // Documents
+    'https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&w=800&q=80', // Legal/Gavel
+    'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80', // Handshake
+    'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=800&q=80'  // Office
+];
+
 /**
  * Helper: robustly resolve the best image for the card and OPTIMIZE IT
  */
-const getCardImages = (listing, width = 600) => {
+const getCardImages = (listing, width = 600, templateOrFields = null) => {
     if (!listing) return [];
 
     // Helper to apply Supabase CDN transformations
@@ -87,6 +96,43 @@ const getCardImages = (listing, width = 600) => {
 
     let collected = [];
 
+    // --- STRATEGY 0: Template-Based Logic (Highest Priority) ---
+    // Handle both full 'template' object (with steps) AND flattened 'templateFields' array
+    let allFields = [];
+    if (templateOrFields) {
+        if (Array.isArray(templateOrFields)) {
+            // It's already the flattened fields array
+            allFields = templateOrFields;
+        } else if (templateOrFields.steps) {
+            // It's the full template object
+            allFields = templateOrFields.steps.flatMap(s => s.fields || []);
+        }
+    }
+
+    if (allFields.length > 0) {
+        // 1. Explicit Cover Image
+        const coverField = allFields.find(f => f.is_cover_image === true);
+        if (coverField) {
+            const val = listing.custom_fields?.[coverField.field_name];
+            if (isValidUrl(val)) collected.push(val);
+        }
+
+        // 2. Any field defined as 'image' or 'file' (that looks like an image)
+        allFields.filter(f => f.field_type === 'image' || f.field_type === 'file').forEach(f => {
+            const val = listing.custom_fields?.[f.field_name];
+            if (Array.isArray(val)) {
+                val.forEach(v => {
+                    const url = typeof v === 'object' ? v?.url : v;
+                    if (isLikelyImage(url)) collected.push(url);
+                });
+            } else if (isLikelyImage(val)) {
+                collected.push(val);
+            }
+        });
+    }
+
+    // --- STRATEGY 1: Standard Fields ---
+
     // 1. Check 'images' array
     if (Array.isArray(listing.images)) {
         listing.images.forEach(img => {
@@ -95,22 +141,42 @@ const getCardImages = (listing, width = 600) => {
         });
     }
 
-    // 2. Check 'image' string
+    // 2. Check 'image' string (often used for cover)
     if (listing.image && isValidUrl(listing.image)) collected.push(listing.image);
 
-    // 3. Check 'media_urls'
+    // 3. Check 'media_urls' (Unified Media Format)
     if (Array.isArray(listing.media_urls)) {
         listing.media_urls.forEach(m => {
             if (m.type === 'image' && isValidUrl(m.url)) collected.push(m.url);
         });
     }
 
-    // 4. Scan Custom Fields
-    if (listing.custom_fields && typeof listing.custom_fields === 'object') {
-        const cf = listing.custom_fields;
-        Object.keys(cf).forEach(key => {
-            if (/image|photo|picture|cover|thumb/i.test(key)) {
-                const val = cf[key];
+    // --- STRATEGY 2: Smart Scan (Custom Fields) ---
+    // Only run if we haven't found much yet, OR if no template was provided
+    let cf = listing.custom_fields;
+
+    // Robust parsing: Handle if custom_fields is a JSON string
+    if (typeof cf === 'string') {
+        try {
+            cf = JSON.parse(cf);
+        } catch (e) {
+            cf = {};
+        }
+    }
+
+    if (cf && typeof cf === 'object' && !Array.isArray(cf)) {
+        const keys = Object.keys(cf);
+
+        // A. Priority Scan: Keys that imply visual content
+        keys.forEach(key => {
+            if (/image|photo|picture|cover|thumb|logo|banner|attachment/i.test(key)) {
+                let val = cf[key];
+
+                // Handle stringified JSON inside values
+                if (typeof val === 'string' && (val.startsWith('[') || val.startsWith('{'))) {
+                    try { val = JSON.parse(val); } catch (e) { }
+                }
+
                 if (Array.isArray(val)) {
                     val.forEach(v => {
                         const url = typeof v === 'object' ? v?.url : v;
@@ -118,7 +184,20 @@ const getCardImages = (listing, width = 600) => {
                     });
                 } else if (isLikelyImage(val)) {
                     collected.push(val);
+                } else if (typeof val === 'object' && val?.url && isLikelyImage(val.url)) {
+                    collected.push(val.url);
                 }
+            }
+        });
+
+        // B. Broad Scan: Check ALL other values for Supabase/Image URLs
+        keys.forEach(key => {
+            // Skip text-heavy fields
+            if (/description|desc|text|location|email|name|phone/i.test(key)) return;
+
+            let val = cf[key];
+            if (typeof val === 'string' && isLikelyImage(val) && !collected.includes(val)) {
+                collected.push(val);
             }
         });
     }
@@ -128,7 +207,7 @@ const getCardImages = (listing, width = 600) => {
 
     if (collected.length > 0) return collected;
 
-    // ❌ No user image found -> USE FALLBACK (ONLY for Jobs)
+    // --- STRATEGY 3: Fallbacks ---
     let categorySlug = 'default';
     if (listing.category) {
         if (typeof listing.category === 'string') categorySlug = listing.category.toLowerCase();
@@ -136,10 +215,18 @@ const getCardImages = (listing, width = 600) => {
         else if (listing.category.name) categorySlug = listing.category.name.toLowerCase();
     }
 
-    if (categorySlug.includes('job') || categorySlug.includes('vacan')) {
+    // Fallback for JOBS
+    if (categorySlug.includes('job') || categorySlug.includes('vacan') || categorySlug.includes('employ')) {
         const hash = (listing.id || listing.title || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
         const index = hash % JOB_IMAGES.length;
         return [JOB_IMAGES[index]];
+    }
+
+    // Fallback for TENDERS
+    if (categorySlug.includes('tender') || categorySlug.includes('bid') || categorySlug.includes('procurement')) {
+        const hash = (listing.id || listing.title || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        const index = hash % TENDER_IMAGES.length;
+        return [TENDER_IMAGES[index]];
     }
 
     return [];
@@ -149,11 +236,18 @@ const getCardImages = (listing, width = 600) => {
  * Helper: Get Summary Fields from Template
  * Selects the best fields to display on the card based on the template.
  */
-const getSummaryFields = (template, listing) => {
-    if (!template || !template.steps) return [];
+const getSummaryFields = (templateOrFields, listing) => {
+    let allFields = [];
 
-    // Flatten fields from all steps
-    const allFields = template.steps.flatMap(s => s.fields || []);
+    if (templateOrFields) {
+        if (Array.isArray(templateOrFields)) {
+            allFields = templateOrFields;
+        } else if (templateOrFields.steps) {
+            allFields = templateOrFields.steps.flatMap(s => s.fields || []);
+        }
+    }
+
+    if (allFields.length === 0) return [];
 
     // Check if template has explicit card configuration
     const hasCardConfig = allFields.some(f => f.display_in_card === true);
@@ -230,6 +324,7 @@ const DynamicListingCard = ({
     showActions = false,
     onEdit,
     template,
+    templateFields, // Accept templateFields prop
     isLocked // Optional override
 }) => {
     const theme = useTheme();
@@ -240,8 +335,24 @@ const DynamicListingCard = ({
     const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
     const [isHovered, setIsHovered] = React.useState(false);
 
+    // Use templateFields if available, otherwise template
+    const activeTemplate = templateFields || template;
+
     // --- Data Preparation ---
-    const images = useMemo(() => getCardImages(listing), [listing]);
+    // CRITICAL: Always extract images, even if template isn't ready yet
+    // This prevents "NO IMAGE" flash when navigating back from cached data
+    const images = useMemo(() => {
+        const imgs = getCardImages(listing, 600, activeTemplate);
+
+        // If no images found but listing has data, try again without template
+        // This handles the case where template loads after listing data
+        if (imgs.length === 0 && listing && !activeTemplate) {
+            return getCardImages(listing, 600, null);
+        }
+
+        return imgs;
+    }, [listing, activeTemplate]);
+
     const imageUrl = images[currentImageIndex];
     const isPremium = listing?.is_premium;
 
@@ -249,7 +360,7 @@ const DynamicListingCard = ({
     const attrs = { ...listing, ...listing.custom_fields };
 
     // Calculate Summary Fields (if template exists)
-    const summaryFields = useMemo(() => getSummaryFields(template, listing), [template, listing]);
+    const summaryFields = useMemo(() => getSummaryFields(activeTemplate, listing), [activeTemplate, listing]);
 
     // --- Access Control ---
     const { permissions } = useListingAccess('all');
@@ -427,17 +538,19 @@ const DynamicListingCard = ({
                         </>
                     )}
 
-                    {/* Fallback / No Image Placeholder */}
-                    <Box sx={{
-                        display: imageUrl ? 'none' : 'flex',
-                        position: 'absolute', inset: 0,
-                        alignItems: 'center', justifyContent: 'center',
-                        flexDirection: 'column',
-                        color: 'text.disabled',
-                        bgcolor: 'grey.100'
-                    }}>
-                        <Typography variant="caption" fontWeight="bold">NO IMAGE</Typography>
-                    </Box>
+                    {/* Fallback / No Image Placeholder - Only show when truly no image */}
+                    {!imageUrl && (
+                        <Box sx={{
+                            position: 'absolute', inset: 0,
+                            display: 'flex',
+                            alignItems: 'center', justifyContent: 'center',
+                            flexDirection: 'column',
+                            color: 'text.disabled',
+                            bgcolor: 'grey.100'
+                        }}>
+                            <Typography variant="caption" fontWeight="bold">NO IMAGE</Typography>
+                        </Box>
+                    )}
 
                     {/* Premium Overlay */}
                     {isPremium && (
@@ -513,7 +626,7 @@ const DynamicListingCard = ({
                     {listing.category && (
                         <Box mb={1}>
                             <Chip
-                                label={listing.category}
+                                label={typeof listing.category === 'object' ? (listing.category.name || listing.category.slug) : listing.category}
                                 size="small"
                                 color="primary"
                                 variant="outlined"

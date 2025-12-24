@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yesra Sew - Marketing Generator</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+Ethiopic:wght@400;700;900&family=Poppins:wght@400;600;800&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 40px;
+            background: #f0f2f5;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #1a1a1a;
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            gap: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .promo-card {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1/1;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            background: #000;
+        }
+
+        .promo-bg {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.2) 60%, transparent);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 40px;
+            color: white;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .brand-pill {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 8px 16px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #0d47a1;
+            font-weight: 800;
+            font-size: 14px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+        }
+
+        .brand-logo {
+            width: 24px;
+            height: 24px;
+        }
+
+        .headline {
+            font-family: 'Noto Sans Ethiopic', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 900;
+            line-height: 1.2;
+            margin-bottom: 16px;
+            background: linear-gradient(90deg, #fff, #e0e0e0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtext {
+            font-family: 'Noto Sans Ethiopic', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 500;
+            margin-bottom: 24px;
+            opacity: 0.9;
+            max-width: 80%;
+        }
+
+        .cta-btn {
+            display: inline-block;
+            background: #00A651;
+            color: white;
+            padding: 12px 32px;
+            border-radius: 12px;
+            font-family: 'Noto Sans Ethiopic', sans-serif;
+            font-weight: 700;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            width: fit-content;
+        }
+
+        /* Specific Adjustments */
+        .text-center {
+            text-align: center;
+            align-items: center;
+        }
+
+        .text-right {
+            text-align: right;
+            align-items: flex-end;
+        }
+
+        .bg-light .headline {
+            color: #1a1a1a;
+            -webkit-text-fill-color: #1a1a1a;
+        }
+
+        .download-hint {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Yesra Sew - Generated Marketing Assets</h1>
+
+    <div class="gallery">
+
+        <!-- 1. Main Brand Promo -->
+        <div class="promo-card">
+            <div class="brand-pill"><span>Yesra Sew Solution</span></div>
+            <img src="./brand_promo.png" class="promo-bg" alt="Brand">
+            <div class="overlay text-center">
+                <div class="headline">የሚፈልጉት ሁሉ<br>በአንድ ቦታ!</div>
+                <div class="subtext">ስራ፣ ቤት፣ መኪና እና ጨረታ</div>
+                <div class="cta-btn">አሁኑኑ ይጎብኙ</div>
+            </div>
+        </div>
+
+        <!-- 2. Jobs Promo -->
+        <div class="promo-card">
+            <div class="brand-pill"><span>Yesra Sew Solution | Jobs</span></div>
+            <img src="./jobs_promo.png" class="promo-bg" alt="Jobs">
+            <div class="overlay">
+                <div class="headline">ህልምዎ ያለው<br>ስራ እዚህ አለ!</div>
+                <div class="subtext">በየቀኑ የሚወጡ አዳዲስ የስራ ማስታወቂያዎች</div>
+                <div class="cta-btn">ስራዎችን ይመልከቱ</div>
+            </div>
+        </div>
+
+        <!-- 3. Real Estate Promo -->
+        <div class="promo-card">
+            <div class="brand-pill"><span>Yesra Sew Solution | Homes</span></div>
+            <img src="./real_estate_promo.png" class="promo-bg" alt="Real Estate">
+            <div class="overlay">
+                <div class="headline">የህልም ቤትዎ፤<br>በእጅዎ መዳፍ!</div>
+                <div class="subtext">ዘመናዊ እና ምቹ ቤቶችን ይምረጡ</div>
+                <div class="cta-btn">ቤቶችን ያስሱ</div>
+            </div>
+        </div>
+
+        <!-- 4. Vehicles Promo -->
+        <div class="promo-card">
+            <div class="brand-pill"><span>Yesra Sew Solution | Cars</span></div>
+            <img src="./vehicle_promo.png" class="promo-bg" alt="Cars">
+            <div class="overlay text-right">
+                <div class="headline">የሚፈልጉትን መኪና<br>ይግዙ!</div>
+                <div class="subtext">በታማኝነት እና በግልፅነት</div>
+                <div class="cta-btn">መኪናዎችን ይዩ</div>
+            </div>
+        </div>
+
+        <!-- 5. Tenders Promo -->
+        <div class="promo-card">
+            <div class="brand-pill"><span>Yesra Sew Solution | Tenders</span></div>
+            <img src="./tenders_promo.png" class="promo-bg" alt="Tenders">
+            <div class="overlay">
+                <div class="headline">አዳዲስ የጨረታ<br>መረጃዎች</div>
+                <div class="subtext">ከእንግዲህ አያመልጥዎትም!</div>
+                <div class="cta-btn">ጨረታዎችን ይከታተሉ</div>
+            </div>
+        </div>
+
+        <!-- 6. Easy Use Promo -->
+        <div class="promo-card">
+            <div class="brand-pill"><span>Yesra Sew Solution</span></div>
+            <img src="./easy_use_promo.png" class="promo-bg" alt="Easy">
+            <div class="overlay text-center">
+                <div class="headline">ቴክኖሎጂ ሲከብድዎ?<br>እኛ አቅልለነዋል!</div>
+                <div class="subtext">ለመጠቀም ቀላል፣ ግልፅ እና ፈጣን</div>
+                <div class="cta-btn">ይሞክሩት</div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="download-hint">
+        Use a screenshot tool or 'Right Click > Save Image' (if converted) to use these graphics. <br>
+        Open this file in your browser: <code>c:\projects\yesrasew-web\graphic_templates\preview.html</code>
+    </div>
+
+</body>
+
+</html>

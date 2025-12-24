@@ -124,13 +124,13 @@ const HomesPage = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [listingType, setListingType] = useState('ALL');
-  const [templateFields, setTemplateFields] = useState([]);
+
 
   // Access Control
   const { isListingLocked } = useListingAccess('homes');
 
-  // Fetch Template Fields (Cached)
-  useQuery(['homesTemplate'], async () => {
+  // Fetch Template Fields (Cached) - USE QUERY DATA DIRECTLY
+  const { data: templateFields = [] } = useQuery(['homesTemplate'], async () => {
     try {
       const categories = await apiService.getCategories();
       const homesCat = categories.data?.categories?.find(c => c.slug === 'homes' || c.name === 'Homes');
@@ -139,7 +139,6 @@ const HomesPage = () => {
         const templateData = await adminService.getTemplate(homesCat.id);
         if (templateData && templateData.steps) {
           const fields = templateData.steps.flatMap(s => s.fields || []);
-          setTemplateFields(fields);
           return fields;
         }
       }
@@ -149,7 +148,9 @@ const HomesPage = () => {
     return [];
   }, {
     staleTime: 1000 * 60 * 60, // 1 hour for templates
-    refetchOnWindowFocus: false
+    cacheTime: 1000 * 60 * 120, // Keep in cache for 2 hours
+    refetchOnWindowFocus: false,
+    refetchOnMount: false
   });
 
   // Fetch Properties (Cached)
@@ -166,7 +167,10 @@ const HomesPage = () => {
     },
     {
       staleTime: 1000 * 60 * 5, // 5 minutes
-      keepPreviousData: true
+      cacheTime: 1000 * 60 * 30, // Keep in cache for 30 minutes
+      keepPreviousData: true,
+      refetchOnMount: false,
+      refetchOnWindowFocus: false
     }
   );
 

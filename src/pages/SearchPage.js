@@ -12,7 +12,9 @@ import {
 } from '@mui/icons-material';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useQuery } from 'react-query';
 import apiService from '../services/api';
+import adminService from '../services/adminService';
 import DynamicListingCard from '../components/DynamicListingCard';
 import useListingAccess from '../hooks/useListingAccess';
 
@@ -40,6 +42,85 @@ const SearchPage = () => {
 
     // Permission Check
     const { isListingLocked } = useListingAccess('all');
+
+
+    // Using useQuery directly since it's common in this codebase
+    const { data: searchTemplates = {} } = useQuery(['searchTemplates'], async () => {
+        try {
+            const categories = await apiService.getCategories();
+            const cats = categories.data?.categories || [];
+            const templates = {};
+
+            // Robust mapping for standard categories
+            const categoryMappings = [
+                { key: 'jobs', match: ['jobs', 'job', 'vacancy', 'vacancies'] },
+                { key: 'tenders', match: ['tenders', 'tender', 'bids'] },
+                { key: 'homes', match: ['homes', 'home', 'property', 'properties', 'real estate'] },
+                { key: 'cars', match: ['cars', 'car', 'vehicle', 'vehicles', 'automotive'] }
+            ];
+
+            for (const mapping of categoryMappings) {
+                // Find the category that matches one of the keywords
+                const cat = cats.find(c => {
+                    const s = (c.slug || '').toLowerCase();
+                    const n = (c.name || '').toLowerCase();
+                    return mapping.match.includes(s) || mapping.match.includes(n);
+                });
+
+                if (cat) {
+                    try {
+                        const templateData = await (typeof adminService.getTemplate === 'function' ? adminService.getTemplate(cat.id) : Promise.resolve(null));
+                        if (templateData && templateData.steps) {
+                            templates[mapping.key] = templateData.steps.flatMap(s => s.fields || []);
+                        }
+                    } catch (e) {
+                        console.warn(`Failed to load template for ${mapping.key}`, e);
+                    }
+                }
+            }
+            return templates;
+        } catch (err) {
+            console.error('Error fetching search templates', err);
+            return {};
+        }
+    }, {
+        staleTime: 1000 * 60 * 60,
+        cacheTime: 1000 * 60 * 120,
+        refetchOnMount: false
+    });
+
+    // Fetch Categories for resolving IDs
+    const { data: categoriesData } = useQuery('categories', async () => {
+        const res = await apiService.getCategories();
+        return res.categories || res.data?.categories || [];
+    }, { staleTime: 1000 * 60 * 60 });
+    const fetchedCategories = categoriesData || [];
+
+    // Helper to resolve category object
+    const getCategoryForListing = (listing) => {
+        if (listing.category) return listing.category;
+        if (listing.category_id && fetchedCategories.length > 0) {
+            return fetchedCategories.find(c => c.id === listing.category_id);
+        }
+        return null;
+    };
+
+    const getTemplateForListing = (listing) => {
+        const cat = getCategoryForListing(listing);
+        if (!cat) return null;
+
+        const rawSlug = (cat.slug || cat.name || '').toLowerCase();
+
+        // Normalize logic to match the keys in searchTemplates
+        let key = rawSlug;
+        if (['job', 'jobs', 'vacancy'].some(s => rawSlug.includes(s))) key = 'jobs';
+        else if (['tender', 'tenders', 'bid'].some(s => rawSlug.includes(s))) key = 'tenders';
+        else if (['home', 'homes', 'property'].some(s => rawSlug.includes(s))) key = 'homes';
+        else if (['car', 'cars', 'vehicle'].some(s => rawSlug.includes(s))) key = 'cars';
+
+        const fields = searchTemplates[key];
+        return fields ? { steps: [{ fields }] } : null;
+    };
 
     useEffect(() => {
         // Initial search on mount
@@ -180,8 +261,11 @@ const SearchPage = () => {
                                     transition={{ delay: index * 0.05 }}
                                 >
                                     <DynamicListingCard
-                                        listing={item}
-                                        templateFields={[]} // Standard fields for search results
+                                        listing={{
+                                            ...item,
+                                            category: getCategoryForListing(item) || item.category
+                                        }}
+                                        template={getTemplateForListing(item)}
                                         viewMode="grid"
                                     />
                                 </motion.div>

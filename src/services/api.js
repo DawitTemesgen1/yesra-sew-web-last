@@ -1,7 +1,8 @@
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabaseClient';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000'; // Fallback for local dev
+// Production-ready API configuration - uses environment variable or production URL
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.yesrasew.com';
 
 // Re-export supabase for backward compatibility if needed within this file
 export { supabase };

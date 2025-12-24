@@ -202,27 +202,40 @@ const ListingsPage = () => {
     { staleTime: 300000 } // 5 minutes cache
   );
 
-  // 2. Fetch Template (Dependent on Category)
-  const { data: templateFields = [] } = useQuery(
-    ['template', selectedCategory],
-    async () => {
-      if (selectedCategory === 'All') return [];
-      // Pass ID if it's an ID (number/uuid) or find the ID from categories list
-      let catId = selectedCategory;
-      const catObj = categories.find(c => c.id === selectedCategory || c.name === selectedCategory);
-      if (catObj) catId = catObj.id;
-
-      const templateData = await adminService.getTemplate(catId);
-      if (templateData && templateData.steps) {
-        return templateData.steps.flatMap(step => step.fields || []);
+  // 2. Fetch Templates for All Categories (Cached)
+  const { data: allTemplates = {} } = useQuery(['allTemplatesListings'], async () => {
+    try {
+      const cats = categories.length > 0 ? categories : (await apiService.getCategories()).categories || [];
+      const templates = {};
+      for (const cat of cats) {
+        if (['jobs', 'tenders', 'homes', 'cars'].includes(cat.slug)) {
+          const templateData = await adminService.getTemplate(cat.id);
+          if (templateData && templateData.steps) {
+            templates[cat.slug] = templateData.steps.flatMap(s => s.fields || []);
+          }
+        }
       }
-      return [];
-    },
-    {
-      enabled: selectedCategory !== 'All' && categories.length > 0,
-      staleTime: 300000
+      return templates;
+    } catch (err) {
+      console.error('Error fetching listings templates', err);
+      return {};
     }
-  );
+  }, {
+    enabled: true,
+    staleTime: 1000 * 60 * 60,
+    cacheTime: 1000 * 60 * 120,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false
+  });
+
+  const getTemplateForListing = (listing) => {
+    if (!listing || !listing.category) return null;
+    const categorySlug = typeof listing.category === 'string'
+      ? listing.category.toLowerCase()
+      : (listing.category.slug || listing.category.name || '').toLowerCase();
+    const fields = allTemplates[categorySlug];
+    return fields ? { steps: [{ fields }] } : null;
+  };
 
   // 3. Fetch Listings
   const {
@@ -389,7 +402,7 @@ const ListingsPage = () => {
                     >
                       <DynamicListingCard
                         listing={listing}
-                        templateFields={templateFields}
+                        template={getTemplateForListing(listing)}
                         viewMode={viewMode}
                         onToggleFavorite={toggleFavorite}
                         isFavorite={favorites.includes(listing.id) || listing.is_favorited}

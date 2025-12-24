@@ -1,20 +1,27 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Auth Test</title>
 </head>
+
 <body>
     <h1>Authentication Test</h1>
     <button onclick="testPhoneLogin()">Test Phone Login</button>
     <div id="result"></div>
-    
+
     <script type="module">
+        // Use environment-aware API URL
+        const API_URL = window.location.hostname === 'localhost'
+            ? 'http://localhost:8000'
+            : 'https://api.yesrasew.com';
+
         async function testPhoneLogin() {
             const resultDiv = document.getElementById('result');
             resultDiv.innerHTML = 'Testing...';
-            
+
             try {
-                const response = await fetch('http://localhost:8000/api/auth/phone/login', {
+                const response = await fetch(`${API_URL}/api/auth/phone/login`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -24,15 +31,15 @@
                         password: 'Test@1234'
                     })
                 });
-                
+
                 const result = await response.json();
                 console.log('Login result:', result);
-                
+
                 if (result.success) {
                     // Store in localStorage
                     localStorage.setItem('accessToken', result.token);
                     localStorage.setItem('user', JSON.stringify(result.user));
-                    
+
                     resultDiv.innerHTML = `
                         <h2>Login Successful!</h2>
                         <p>User: ${result.user.full_name}</p>
@@ -47,8 +54,9 @@
                 resultDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
             }
         }
-        
+
         window.testPhoneLogin = testPhoneLogin;
     </script>
 </body>
+
 </html>

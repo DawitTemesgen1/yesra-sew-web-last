@@ -349,11 +349,91 @@ const HomePage = () => {
   // Fetch Real Market Stats (Counts)
   const { data: marketStats = { jobs: 0, homes: 0, cars: 0 }, isLoading: statsLoading } = useQuery(
     'marketStats',
-    async () => {
-      return await apiService.getMarketStats();
-    },
-    { staleTime: 1000 * 60 * 15 } // Cache for 15 minutes
+    async () => await apiService.getMarketStats(),
+    { staleTime: 1000 * 60 * 15 }
   );
+
+  // Fetch Categories for resolving IDs
+  const { data: categoriesData } = useQuery('categories', async () => {
+    const res = await apiService.getCategories();
+    return res.categories || res.data?.categories || [];
+  }, { staleTime: 1000 * 60 * 60 });
+  const fetchedCategories = categoriesData || [];
+
+  // Fetch Templates for All Categories
+  const { data: allTemplates = {} } = useQuery(['allTemplates'], async () => {
+    try {
+      const categories = await apiService.getCategories();
+      const cats = categories.data?.categories || [];
+
+      const templates = {};
+
+      // Robust mapping for standard categories
+      const categoryMappings = [
+        { key: 'jobs', match: ['jobs', 'job', 'vacancy', 'vacancies'] },
+        { key: 'tenders', match: ['tenders', 'tender', 'bids'] },
+        { key: 'homes', match: ['homes', 'home', 'property', 'properties', 'real estate'] },
+        { key: 'cars', match: ['cars', 'car', 'vehicle', 'vehicles', 'automotive'] }
+      ];
+
+      for (const mapping of categoryMappings) {
+        // Find the category that matches one of the keywords
+        const cat = cats.find(c => {
+          const s = (c.slug || '').toLowerCase();
+          const n = (c.name || '').toLowerCase();
+          return mapping.match.includes(s) || mapping.match.includes(n);
+        });
+
+        if (cat) {
+          try {
+            const templateData = await adminService.getTemplate(cat.id);
+            if (templateData && templateData.steps) {
+              templates[mapping.key] = templateData.steps.flatMap(s => s.fields || []);
+            }
+          } catch (e) {
+            console.warn(`Failed to load template for ${mapping.key}`, e);
+          }
+        }
+      }
+
+      return templates;
+    } catch (err) {
+      console.error('Error fetching templates', err);
+      return {};
+    }
+  }, {
+    staleTime: 1000 * 60 * 60, // 1 hour
+    cacheTime: 1000 * 60 * 120, // 2 hours
+    refetchOnWindowFocus: false,
+    refetchOnMount: false
+  });
+
+  // Helper to resolve category object
+  const getCategoryForListing = (listing) => {
+    if (listing.category) return listing.category;
+    if (listing.category_id && fetchedCategories.length > 0) {
+      return fetchedCategories.find(c => c.id === listing.category_id);
+    }
+    return null;
+  };
+
+  // Helper to get template for a listing based on its category
+  const getTemplateForListing = (listing) => {
+    const cat = getCategoryForListing(listing);
+    if (!cat) return null;
+
+    const rawSlug = (cat.slug || cat.name || '').toLowerCase();
+
+    // Normalize logic to match the keys in allTemplates
+    let key = rawSlug;
+    if (['job', 'jobs', 'vacancy'].some(s => rawSlug.includes(s))) key = 'jobs';
+    else if (['tender', 'tenders', 'bid'].some(s => rawSlug.includes(s))) key = 'tenders';
+    else if (['home', 'homes', 'property'].some(s => rawSlug.includes(s))) key = 'homes';
+    else if (['car', 'cars', 'vehicle'].some(s => rawSlug.includes(s))) key = 'cars';
+
+    const fields = allTemplates[key];
+    return fields ? { steps: [{ fields }] } : null;
+  };
 
 
   return (
@@ -741,9 +821,12 @@ const HomePage = () => {
                 {premiumListings.map((listing, i) => (
                   <Box key={listing.id} sx={{ minWidth: 320, maxWidth: 320 }}>
                     <DynamicListingCard
-                      listing={listing}
+                      listing={{
+                        ...listing,
+                        category: getCategoryForListing(listing) || listing.category
+                      }}
+                      template={getTemplateForListing(listing)}
                       viewMode="grid"
-                      // isLocked prop removed to allow DynamicListingCard to self-manage access via useListingAccess
                       onToggleFavorite={toggleFavorite}
                       isFavorite={favorites.includes(listing.id) || listing.is_favorited}
                     />
@@ -798,7 +881,11 @@ const HomePage = () => {
                   viewport={{ once: true }}
                 >
                   <DynamicListingCard
-                    listing={listing}
+                    listing={{
+                      ...listing,
+                      category: getCategoryForListing(listing) || listing.category
+                    }}
+                    template={getTemplateForListing(listing)}
                     viewMode="grid"
                     onToggleFavorite={toggleFavorite}
                     isFavorite={favorites.includes(listing.id) || listing.is_favorited}

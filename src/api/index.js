@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 // API Configuration
-const API_BASE_URL = (process.env.REACT_APP_API_URL || 'http://localhost:8000') + '/api';
+// Production-ready API configuration
+const API_BASE_URL = (process.env.REACT_APP_API_URL || 'https://api.yesrasew.com') + '/api';
 
 // Create axios instance
 const api = axios.create({

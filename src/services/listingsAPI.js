@@ -1,4 +1,5 @@
-const API_BASE_URL = process.env.REACT_APP_LISTINGS_API || 'http://localhost:5000/api';
+// Production-ready API configuration
+const API_BASE_URL = process.env.REACT_APP_LISTINGS_API || process.env.REACT_APP_API_URL || 'https://api.yesrasew.com/api';
 
 class ListingsAPIService {
     /**

@@ -53,9 +53,10 @@
         <div class="info">
             <h3>📝 Next Steps:</h3>
             <ol>
-                <li>Make sure your React dev server is running on <code>http://localhost:3000</code></li>
+                <li>Make sure your React dev server is running on <code>http://localhost:3000</code> (development)</li>
                 <li>Run: <code>npm start</code> in the main project directory</li>
                 <li>The Flutter app will then load your actual React application</li>
+                <li>In production, the app will load from <code>https://www.yesrasewsolution.com</code></li>
             </ol>
         </div>
 
@@ -63,7 +64,8 @@
             <h3>🔍 Current Configuration:</h3>
             <ul>
                 <li><strong>Flutter App:</strong> Loading from iframe</li>
-                <li><strong>Target URL:</strong> http://localhost:3000</li>
+                <li><strong>Development URL:</strong> http://localhost:3000</li>
+                <li><strong>Production URL:</strong> https://www.yesrasewsolution.com</li>
                 <li><strong>Platform:</strong> Web (Chrome)</li>
             </ul>
         </div>
@@ -73,6 +75,7 @@
         console.log('✅ Test page loaded successfully!');
         console.log('📍 Current URL:', window.location.href);
         console.log('🌐 User Agent:', navigator.userAgent);
+        console.log('🔧 Environment:', window.location.hostname === 'localhost' ? 'Development' : 'Production');
     </script>
 </body>
 
