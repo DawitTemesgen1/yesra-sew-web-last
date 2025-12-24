@@ -1199,7 +1199,7 @@ const adminService = {
             if (templateError) throw templateError;
             if (!template) return null; // No template exists yet
 
-            const { data: rawSteps, error: stepsError } = await supabase
+            const { data: steps, error: stepsError } = await supabase
                 .from('template_steps')
                 .select(`
                   *,
@@ -1211,29 +1211,14 @@ const adminService = {
             if (stepsError) throw stepsError;
 
             // Sort fields properly in JS
-            rawSteps?.forEach(step => {
+            steps?.forEach(step => {
                 if (step.fields) {
                     step.fields.sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
                 }
             });
 
-            // Extract Config/Filters from hidden step
-            let filters = { enabled: true, items: [] }; // Default
-            let steps = [];
-
-            if (rawSteps) {
-                const configStep = rawSteps.find(s => s.title === '__CONFIG__');
-                if (configStep && configStep.description) {
-                    try {
-                        const parsed = JSON.parse(configStep.description);
-                        if (parsed.filters) filters = parsed.filters;
-                    } catch (e) {
-                        console.warn('Failed to parse template config', e);
-                    }
-                }
-                // Filter out the config step from the UI steps
-                steps = rawSteps.filter(s => s.title !== '__CONFIG__');
-            }
+            // Use the filters directly from the template column (fallback if null)
+            const filters = template.filters || { enabled: true, items: [] };
 
             const result = { template, steps, filters };
             cache.set(cacheKey, result, 5 * 60 * 1000); // 5 minute cache
@@ -1275,6 +1260,24 @@ const adminService = {
             return data ? data[0] : null;
         } catch (error) {
             console.error('Error updating template:', error);
+            throw error;
+        }
+    },
+
+    // New Method to Manage Filters via Column
+    async updateTemplateFilters(templateId, filters) {
+        try {
+            const { error } = await supabase
+                .from('post_templates')
+                .update({ filters: filters })
+                .eq('id', templateId);
+
+            if (error) throw error;
+
+            cache.clear('template_');
+            return true;
+        } catch (error) {
+            console.error('Error updating template filters:', error);
             throw error;
         }
     },
