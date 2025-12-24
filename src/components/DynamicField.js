@@ -7,6 +7,7 @@ import {
 import { DatePicker, TimePicker, DateTimePicker } from '@mui/x-date-pickers';
 import VideoUploader from './VideoUploader';
 import ImageUploader from './ImageUploader';
+import FileUploader from './FileUploader';
 
 const DynamicField = ({ field, value, onChange, error, helperText }) => {
     const handleChange = (e) => {
@@ -272,8 +273,26 @@ const DynamicField = ({ field, value, onChange, error, helperText }) => {
                 </Box>
             );
 
-        case 'image':
         case 'file':
+            return (
+                <Box>
+                    <Typography variant="subtitle2" gutterBottom required={field.is_required}>
+                        {field.field_label} {field.is_required && '*'}
+                    </Typography>
+                    <FileUploader
+                        value={value}
+                        onChange={onChange}
+                        multiple={field.allow_multiple}
+                    />
+                    {(error || field.help_text) && (
+                        <Typography variant="caption" color={error ? "error" : "textSecondary"} sx={{ display: 'block', mt: 1 }}>
+                            {error || field.help_text}
+                        </Typography>
+                    )}
+                </Box>
+            );
+
+        case 'image':
             return (
                 <Box>
                     <Typography variant="subtitle2" gutterBottom required={field.is_required}>
@@ -320,4 +339,3 @@ const DynamicField = ({ field, value, onChange, error, helperText }) => {
 };
 
 export default DynamicField;
-

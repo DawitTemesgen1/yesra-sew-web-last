@@ -176,6 +176,7 @@ const DynamicField = ({ field, value, isMobile }) => {
   }
 
   if (field.field_type === 'file') {
+    const files = Array.isArray(value) ? value : [value];
     return (
       <Paper
         sx={{
@@ -190,15 +191,31 @@ const DynamicField = ({ field, value, isMobile }) => {
         <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
           {field.field_label}
         </Typography>
-        <Button
-          variant="outlined"
-          size="small"
-          href={value}
-          target="_blank"
-          sx={{ mt: 1, textTransform: 'none' }}
-        >
-          View Document
-        </Button>
+        <Stack spacing={1} sx={{ mt: 1 }}>
+          {files.map((fileUrl, idx) => (
+            <Button
+              key={idx}
+              variant="outlined"
+              size="small"
+              href={fileUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={{ textTransform: 'none', justifyContent: 'flex-start' }}
+              startIcon={<Box component="span" sx={{ fontSize: 16 }}>📄</Box>}
+            >
+              {/* Try to extract a readable name, fallback to Document N */}
+              {(() => {
+                try {
+                  const parts = fileUrl.split('/');
+                  const filename = parts[parts.length - 1];
+                  // Remove timestamp prefix if present (123123-random-name.pdf)
+                  const cleanName = filename.split('-').slice(2).join('-') || filename;
+                  return decodeURIComponent(cleanName);
+                } catch (e) { return `Document ${idx + 1}`; }
+              })()}
+            </Button>
+          ))}
+        </Stack>
       </Paper>
     );
   }
