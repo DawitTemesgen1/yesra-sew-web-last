@@ -117,8 +117,10 @@ export const AuthProvider = ({ children }) => {
         } else if (isWebOAuth) {
           // Handle Standard Web OAuth (Browser)
 
-          const redirectUrl = window.location.origin;
-
+          // Use explicit production URL to avoid any localhost redirection issues
+          const redirectUrl = window.location.hostname === 'localhost'
+            ? 'http://localhost:3000'
+            : 'https://www.yesrasewsolution.com';
 
           result = await supabase.auth.signInWithOAuth({
             provider: 'google',
