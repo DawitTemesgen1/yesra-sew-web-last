@@ -129,29 +129,44 @@ const HomesPage = () => {
   // Access Control
   const { isListingLocked } = useListingAccess('homes');
 
-  // Fetch Template Fields (Cached) - USE QUERY DATA DIRECTLY
-  const { data: templateFields = [] } = useQuery(['homesTemplate'], async () => {
+  // Fetch Template Data (Fields & Filters)
+  const { data: templateData } = useQuery(['homesTemplate'], async () => {
     try {
       const categories = await apiService.getCategories();
       const homesCat = categories.data?.categories?.find(c => c.slug === 'homes' || c.name === 'Homes');
 
       if (homesCat) {
-        const templateData = await adminService.getTemplate(homesCat.id);
-        if (templateData && templateData.steps) {
-          const fields = templateData.steps.flatMap(s => s.fields || []);
-          return fields;
+        const data = await adminService.getTemplate(homesCat.id);
+        if (data) {
+          const fields = data.steps ? data.steps.flatMap(s => s.fields || []) : [];
+          const filters = data.filters || { enabled: true, items: [] };
+          return { fields, filters };
         }
       }
     } catch (err) {
       console.error('Error fetching homes template', err);
     }
-    return [];
+    return { fields: [], filters: { enabled: true, items: [] } };
   }, {
     staleTime: 1000 * 60 * 60, // 1 hour for templates
     cacheTime: 1000 * 60 * 120, // Keep in cache for 2 hours
     refetchOnWindowFocus: false,
     refetchOnMount: false
   });
+
+  const templateFields = templateData?.fields || [];
+
+  const defaultFilterOptions = [
+    { id: 'ALL', label: t.allTypes || 'All Types' },
+    { id: 'sale', label: t.forSale || 'For Sale' },
+    { id: 'rent', label: t.forRent || 'For Rent' }
+  ];
+
+  const validDynamicFilters = templateData?.filters?.enabled && templateData?.filters?.items?.length > 0
+    ? [{ label: t.allTypes || 'All Types', id: 'ALL' }, ...templateData.filters.items.map(i => ({ id: i.value, label: i.label }))]
+    : null;
+
+  const filterOptions = validDynamicFilters || defaultFilterOptions;
 
   // Fetch Properties (Cached)
   const { data: properties = [], isLoading, error } = useQuery(
@@ -266,11 +281,7 @@ const HomesPage = () => {
       <Box sx={{ bgcolor: 'background.default', pt: 3, pb: 1 }}>
         <Container maxWidth="lg">
           <Stack direction="row" spacing={1} sx={{ justifyContent: isMobile ? 'flex-start' : 'center', overflowX: 'auto', pb: 1 }}>
-            {[
-              { id: 'ALL', label: t.allTypes || 'All Types' },
-              { id: 'sale', label: t.forSale || 'For Sale' },
-              { id: 'rent', label: t.forRent || 'For Rent' }
-            ].map((type) => {
+            {filterOptions.map((type) => {
               const isSelected = listingType === type.id;
               return (
                 <Chip

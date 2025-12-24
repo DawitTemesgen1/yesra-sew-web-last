@@ -122,7 +122,7 @@ const JobsPage = () => {
   // Check listing access for jobs category
   const { hasAccess, loading: accessLoading, isListingLocked } = useListingAccess('jobs');
 
-  const filterOptions = [
+  const defaultFilterOptions = [
     { value: 'All Jobs', label: t.filters.all },
     { value: 'Full Time', label: t.filters.fullTime },
     { value: 'Part Time', label: t.filters.partTime },
@@ -131,29 +131,38 @@ const JobsPage = () => {
     { value: 'Contract', label: t.filters.contract }
   ];
 
-  // Fetch Template Fields (Cached) - USE QUERY DATA DIRECTLY
-  const { data: templateFields = [] } = useQuery(['jobsTemplate'], async () => {
+  // Fetch Template Data (Fields & Filters)
+  const { data: templateData } = useQuery(['jobsTemplate'], async () => {
     try {
       const allCats = await apiService.getCategories();
       const jobsCat = allCats.data?.categories?.find(c => c.slug === 'jobs' || c.name === 'Jobs');
 
       if (jobsCat) {
-        const templateData = await adminService.getTemplate(jobsCat.id);
-        if (templateData && templateData.steps) {
-          const fields = templateData.steps.flatMap(s => s.fields || []);
-          return fields; // Return directly - React Query will cache this
+        const data = await adminService.getTemplate(jobsCat.id);
+        if (data) {
+          const fields = data.steps ? data.steps.flatMap(s => s.fields || []) : [];
+          const filters = data.filters || { enabled: true, items: [] };
+          return { fields, filters };
         }
       }
     } catch (err) {
       console.error('Error fetching jobs template', err);
     }
-    return [];
+    return { fields: [], filters: { enabled: true, items: [] } };
   }, {
     staleTime: 1000 * 60 * 60, // 1 hour for templates
     cacheTime: 1000 * 60 * 120, // Keep in cache for 2 hours
     refetchOnWindowFocus: false,
     refetchOnMount: false
   });
+
+  const templateFields = templateData?.fields || [];
+  const validDynamicFilters = templateData?.filters?.enabled && templateData?.filters?.items?.length > 0
+    ? [{ label: t.filters.all, value: 'All Jobs' }, ...templateData.filters.items]
+    : null;
+
+  // Use dynamic filters if available, otherwise default
+  const filterOptions = validDynamicFilters || defaultFilterOptions;
 
   // Fetch Jobs (Cached)
   const { data: jobs = [], isLoading, error } = useQuery(

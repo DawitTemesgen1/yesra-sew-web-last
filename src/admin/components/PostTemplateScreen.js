@@ -56,7 +56,8 @@ const PostTemplateScreen = () => {
     const [selectedCategory, setSelectedCategory] = useState(categoryId || '');
     const [template, setTemplate] = useState(null);
     const [steps, setSteps] = useState([]);
-    const [viewMode, setViewMode] = useState('form'); // 'form', 'detail', 'card'
+    const [filters, setFilters] = useState({ enabled: true, items: [] }); // New State for Filters
+    const [viewMode, setViewMode] = useState('form'); // 'form', 'detail', 'card', 'filters'
 
     // Dialog States
     const [stepDialogOpen, setStepDialogOpen] = useState(false);
@@ -73,6 +74,9 @@ const PostTemplateScreen = () => {
         options: [], allow_multiple: false,
         display_in_card: false, display_in_detail: true, card_priority: 0, is_cover_image: false
     });
+
+    // Filter Form State
+    const [filterForm, setFilterForm] = useState({ label: '', value: '' });
 
     useEffect(() => {
         loadCategories();
@@ -110,14 +114,17 @@ const PostTemplateScreen = () => {
             if (data) {
                 setTemplate(data.template);
                 setSteps(data.steps || []);
+                setFilters(data.filters || { enabled: true, items: [] });
             } else {
                 setTemplate(null);
                 setSteps([]);
+                setFilters({ enabled: true, items: [] });
             }
         } catch (error) {
             console.error('Error loading template:', error);
             setTemplate(null);
             setSteps([]);
+            setFilters({ enabled: true, items: [] });
         } finally {
             setLoading(false);
         }
@@ -145,6 +152,36 @@ const PostTemplateScreen = () => {
             loadTemplate();
         } catch (error) {
             toast.error('Failed to publish template');
+        }
+    };
+
+    // Filter Handlers
+    const handleAddFilterItem = () => {
+        if (!filterForm.label || !filterForm.value) {
+            toast.error('Label and Value are required');
+            return;
+        }
+        setFilters(prev => ({
+            ...prev,
+            items: [...prev.items, { ...filterForm }]
+        }));
+        setFilterForm({ label: '', value: '' });
+    };
+
+    const handleRemoveFilterItem = (index) => {
+        setFilters(prev => {
+            const newItems = [...prev.items];
+            newItems.splice(index, 1);
+            return { ...prev, items: newItems };
+        });
+    };
+
+    const handleSaveFilters = async () => {
+        try {
+            await adminService.updateTemplateFilters(template.id, filters);
+            toast.success('Filters configuration saved!');
+        } catch (error) {
+            toast.error('Failed to save filters');
         }
     };
 
@@ -486,7 +523,7 @@ const PostTemplateScreen = () => {
                         Post Template Builder
                     </Typography>
                     <Typography variant="body2" color="text.secondary" mb={3}>
-                        Create dynamic forms, detail layouts, and card designs for listings
+                        Create dynamic forms, detail layouts, card designs, and filters for listings
                     </Typography>
 
                     {/* Category Selector */}
@@ -548,10 +585,87 @@ const PostTemplateScreen = () => {
                                 >
                                     Card Layout
                                 </Button>
+                                <Button
+                                    variant={viewMode === 'filters' ? 'contained' : 'text'}
+                                    onClick={() => setViewMode('filters')}
+                                >
+                                    Filters
+                                </Button>
                             </Stack>
                         </Box>
                     )}
                 </Box>
+
+                {/* FILTER MANAGER */}
+                {viewMode === 'filters' && template && (
+                    <Box>
+                        <Alert severity="info" sx={{ mb: 3 }}>
+                            <strong>Managed Filters:</strong> Configure the filter chips that appear at the top of the listings page for this category.
+                        </Alert>
+
+                        <Card sx={{ mb: 3 }}>
+                            <CardContent>
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={filters.enabled}
+                                            onChange={(e) => setFilters({ ...filters, enabled: e.target.checked })}
+                                        />
+                                    }
+                                    label="Enable Filters for this Category"
+                                />
+
+                                <Divider sx={{ my: 2 }} />
+
+                                <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                                    <TextField
+                                        label="Label (e.g. Construction)"
+                                        size="small"
+                                        value={filterForm.label}
+                                        onChange={(e) => setFilterForm({ ...filterForm, label: e.target.value })}
+                                    />
+                                    <TextField
+                                        label="Value (e.g. construction)"
+                                        size="small"
+                                        value={filterForm.value}
+                                        onChange={(e) => setFilterForm({ ...filterForm, value: e.target.value })}
+                                    />
+                                    <Button variant="contained" onClick={handleAddFilterItem} startIcon={<Add />}>
+                                        Add
+                                    </Button>
+                                </Box>
+
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                                    {filters.items.map((item, index) => (
+                                        <Chip
+                                            key={index}
+                                            label={`${item.label} (${item.value})`}
+                                            onDelete={() => handleRemoveFilterItem(index)}
+                                            color="primary"
+                                            variant="outlined"
+                                        />
+                                    ))}
+                                    {filters.items.length === 0 && (
+                                        <Typography variant="body2" color="text.secondary">
+                                            No filters configured.
+                                        </Typography>
+                                    )}
+                                </Box>
+
+                                <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+                                    <Button
+                                        variant="contained"
+                                        color="primary"
+                                        startIcon={<Save />}
+                                        onClick={handleSaveFilters}
+                                    >
+                                        Save Configuration
+                                    </Button>
+                                </Box>
+                            </CardContent>
+                        </Card>
+                    </Box>
+                )}
 
                 {/* FORM BUILDER */}
                 {viewMode === 'form' && template && (

@@ -156,29 +156,50 @@ const TendersPage = () => {
   // Check listing access for tenders category
   const { hasAccess, loading: accessLoading, isListingLocked } = useListingAccess('tenders');
 
+  /* Removed blocking loader */
+
+  const defaultCategories = [
+    { value: 'All', label: t.categories.all },
+    { value: 'Construction', label: t.categories.construction },
+    { value: 'Technology', label: t.categories.technology },
+    { value: 'Healthcare', label: t.categories.healthcare },
+    { value: 'Energy', label: t.categories.energy },
+    { value: 'Education', label: t.categories.education },
+    { value: 'Logistics', label: t.categories.logistics },
+    { value: 'Agriculture', label: t.categories.agriculture }
+  ];
+
   // Fetch Template Fields (Cached) - USE QUERY DATA DIRECTLY
-  const { data: templateFields = [] } = useQuery(['tendersTemplate'], async () => {
+  const { data: templateData } = useQuery(['tendersTemplate'], async () => {
     try {
       const allCats = await apiService.getCategories();
       const tendersCat = allCats.data?.categories?.find(c => c.slug === 'tenders' || c.name === 'Tenders');
 
       if (tendersCat) {
-        const templateData = await adminService.getTemplate(tendersCat.id);
-        if (templateData && templateData.steps) {
-          const fields = templateData.steps.flatMap(s => s.fields || []);
-          return fields; // Return directly - React Query will cache this
+        const data = await adminService.getTemplate(tendersCat.id);
+        if (data) {
+          const fields = data.steps ? data.steps.flatMap(s => s.fields || []) : [];
+          const filters = data.filters || { enabled: true, items: [] };
+          return { fields, filters };
         }
       }
     } catch (err) {
       console.error('Error fetching tenders template', err);
     }
-    return [];
+    return { fields: [], filters: { enabled: true, items: [] } };
   }, {
     staleTime: 1000 * 60 * 60, // 1 hour for templates
     cacheTime: 1000 * 60 * 120, // Keep in cache for 2 hours
     refetchOnWindowFocus: false,
     refetchOnMount: false
   });
+
+  const templateFields = templateData?.fields || [];
+  const validDynamicFilters = templateData?.filters?.enabled && templateData?.filters?.items?.length > 0
+    ? [{ label: t.categories.all, value: 'All' }, ...templateData.filters.items]
+    : null;
+
+  const categories = validDynamicFilters || defaultCategories;
 
   // Fetch Tenders (Cached)
   const { data: tenders = [], isLoading, error } = useQuery(
@@ -200,17 +221,6 @@ const TendersPage = () => {
       refetchOnWindowFocus: false // Don't refetch when window regains focus
     }
   );
-
-  const categories = [
-    { value: 'All', label: t.categories.all },
-    { value: 'Construction', label: t.categories.construction },
-    { value: 'Technology', label: t.categories.technology },
-    { value: 'Healthcare', label: t.categories.healthcare },
-    { value: 'Energy', label: t.categories.energy },
-    { value: 'Education', label: t.categories.education },
-    { value: 'Logistics', label: t.categories.logistics },
-    { value: 'Agriculture', label: t.categories.agriculture }
-  ];
 
   /* Removed blocking loader */
 

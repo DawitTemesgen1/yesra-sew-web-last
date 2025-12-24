@@ -108,7 +108,7 @@ const CarsPage = () => {
   const t = translations[language] || translations.en;
 
   // Dynamically generate car brands based on the selected language for "All Brands"
-  const CAR_BRANDS = [
+  const DEFAULT_CAR_BRANDS = [
     { id: 'ALL', label: t.allBrands },
     { id: 'Toyota', label: 'Toyota' },
     { id: 'Hyundai', label: 'Hyundai' },
@@ -127,29 +127,37 @@ const CarsPage = () => {
   // Access Control
   const { isListingLocked } = useListingAccess('cars');
 
-  // Fetch Template Fields (Cached) - USE QUERY DATA DIRECTLY
-  const { data: templateFields = [] } = useQuery(['carsTemplate'], async () => {
+  // Fetch Template Data (Fields & Filters)
+  const { data: templateData } = useQuery(['carsTemplate'], async () => {
     try {
       const categories = await apiService.getCategories();
       const carsCat = categories.data?.categories?.find(c => c.slug === 'cars' || c.name === 'Cars');
 
       if (carsCat) {
-        const templateData = await adminService.getTemplate(carsCat.id);
-        if (templateData && templateData.steps) {
-          const fields = templateData.steps.flatMap(s => s.fields || []);
-          return fields;
+        const data = await adminService.getTemplate(carsCat.id);
+        if (data) {
+          const fields = data.steps ? data.steps.flatMap(s => s.fields || []) : [];
+          const filters = data.filters || { enabled: true, items: [] };
+          return { fields, filters };
         }
       }
     } catch (err) {
       console.error('Error fetching cars template', err);
     }
-    return [];
+    return { fields: [], filters: { enabled: true, items: [] } };
   }, {
     staleTime: 1000 * 60 * 60, // 1 hour for templates
     cacheTime: 1000 * 60 * 120, // Keep in cache for 2 hours
     refetchOnWindowFocus: false,
     refetchOnMount: false
   });
+
+  const templateFields = templateData?.fields || [];
+  const validDynamicBrands = templateData?.filters?.enabled && templateData?.filters?.items?.length > 0
+    ? [{ label: t.allBrands, id: 'ALL' }, ...templateData.filters.items.map(i => ({ id: i.value, label: i.label }))]
+    : null;
+
+  const CAR_BRANDS = validDynamicBrands || DEFAULT_CAR_BRANDS;
 
   // Fetch Cars (Cached)
   const { data: cars = [], isLoading, error } = useQuery(
