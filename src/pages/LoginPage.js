@@ -267,6 +267,7 @@ const LoginPage = () => {
 
                 {/* Combined Identifier Field */}
                 <TextField
+                  autoFocus
                   fullWidth
                   label={t.emailOrPhoneLabel}
                   value={identifier}
@@ -291,7 +292,23 @@ const LoginPage = () => {
                   <Link component={RouterLink} to="/forgot-password" variant="body2" color="primary" sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>{t.forgotPassword}</Link>
                 </Box>
 
-                <Button type="submit" fullWidth variant="contained" size="large" disabled={isLoading} sx={{ py: 1.5, borderRadius: 2, fontSize: '1rem', transition: 'all 0.3s ease' }}>
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  size="large"
+                  disabled={isLoading}
+                  sx={{
+                    py: 1.5,
+                    borderRadius: 2,
+                    fontSize: '1rem',
+                    transition: 'all 0.3s ease',
+                    background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                    '&:hover': {
+                      background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
+                    },
+                  }}
+                >
                   {isLoading ? (<><CircularProgress size={24} sx={{ mr: 1, color: 'white' }} />{t.signingInButton}</>) : (t.signInButton)}
                 </Button>
               </Stack>

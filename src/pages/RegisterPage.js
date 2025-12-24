@@ -12,14 +12,189 @@ import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { alpha } from '@mui/material/styles';
-import apiService from '../services/apiService'; // Ensure this is imported
+import apiService from '../services/apiService';
+import { useLanguage } from '../contexts/LanguageContext';
+
+const translations = {
+  en: {
+    header: "Create Account",
+    title: "Join Yesira Sew",
+    subtitle: "Create your account to start posting and discovering amazing opportunities",
+    individual: "Individual",
+    company: "Company",
+    firstName: "First Name",
+    lastName: "Last Name",
+    companyName: "Company Name",
+    emailOrPhone: "Email or Phone Number",
+    emailOrPhonePlaceholder: "Enter email or phone number",
+    password: "Password",
+    confirmPassword: "Confirm Password",
+    agreeTo: "I agree to the ",
+    terms: "Terms of Service",
+    privacy: "Privacy Policy",
+    and: " and ",
+    createAccount: "Create Account",
+    creating: "Creating Account...",
+    or: "OR",
+    google: "Sign up with Google",
+    facebook: "Sign up with Facebook",
+    alreadyHaveAccount: "Already have an account?",
+    signIn: "Sign In",
+    successMsg: "Account created successfully! Redirecting...",
+    verifyEmailMsg: "Account created! Please check your email to verify your account.",
+    help: "Help Center",
+    support: "Contact Support",
+    validation: {
+      required: "Field is required",
+      firstName: "First name is required",
+      lastName: "Last name is required",
+      companyName: "Company name is required",
+      identifierRequired: "Email or Phone number is required",
+      identifierInvalid: "Please enter a valid email or phone number",
+      passwordRequired: "Password is required",
+      passwordMin: "Password must be at least 6 characters",
+      confirmRequired: "Please confirm your password",
+      passwordMismatch: "Passwords do not match",
+      terms: "You must agree to the terms and conditions"
+    }
+  },
+  am: {
+    header: "አካውንት ይፍጠሩ",
+    title: "ይሥራ ሰው ይቀላቀሉ",
+    subtitle: "አዳዲስ እድሎችን ለማግኘት እና ለመለጠፍ አካውንትዎን ይፍጠሩ",
+    individual: "ግለሰብ",
+    company: "ድርጅት",
+    firstName: "ስም",
+    lastName: "የአባት ስም",
+    companyName: "የድርጅት ስም",
+    emailOrPhone: "ኢሜይል ወይም ስልክ ቁጥር",
+    emailOrPhonePlaceholder: "ኢሜይል ወይም ስልክ ቁጥር ያስገቡ",
+    password: "የይለፍ ቃል",
+    confirmPassword: "የይለፍ ቃል ያረጋግጡ",
+    agreeTo: "በ",
+    terms: "አገልግሎት ውል",
+    privacy: "ግላዊነት ፖሊሲ",
+    and: " እና ",
+    createAccount: "አካውንት ይፍጠሩ",
+    creating: "በመፍጠር ላይ...",
+    or: "ወይም",
+    google: "በGoogle ይመዝገቡ",
+    facebook: "በFacebook ይመዝገቡ",
+    alreadyHaveAccount: "አካውንት አለዎት?",
+    signIn: "ይግቡ",
+    successMsg: "አካውንትዎ በተሳካ ሁኔታ ተፈጥሯል! በማስተላለፍ ላይ...",
+    verifyEmailMsg: "አካውንት ተፈጥሯል! እባክዎ ኢሜይልዎን ያረጋግጡ።",
+    help: "የእርዳታ ማዕከል",
+    support: "ድጋፍ ያግኙ",
+    validation: {
+      required: "ይህ ቦታ ያስፈልጋል",
+      firstName: "ስም ያስፈልጋል",
+      lastName: "የአባት ስም ያስፈልጋል",
+      companyName: "የድርጅት ስም ያስፈልጋል",
+      identifierRequired: "ኢሜይል ወይም ስልክ ቁጥር ያስፈልጋል",
+      identifierInvalid: "እባክዎ ትክክለኛ ኢሜይል ወይም ስልክ ቁጥር ያስገቡ",
+      passwordRequired: "የይለፍ ቃል ያስፈልጋል",
+      passwordMin: "የይለፍ ቃል ቢያንስ 6 ቁምፊዎች መሆን አለበት",
+      confirmRequired: "እባክዎ የይለፍ ቃልዎን ያረጋግጡ",
+      passwordMismatch: "የይለፍ ቃላቶቹ አይመሳሰሉም",
+      terms: "በውል እና ሁኔታዎቹ መስማማት አለብዎት"
+    }
+  },
+  om: {
+    header: "Akkaawuntii Uumi",
+    title: "Yesira Sewitti Makami",
+    subtitle: "Carraawwan dinqisiisoo argachuuf fi maxxansuuf akkaawuntii keessan uumaa",
+    individual: "Dhuunfaa",
+    company: "Dhaabbata",
+    firstName: "Maqaa",
+    lastName: "Maqaa Abbaa",
+    companyName: "Maqaa Dhaabbataa",
+    emailOrPhone: "Imeelii ykn Lakkoofsa Bilbilaa",
+    emailOrPhonePlaceholder: "Imeelii ykn bilbila galchaa",
+    password: "Jecha Darbii",
+    confirmPassword: "Jecha Darbii Mirkaneessi",
+    agreeTo: "Ani ",
+    terms: "Waliigaltee Tajaajilaa",
+    privacy: "Imammata Mateenyaa",
+    and: " fi ",
+    createAccount: "Akkaawuntii Uumi",
+    creating: "Uumaa jira...",
+    or: "YKN",
+    google: "Google'n Galmaa'i",
+    facebook: "Facebook'n Galmaa'i",
+    alreadyHaveAccount: "Akkaawuntii qabduu?",
+    signIn: "Seeni",
+    successMsg: "Akkaawuntiin milkaa'inaan uumameera! Gara fuula biraatti darbaa jira...",
+    verifyEmailMsg: "Akkaawuntiin uumameera! Maaloo imeelii keessan mirkaneeffadhaa.",
+    help: "Giddugala Gargaarsaa",
+    support: "Deeggarsa Argadhu",
+    validation: {
+      required: "Bakki kun dirqama",
+      firstName: "Maqaan dirqama",
+      lastName: "Maqaan abbaa dirqama",
+      companyName: "Maqaan dhaabbataa dirqama",
+      identifierRequired: "Imeeliin ykn Bilbilli barbaachisaadha",
+      identifierInvalid: "Maaloo imeelii ykn bilbila sirrii galchaa",
+      passwordRequired: "Jechi darbii barbaachisaadha",
+      passwordMin: "Jechi darbii yoo xiqqaate qubee 6 qabaachuu qaba",
+      confirmRequired: "Maaloo jecha darbii mirkaneessi",
+      passwordMismatch: "Jechi darbii wal hin simu",
+      terms: "Waliigalteewwan fudhachuu qabdu"
+    }
+  },
+  ti: {
+    header: "ኣካውንት ፍጠር",
+    title: "ምስ ይስራ ሰው ተሓወሱ",
+    subtitle: "ዝገርሙ ዕድላት ንምርካብን ንምልጣፍን ኣካውንትኩም ፍጠሩ",
+    individual: "ውልቀሰብ",
+    company: "ኩባንያ",
+    firstName: "ስም",
+    lastName: "ስም ኣቦ",
+    companyName: "ስም ኩባንያ",
+    emailOrPhone: "ኢመይል ወይ ቁጽሪ ስልኪ",
+    emailOrPhonePlaceholder: "ኢመይል ወይ ቁጽሪ ስልኪ ኣእትዉ",
+    password: "መሕለፊ ቃል",
+    confirmPassword: "መሕለፊ ቃል ኣረጋግጽ",
+    agreeTo: "ኣነ ነቲ ",
+    terms: "ውዕል ኣገልግሎት",
+    privacy: "ፖሊሲ ብሕትውና",
+    and: "ን ",
+    createAccount: "ኣካውንት ፍጠር",
+    creating: "ይፈጥር ኣሎ...",
+    or: "ወይ",
+    google: "ብ Google ተመዝገብ",
+    facebook: "ብ Facebook ተመዝገብ",
+    alreadyHaveAccount: "ኣካውንት ኣለኩም?",
+    signIn: "እቶ",
+    successMsg: "ኣካውንት ብዓወት ተፈጢሩ! ናብ ካልእ ገጽ ይቕይር ኣሎ...",
+    verifyEmailMsg: "ኣካውንት ተፈጢሩ! በጃኹም ኢመይልኩም ኣረጋግጹ።",
+    help: "ማእከል ሓገዝ",
+    support: "ሓገዝ ርኸብ",
+    validation: {
+      required: "እዚ ቦታ የድሊ",
+      firstName: "ስም የድሊ",
+      lastName: "ስም ኣቦ የድሊ",
+      companyName: "ስም ኩባንያ የድሊ",
+      identifierRequired: "ኢመይል ወይ ቁጽሪ ስልኪ የድሊ",
+      identifierInvalid: "በጃኹም ቅኑዕ ኢመይል ወይ ቁጽሪ ስልኪ ኣእትዉ",
+      passwordRequired: "መሕለፊ ቃል የድሊ",
+      passwordMin: "መሕለፊ ቃል እንተ ወሓደ 6 ፊደላት ክኸውን ኣለዎ",
+      confirmRequired: "በጃኹም መሕለፊ ቃል ኣረጋግጹ",
+      passwordMismatch: "መሕለፊ ቃል ኣይጋጠምን",
+      terms: "ነቲ ውዕል ክትሰማምዑሉ ኣለኩም"
+    }
+  }
+};
 
 const RegisterPage = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  // Removed registerType state (email/phone toggle)
+  // Language Hook
+  const { language } = useLanguage();
+  const t = translations[language] || translations.en;
+
   const [accountType, setAccountType] = useState('individual');
 
   const [formData, setFormData] = useState({
@@ -43,14 +218,14 @@ const RegisterPage = () => {
 
     if (accountType === 'individual') {
       if (!formData.firstName.trim()) {
-        newErrors.firstName = 'First name is required';
+        newErrors.firstName = t.validation.firstName;
       }
       if (!formData.lastName.trim()) {
-        newErrors.lastName = 'Last name is required';
+        newErrors.lastName = t.validation.lastName;
       }
     } else {
       if (!formData.companyName.trim()) {
-        newErrors.companyName = 'Company name is required';
+        newErrors.companyName = t.validation.companyName;
       }
     }
 
@@ -60,25 +235,25 @@ const RegisterPage = () => {
     const phoneRegex = /^(\+251|0)?9\d{8}$/;
 
     if (!trimmedId) {
-      newErrors.identifier = 'Email or Phone number is required';
+      newErrors.identifier = t.validation.identifierRequired;
     } else if (!emailRegex.test(trimmedId) && !phoneRegex.test(trimmedId.replace(/\s/g, ''))) {
-      newErrors.identifier = 'Please enter a valid email or phone number';
+      newErrors.identifier = t.validation.identifierInvalid;
     }
 
     if (!formData.password.trim()) {
-      newErrors.password = 'Password is required';
+      newErrors.password = t.validation.passwordRequired;
     } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+      newErrors.password = t.validation.passwordMin;
     }
 
     if (!formData.confirmPassword.trim()) {
-      newErrors.confirmPassword = 'Please confirm your password';
+      newErrors.confirmPassword = t.validation.confirmRequired;
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = t.validation.passwordMismatch;
     }
 
     if (!agreeTerms) {
-      newErrors.terms = 'You must agree to the terms and conditions';
+      newErrors.terms = t.validation.terms;
     }
 
     setErrors(newErrors);
@@ -107,22 +282,19 @@ const RegisterPage = () => {
       // Remove generic identifier from payload
       delete payload.identifier;
 
-      // Call the API register (assuming apiService is globally available or imported)
-      // Note: In the read file, apiService was used but I didn't see the import. 
-      // I added the import line at the top just in case.
       const response = await apiService.register(payload);
 
       setLoading(false);
       setShowSuccess(true);
 
       if (response.requiresVerification) {
-        toast.success('Account created! Please check your email to verify your account.');
+        toast.success(t.verifyEmailMsg);
         setTimeout(() => {
           navigate('/login');
         }, 3000);
       } else {
         localStorage.setItem('token', response.token);
-        toast.success('Account created successfully!');
+        toast.success(t.successMsg);
         setTimeout(() => {
           navigate('/');
         }, 1500);
@@ -134,21 +306,11 @@ const RegisterPage = () => {
     }
   };
 
-  // Google Icon SVG
-  const GoogleIcon = (
-    <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.84z" fill="#FBBC05" />
-      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-    </svg>
-  );
-
   return (
     <Box sx={{
-      bgcolor: '#f8fafc',
+      bgcolor: '#0a192f',
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+      background: 'linear-gradient(135deg, #0a192f 0%, #172a45 100%)',
       pb: isMobile ? 10 : 0,
       display: 'flex',
       alignItems: 'center',
@@ -175,13 +337,13 @@ const RegisterPage = () => {
               <ArrowBack />
             </IconButton>
             <Typography variant="h6" fontWeight="bold">
-              Create Account
+              {t.header}
             </Typography>
           </Box>
         </Container>
       </Box>
 
-      <Container maxWidth="sm" sx={{ pt: 8, position: 'relative', zIndex: 1 }}>
+      <Container maxWidth="sm" sx={{ pt: 10, pb: isMobile ? 2 : 4, position: 'relative', zIndex: 1 }}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -193,7 +355,7 @@ const RegisterPage = () => {
               borderRadius: 4,
               boxShadow: `0 8px 32px ${alpha(theme.palette.common.black, 0.1)}`,
               backdropFilter: 'blur(10px)',
-              backgroundColor: alpha(theme.palette.background.paper, 0.95),
+              backgroundColor: alpha(theme.palette.background.paper, 0.95), // Slight transparency
               border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
             }}
           >
@@ -216,18 +378,15 @@ const RegisterPage = () => {
                 </Typography>
               </Box>
               <Typography variant="h4" fontWeight="bold" gutterBottom>
-                Join Yesira Sew
+                {t.title}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Create your account to start posting and discovering amazing opportunities
+                {t.subtitle}
               </Typography>
             </Box>
 
             {/* Account Type Toggle */}
             <Box sx={{ mb: 3 }}>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                Account type
-              </Typography>
               <ToggleButtonGroup
                 value={accountType}
                 exclusive
@@ -239,16 +398,16 @@ const RegisterPage = () => {
                 }}
                 sx={{ width: '100%' }}
               >
-                <ToggleButton value="individual" sx={{ flex: 1 }}>
+                <ToggleButton value="individual" sx={{ flex: 1, textTransform: 'none' }}>
                   <Stack direction="row" spacing={1} alignItems="center">
                     <Person sx={{ fontSize: 18 }} />
-                    <Typography>Individual</Typography>
+                    <Typography>{t.individual}</Typography>
                   </Stack>
                 </ToggleButton>
-                <ToggleButton value="company" sx={{ flex: 1 }}>
+                <ToggleButton value="company" sx={{ flex: 1, textTransform: 'none' }}>
                   <Stack direction="row" spacing={1} alignItems="center">
                     <Business sx={{ fontSize: 18 }} />
-                    <Typography>Company</Typography>
+                    <Typography>{t.company}</Typography>
                   </Stack>
                 </ToggleButton>
               </ToggleButtonGroup>
@@ -261,8 +420,9 @@ const RegisterPage = () => {
                   <Grid container spacing={2}>
                     <Grid item xs={12} sm={6}>
                       <TextField
+                        autoFocus
                         fullWidth
-                        label="First Name"
+                        label={t.firstName}
                         value={formData.firstName}
                         onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                         error={!!errors.firstName}
@@ -271,7 +431,7 @@ const RegisterPage = () => {
                         InputProps={{
                           startAdornment: (
                             <InputAdornment position="start">
-                              <Person color="primary" />
+                              <Person color="action" />
                             </InputAdornment>
                           ),
                         }}
@@ -283,7 +443,7 @@ const RegisterPage = () => {
                     <Grid item xs={12} sm={6}>
                       <TextField
                         fullWidth
-                        label="Last Name"
+                        label={t.lastName}
                         value={formData.lastName}
                         onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                         error={!!errors.lastName}
@@ -297,8 +457,9 @@ const RegisterPage = () => {
                   </Grid>
                 ) : (
                   <TextField
+                    autoFocus
                     fullWidth
-                    label="Company Name"
+                    label={t.companyName}
                     value={formData.companyName}
                     onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
                     error={!!errors.companyName}
@@ -307,7 +468,7 @@ const RegisterPage = () => {
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
-                          <Business color="primary" />
+                          <Business color="action" />
                         </InputAdornment>
                       ),
                     }}
@@ -320,17 +481,17 @@ const RegisterPage = () => {
                 {/* Combined Identifier Field */}
                 <TextField
                   fullWidth
-                  label="Email or Phone Number"
+                  label={t.emailOrPhone}
                   value={formData.identifier}
                   onChange={(e) => setFormData({ ...formData, identifier: e.target.value })}
                   error={!!errors.identifier}
                   helperText={errors.identifier}
                   disabled={loading}
-                  placeholder="Enter email or phone number"
+                  placeholder={t.emailOrPhonePlaceholder}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <Person color="primary" />
+                        <Person color="action" />
                       </InputAdornment>
                     ),
                   }}
@@ -341,7 +502,7 @@ const RegisterPage = () => {
 
                 <TextField
                   fullWidth
-                  label="Password"
+                  label={t.password}
                   type={showPassword ? 'text' : 'password'}
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -351,7 +512,7 @@ const RegisterPage = () => {
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <Lock color="primary" />
+                        <Lock color="action" />
                       </InputAdornment>
                     ),
                     endAdornment: (
@@ -373,7 +534,7 @@ const RegisterPage = () => {
 
                 <TextField
                   fullWidth
-                  label="Confirm Password"
+                  label={t.confirmPassword}
                   type={showConfirmPassword ? 'text' : 'password'}
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
@@ -383,7 +544,7 @@ const RegisterPage = () => {
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <Lock color="primary" />
+                        <Lock color="action" />
                       </InputAdornment>
                     ),
                     endAdornment: (
@@ -415,20 +576,20 @@ const RegisterPage = () => {
                       />
                     }
                     label={
-                      <Typography variant="body2">
-                        I agree to the{' '}
+                      <Typography variant="body2" sx={{ lineHeight: 1.3 }}>
+                        {t.agreeTo}
                         <Link href="#" color="primary" sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
-                          Terms of Service
+                          {t.terms}
                         </Link>
-                        {' '}and{' '}
+                        {t.and}
                         <Link href="#" color="primary" sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
-                          Privacy Policy
+                          {t.privacy}
                         </Link>
                       </Typography>
                     }
                   />
                   {errors.terms && (
-                    <Typography variant="caption" color="error" sx={{ mt: 1, display: 'block' }}>
+                    <Typography variant="caption" color="error" sx={{ mt: 1, display: 'block', ml: 4 }}>
                       {errors.terms}
                     </Typography>
                   )}
@@ -455,10 +616,10 @@ const RegisterPage = () => {
                   {loading ? (
                     <>
                       <CircularProgress size={20} sx={{ mr: 1, color: 'white' }} />
-                      Creating Account...
+                      {t.creating}
                     </>
                   ) : (
-                    'Create Account'
+                    t.createAccount
                   )}
                 </Button>
               </Stack>
@@ -466,7 +627,7 @@ const RegisterPage = () => {
 
             <Divider sx={{ my: 3 }}>
               <Typography variant="body2" color="text.secondary">
-                OR
+                {t.or}
               </Typography>
             </Divider>
 
@@ -475,24 +636,13 @@ const RegisterPage = () => {
                 fullWidth
                 variant="outlined"
                 size="large"
-                startIcon={GoogleIcon}
-                sx={{
-                  py: 1.5,
-                  borderRadius: 3,
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  borderColor: alpha(theme.palette.text.primary, 0.2),
-                }}
-              >
-                Sign up with Google
-              </Button>
-
-              <Button
-                fullWidth
-                variant="outlined"
-                size="large"
                 startIcon={
-                  <Box sx={{ width: 20, height: 20, bgcolor: '#1877F2', borderRadius: '50%' }} />
+                  <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.84z" fill="#FBBC05" />
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                  </svg>
                 }
                 sx={{
                   py: 1.5,
@@ -502,13 +652,29 @@ const RegisterPage = () => {
                   borderColor: alpha(theme.palette.text.primary, 0.2),
                 }}
               >
-                Sign up with Facebook
+                {t.google}
+              </Button>
+
+              <Button
+                fullWidth
+                variant="outlined"
+                size="large"
+                startIcon={<img src="/facebook-logo.svg" alt="Facebook" width={20} />}
+                sx={{
+                  py: 1.5,
+                  borderRadius: 3,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  borderColor: alpha(theme.palette.text.primary, 0.2),
+                }}
+              >
+                {t.facebook}
               </Button>
             </Stack>
 
             <Box sx={{ textAlign: 'center', mt: 3 }}>
               <Typography variant="body2" color="text.secondary">
-                Already have an account?{' '}
+                {t.alreadyHaveAccount}{' '}
                 <Link
                   component={RouterLink}
                   to="/login"
@@ -516,7 +682,7 @@ const RegisterPage = () => {
                   fontWeight="600"
                   sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
                 >
-                  Sign In
+                  {t.signIn}
                 </Link>
               </Typography>
             </Box>
@@ -531,11 +697,11 @@ const RegisterPage = () => {
               alignItems="center"
             >
               <Link href="#" color="text.secondary" variant="caption" sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
-                Help Center
+                {t.help}
               </Link>
-              <Typography variant="caption" color="text.secondary">•</Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' } }}>•</Typography>
               <Link href="#" color="text.secondary" variant="caption" sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
-                Contact Support
+                {t.support}
               </Link>
             </Stack>
           </Box>
@@ -555,7 +721,7 @@ const RegisterPage = () => {
           icon={<CheckCircle fontSize="inherit" />}
           sx={{ width: '100%' }}
         >
-          Account created successfully! Redirecting to home...
+          {t.successMsg}
         </Alert>
       </Snackbar>
     </Box>
