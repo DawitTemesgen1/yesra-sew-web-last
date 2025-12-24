@@ -207,11 +207,31 @@ const ListingsPage = () => {
     try {
       const cats = categories.length > 0 ? categories : (await apiService.getCategories()).categories || [];
       const templates = {};
-      for (const cat of cats) {
-        if (['jobs', 'tenders', 'homes', 'cars'].includes(cat.slug)) {
-          const templateData = await adminService.getTemplate(cat.id);
-          if (templateData && templateData.steps) {
-            templates[cat.slug] = templateData.steps.flatMap(s => s.fields || []);
+
+      // Robust mapping for standard categories
+      const categoryMappings = [
+        { key: 'jobs', match: ['jobs', 'job', 'vacancy', 'vacancies'] },
+        { key: 'tenders', match: ['tenders', 'tender', 'bids'] },
+        { key: 'homes', match: ['homes', 'home', 'property', 'properties', 'real estate'] },
+        { key: 'cars', match: ['cars', 'car', 'vehicle', 'vehicles', 'automotive'] }
+      ];
+
+      for (const mapping of categoryMappings) {
+        // Find the category that matches one of the keywords
+        const cat = cats.find(c => {
+          const s = (c.slug || '').toLowerCase();
+          const n = (c.name || '').toLowerCase();
+          return mapping.match.includes(s) || mapping.match.includes(n);
+        });
+
+        if (cat) {
+          try {
+            const templateData = await adminService.getTemplate(cat.id);
+            if (templateData && templateData.steps) {
+              templates[mapping.key] = templateData.steps.flatMap(s => s.fields || []);
+            }
+          } catch (e) {
+            console.warn(`Failed to load template for ${mapping.key}`, e);
           }
         }
       }
@@ -228,12 +248,37 @@ const ListingsPage = () => {
     refetchOnWindowFocus: false
   });
 
+  // Helper to resolve category object (Crucial for Images)
+  const getCategoryForListingHelper = (listing) => {
+    if (listing.category) return listing.category;
+    if (listing.category_id && categories.length > 0) {
+      return categories.find(c => c.id === listing.category_id);
+    }
+    // Fallback: Try to find by stored category matching (least reliable but helpful)
+    return null;
+  };
+
   const getTemplateForListing = (listing) => {
-    if (!listing || !listing.category) return null;
-    const categorySlug = typeof listing.category === 'string'
-      ? listing.category.toLowerCase()
-      : (listing.category.slug || listing.category.name || '').toLowerCase();
-    const fields = allTemplates[categorySlug];
+    // Resolve category first
+    const cat = getCategoryForListingHelper(listing);
+    if (!cat) return null;
+
+    // Improved slug resolution
+    let rawSlug = '';
+    if (typeof cat === 'string') {
+      rawSlug = cat.toLowerCase();
+    } else {
+      rawSlug = (cat.slug || cat.name || '').toLowerCase();
+    }
+
+    // Normalize logic to match the keys in allTemplates
+    let key = rawSlug;
+    if (['job', 'jobs', 'vacancy'].some(s => rawSlug.includes(s))) key = 'jobs';
+    else if (['tender', 'tenders', 'bid'].some(s => rawSlug.includes(s))) key = 'tenders';
+    else if (['home', 'homes', 'property'].some(s => rawSlug.includes(s))) key = 'homes';
+    else if (['car', 'cars', 'vehicle'].some(s => rawSlug.includes(s))) key = 'cars';
+
+    const fields = allTemplates[key];
     return fields ? { steps: [{ fields }] } : null;
   };
 
@@ -401,7 +446,10 @@ const ListingsPage = () => {
                       transition={{ duration: 0.3, delay: index * 0.05 }}
                     >
                       <DynamicListingCard
-                        listing={listing}
+                        listing={{
+                          ...listing,
+                          category: getCategoryForListingHelper(listing) || listing.category
+                        }}
                         template={getTemplateForListing(listing)}
                         viewMode={viewMode}
                         onToggleFavorite={toggleFavorite}
