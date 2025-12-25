@@ -20,6 +20,7 @@ import toast from 'react-hot-toast';
 import { useLanguage } from '../contexts/LanguageContext';
 import ReportDialog from '../components/ReportDialog';
 import BlockUserDialog from '../components/BlockUserDialog';
+import ImageViewer from '../components/ImageViewer';
 import { Flag, Block as BlockIcon } from '@mui/icons-material';
 
 const translations = {
@@ -308,6 +309,7 @@ const ListingDetailPage = () => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [blockDialogOpen, setBlockDialogOpen] = useState(false);
+  const [imageViewerOpen, setImageViewerOpen] = useState(false);
 
   // 1. Fetch Listing & Comments in Parallel
   const { data: listing, isLoading: loadingListing, error } = useQuery(
@@ -630,12 +632,20 @@ const ListingDetailPage = () => {
                     component="img"
                     src={images[currentImageIndex]}
                     alt={listing?.title || 'Listing Image'}
+                    onClick={() => {
+                      setImageViewerOpen(true);
+                    }}
                     sx={{
                       width: '100%',
                       height: 'auto',
                       maxHeight: isMobile ? 500 : 700,
                       objectFit: 'contain',
-                      display: 'block'
+                      display: 'block',
+                      cursor: 'pointer',
+                      transition: 'transform 0.2s',
+                      '&:hover': {
+                        transform: 'scale(1.02)'
+                      }
                     }}
                     onError={(e) => {
                       e.target.onerror = null;
@@ -1006,6 +1016,14 @@ const ListingDetailPage = () => {
         onBlocked={() => {
           navigate(-1);
         }}
+      />
+
+      {/* Image Viewer */}
+      <ImageViewer
+        open={imageViewerOpen}
+        images={images}
+        initialIndex={currentImageIndex}
+        onClose={() => setImageViewerOpen(false)}
       />
     </Box>
   );
