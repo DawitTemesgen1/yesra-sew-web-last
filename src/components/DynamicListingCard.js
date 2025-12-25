@@ -151,7 +151,7 @@ const getCardImages = (listing, width = 600, templateOrFields = null) => {
     }
 
     // --- STRATEGY 2: Smart Scan (Custom Fields) ---
-    // Only run if we haven't found much yet, OR if no template was provided
+    // Scan ALL custom fields for potential image URLs
     let cf = listing.custom_fields;
 
     // Robust parsing: Handle if custom_fields is a JSON string
@@ -166,36 +166,42 @@ const getCardImages = (listing, width = 600, templateOrFields = null) => {
     if (cf && typeof cf === 'object' && !Array.isArray(cf)) {
         const keys = Object.keys(cf);
 
-        // A. Priority Scan: Keys that imply visual content
+        // Scan ALL keys for image URLs (not just image-named keys)
         keys.forEach(key => {
-            if (/image|photo|picture|cover|thumb|logo|banner|attachment/i.test(key)) {
-                let val = cf[key];
-
-                // Handle stringified JSON inside values
-                if (typeof val === 'string' && (val.startsWith('[') || val.startsWith('{'))) {
-                    try { val = JSON.parse(val); } catch (e) { }
-                }
-
-                if (Array.isArray(val)) {
-                    val.forEach(v => {
-                        const url = typeof v === 'object' ? v?.url : v;
-                        if (isLikelyImage(url)) collected.push(url);
-                    });
-                } else if (isLikelyImage(val)) {
-                    collected.push(val);
-                } else if (typeof val === 'object' && val?.url && isLikelyImage(val.url)) {
-                    collected.push(val.url);
-                }
-            }
-        });
-
-        // B. Broad Scan: Check ALL other values for Supabase/Image URLs
-        keys.forEach(key => {
-            // Skip text-heavy fields
-            if (/description|desc|text|location|email|name|phone/i.test(key)) return;
+            // Skip obvious text fields
+            if (/description|desc|text|details|requirements|qualifications|email|phone|address|summary/i.test(key)) return;
 
             let val = cf[key];
-            if (typeof val === 'string' && isLikelyImage(val) && !collected.includes(val)) {
+
+            // Handle stringified JSON inside values
+            if (typeof val === 'string' && (val.startsWith('[') || val.startsWith('{'))) {
+                try { val = JSON.parse(val); } catch (e) { }
+            }
+
+            // Check if value is an array of images
+            if (Array.isArray(val)) {
+                val.forEach(v => {
+                    // Handle various object formats
+                    let url;
+                    if (typeof v === 'string') {
+                        url = v;
+                    } else if (typeof v === 'object' && v !== null) {
+                        url = v?.url || v?.src || v?.path || v?.uri || v?.link;
+                    }
+                    if (url && isLikelyImage(url) && !collected.includes(url)) {
+                        collected.push(url);
+                    }
+                });
+            }
+            // Check if value is an object with url property
+            else if (typeof val === 'object' && val !== null) {
+                const url = val?.url || val?.src || val?.path || val?.uri || val?.link;
+                if (url && isLikelyImage(url) && !collected.includes(url)) {
+                    collected.push(url);
+                }
+            }
+            // Check if value is a direct URL string
+            else if (typeof val === 'string' && isLikelyImage(val) && !collected.includes(val)) {
                 collected.push(val);
             }
         });
