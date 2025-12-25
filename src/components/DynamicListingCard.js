@@ -69,18 +69,26 @@ const getCardImages = (listing, width = 600, templateOrFields = null) => {
     const isLikelyImage = (val) => {
         if (!isValidUrl(val)) return false;
 
-        // Explicitly reject document extensions
+        // Explicitly reject document extensions (case-insensitive)
         if (/\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)$/i.test(val)) return false;
 
-        // Check for common image extensions
-        if (/\.(jpeg|jpg|gif|png|webp|bmp|svg)$/i.test(val)) return true;
+        // Explicitly reject if check fails but URL contains 'document' or 'file' which suggests non-image
+        if (val.toLowerCase().includes('document') || val.toLowerCase().includes('file')) {
+            // Exception: 'profile' or 'image' within filename
+            // But simpler to rely on extension.
+        }
 
-        // Accept Supabase storage URL IF it doesn't look like a document
-        if (val.includes('supabase') && val.includes('/storage/')) return true;
+        // REQUIRED: Must have an image extension
+        // This is safe because almost all web images have an extension, or are data URIs
+        if (/\.(jpeg|jpg|gif|png|webp|bmp|svg|tiff|ico)$/i.test(val)) return true;
 
-        // Also accept URLs with image-related keywords
-        if (/image|photo|picture|img|thumb|cover/i.test(val)) return true;
+        // Also accept optimized Supabase image rendition URLs (contain /render/image/)
+        if (val.includes('/render/image/')) return true;
 
+        // Fallback: If it's a data URI for an image
+        if (val.startsWith('data:image/')) return true;
+
+        // Default to false for everything else (including raw generic Supabase storage URLs without extension)
         return false;
     };
 
@@ -104,10 +112,10 @@ const getCardImages = (listing, width = 600, templateOrFields = null) => {
         const coverField = allFields.find(f => f.is_cover_image === true);
         if (coverField) {
             const val = listing.custom_fields?.[coverField.field_name];
-            if (isValidUrl(val)) collected.push(val);
+            if (isLikelyImage(val)) collected.push(val);
             else if (Array.isArray(val) && val.length > 0) {
                 const firstUrl = typeof val[0] === 'object' ? val[0]?.url : val[0];
-                if (isValidUrl(firstUrl)) collected.push(firstUrl);
+                if (isLikelyImage(firstUrl)) collected.push(firstUrl);
             }
         }
 
@@ -135,17 +143,17 @@ const getCardImages = (listing, width = 600, templateOrFields = null) => {
     if (Array.isArray(listing.images)) {
         listing.images.forEach(img => {
             const url = typeof img === 'object' ? (img?.url || img?.src) : img;
-            if (isValidUrl(url)) collected.push(url);
+            if (isLikelyImage(url)) collected.push(url);
         });
     }
 
     // 2. Check common single image field names
     ['image', 'cover_image', 'photo', 'thumbnail', 'logo', 'banner'].forEach(fieldName => {
         const val = listing[fieldName] || listing.custom_fields?.[fieldName];
-        if (val && isValidUrl(val)) collected.push(val);
+        if (val && isLikelyImage(val)) collected.push(val);
         else if (Array.isArray(val) && val.length > 0) {
             const firstUrl = typeof val[0] === 'object' ? val[0]?.url : val[0];
-            if (isValidUrl(firstUrl)) collected.push(firstUrl);
+            if (isLikelyImage(firstUrl)) collected.push(firstUrl);
         }
     });
 
@@ -153,7 +161,7 @@ const getCardImages = (listing, width = 600, templateOrFields = null) => {
     if (Array.isArray(listing.media_urls)) {
         listing.media_urls.forEach(m => {
             const url = typeof m === 'object' ? m?.url : m;
-            if (isValidUrl(url)) collected.push(url);
+            if (isLikelyImage(url)) collected.push(url);
         });
     }
 
