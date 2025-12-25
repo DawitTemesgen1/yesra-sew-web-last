@@ -447,8 +447,33 @@ const ListingDetailPage = () => {
 
   // Image Extraction Logic (Matches DynamicListingCard)
   // Priority: Admin Template Fields → Standard DB Columns → Placeholder
+  // Helper to validate if URL is a renderable image
+  const isLikelyImage = (val) => {
+    if (!val || typeof val !== 'string') return false;
+
+    // Explicitly reject document extensions (case-insensitive)
+    if (/\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)$/i.test(val)) return false;
+
+    // Explicitly reject if check fails but URL contains 'document' or 'file' which suggests non-image
+    // (unless it has a clear image extension)
+    if ((val.toLowerCase().includes('document') || val.toLowerCase().includes('file')) &&
+      !/\.(jpeg|jpg|gif|png|webp|bmp|svg|tiff|ico)$/i.test(val)) {
+      return false;
+    }
+
+    // REQUIRED: Must have an image extension
+    if (/\.(jpeg|jpg|gif|png|webp|bmp|svg|tiff|ico)$/i.test(val)) return true;
+
+    // Also accept optimized Supabase image rendition URLs (contain /render/image/)
+    if (val.includes('/render/image/')) return true;
+
+    // Fallback: If it's a data URI for an image
+    if (val.startsWith('data:image/')) return true;
+    return false;
+  };
+
   const images = (() => {
-    const imageArray = [];
+    const rawCandidates = [];
 
     // 1. PRIORITY: Admin-configured template fields (if template exists)
     if (steps && steps.length > 0) {
@@ -464,52 +489,58 @@ const ListingDetailPage = () => {
               try {
                 const parsed = JSON.parse(val);
                 if (Array.isArray(parsed)) {
-                  imageArray.push(...parsed.filter(url => url && typeof url === 'string'));
+                  rawCandidates.push(...parsed.filter(url => url && typeof url === 'string'));
                 }
               } catch (e) {
-                if (val.startsWith('http')) imageArray.push(val);
+                if (val.startsWith('http')) rawCandidates.push(val);
               }
             } else if (val.startsWith('http')) {
-              imageArray.push(val);
+              rawCandidates.push(val);
             }
           } else if (Array.isArray(val)) {
-            imageArray.push(...val.filter(url => url && typeof url === 'string'));
+            rawCandidates.push(...val.filter(url => url && typeof url === 'string'));
           }
         }
       });
     }
 
-    // 2. FALLBACK: Standard database columns (for listings without templates or legacy data)
-    if (imageArray.length === 0) {
+    // 2. FALLBACK: Standard database columns
+    if (rawCandidates.length === 0) {
       // Check image_url column
-      if (listing.image_url) {
-        imageArray.push(listing.image_url);
-      }
+      if (listing.image_url) rawCandidates.push(listing.image_url);
+
       // Check image column
-      else if (listing.image) {
-        imageArray.push(listing.image);
-      }
+      if (listing.image) rawCandidates.push(listing.image);
+
       // Check media_urls array
-      else if (Array.isArray(listing.media_urls)) {
-        const img = listing.media_urls.find(m => m.type === 'image');
-        if (img) imageArray.push(img.url);
+      if (Array.isArray(listing.media_urls)) {
+        listing.media_urls.forEach(m => {
+          const url = typeof m === 'object' ? m?.url : m;
+          if (url) rawCandidates.push(url);
+        });
       }
-      // Check custom_fields.images (legacy or mis-assigned data)
-      else if (listing.custom_fields?.images && Array.isArray(listing.custom_fields.images) && listing.custom_fields.images.length > 0) {
-        imageArray.push(...listing.custom_fields.images);
+
+      // Check custom_fields.images
+      if (listing.custom_fields?.images && Array.isArray(listing.custom_fields.images)) {
+        rawCandidates.push(...listing.custom_fields.images);
       }
-      // Check if images is stored as array directly in listing
-      else if (Array.isArray(listing.images) && listing.images.length > 0) {
-        imageArray.push(...listing.images);
+
+      // Check root images array
+      if (Array.isArray(listing.images)) {
+        rawCandidates.push(...listing.images);
       }
     }
 
-    // 3. LAST RESORT: Placeholder (only if truly no images exist)
-    if (imageArray.length === 0) {
-      imageArray.push('https://via.placeholder.com/800x600?text=No+Image');
+    // 3. FILTER: Strict Image Validation
+    // Remove duplicates and non-images
+    const validImages = [...new Set(rawCandidates)].filter(url => isLikelyImage(url));
+
+    // 4. FINAL CHECK
+    if (validImages.length === 0) {
+      return ['https://via.placeholder.com/800x600?text=No+Image'];
     }
 
-    return imageArray;
+    return validImages;
   })();
 
 
