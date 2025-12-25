@@ -415,7 +415,7 @@ const supabaseAuthService = {
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${window.location.origin}/auth/callback` }
+        options: { redirectTo: 'https://www.yesrasewsolution.com/auth/callback' }
       });
       if (error) throw error;
       return { success: true, data };

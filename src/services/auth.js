@@ -215,7 +215,7 @@ class AuthService {
             account_type: accountType || 'individual',
             company_name: accountType === 'company' ? companyName : null
           },
-          emailRedirectTo: `${window.location.origin}/verify-email`
+          emailRedirectTo: 'https://www.yesrasewsolution.com/verify-email'
         }
       })
 
@@ -287,7 +287,7 @@ class AuthService {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`
+          redirectTo: 'https://www.yesrasewsolution.com/auth/callback'
         }
       })
 
@@ -339,7 +339,7 @@ class AuthService {
       } else {
         // Email - use Supabase built-in
         const { error } = await supabase.auth.resetPasswordForEmail(identifier, {
-          redirectTo: `${window.location.origin}/reset-password`
+          redirectTo: 'https://www.yesrasewsolution.com/reset-password'
         })
 
         if (error) console.error('Reset email error:', error)
