@@ -15,8 +15,7 @@ import {
     ZoomOut,
     ChevronLeft,
     ChevronRight,
-    ZoomOutMap,
-    Download
+    ZoomOutMap
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { alpha } from '@mui/material/styles';
@@ -127,23 +126,6 @@ const ImageViewer = ({ open, images, initialIndex = 0, onClose }) => {
     const handleResetZoom = () => {
         setZoom(1);
         setPosition({ x: 0, y: 0 });
-    };
-
-    const handleDownload = async () => {
-        try {
-            const response = await fetch(images[currentIndex]);
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `image-${currentIndex + 1}.jpg`;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-        } catch (error) {
-            console.error('Download failed:', error);
-        }
     };
 
     // Mouse drag handlers
@@ -300,28 +282,16 @@ const ImageViewer = ({ open, images, initialIndex = 0, onClose }) => {
                             {currentIndex + 1} / {images.length}
                         </Typography>
 
-                        <Box sx={{ display: 'flex', gap: 1 }}>
-                            <IconButton
-                                onClick={handleDownload}
-                                sx={{
-                                    color: 'white',
-                                    bgcolor: alpha('#fff', 0.1),
-                                    '&:hover': { bgcolor: alpha('#fff', 0.2) }
-                                }}
-                            >
-                                <Download />
-                            </IconButton>
-                            <IconButton
-                                onClick={onClose}
-                                sx={{
-                                    color: 'white',
-                                    bgcolor: alpha('#fff', 0.1),
-                                    '&:hover': { bgcolor: alpha('#fff', 0.2) }
-                                }}
-                            >
-                                <Close />
-                            </IconButton>
-                        </Box>
+                        <IconButton
+                            onClick={onClose}
+                            sx={{
+                                color: 'white',
+                                bgcolor: alpha('#fff', 0.1),
+                                '&:hover': { bgcolor: alpha('#fff', 0.2) }
+                            }}
+                        >
+                            <Close />
+                        </IconButton>
                     </Box>
                 </Fade>
 
@@ -329,11 +299,15 @@ const ImageViewer = ({ open, images, initialIndex = 0, onClose }) => {
                 <Box
                     sx={{
                         position: 'absolute',
-                        inset: 0,
+                        top: 70,
+                        bottom: 80,
+                        left: 0,
+                        right: 0,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        p: isMobile ? 2 : 8
+                        px: isMobile ? 1 : 4,
+                        py: 2
                     }}
                 >
                     <AnimatePresence mode="wait">
