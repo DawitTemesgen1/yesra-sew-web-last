@@ -405,7 +405,7 @@ const TendersPage = () => {
                           visible: { opacity: 1, y: 0 }
                         }}>
                           <DynamicListingCard
-                            listing={tender}
+                            listing={{ ...tender, category: tender.category || { slug: 'tenders', name: 'Tenders' } }}
                             templateFields={templateFields}
                             viewMode="grid"
                           />
@@ -431,7 +431,7 @@ const TendersPage = () => {
                       regularTenders.map((tender) => (
                         <Grid item xs={12} sm={6} lg={4} key={tender.id}>
                           <DynamicListingCard
-                            listing={tender}
+                            listing={{ ...tender, category: tender.category || { slug: 'tenders', name: 'Tenders' } }}
                             templateFields={templateFields}
                             viewMode="grid"
                           />

@@ -39,28 +39,6 @@ const translations = {
     }
 };
 
-
-/**
- * Helper: robustly resolve the best image for the card
- */
-// --- FALLBACK IMAGES (Beautiful Placeholders for Jobs) ---
-const JOB_IMAGES = [
-    'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80'
-];
-
-// --- FALLBACK IMAGES (Beautiful Placeholders for Tenders) ---
-const TENDER_IMAGES = [
-    'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=800&q=80', // Business/Finance
-    'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=800&q=80', // Documents
-    'https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&w=800&q=80', // Legal/Gavel
-    'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80', // Handshake
-    'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=800&q=80'  // Office
-];
-
 /**
  * Helper: robustly resolve the best image for the card and OPTIMIZE IT
  */
@@ -90,8 +68,13 @@ const getCardImages = (listing, width = 600, templateOrFields = null) => {
 
     const isLikelyImage = (val) => {
         if (!isValidUrl(val)) return false;
-        return /\.(jpeg|jpg|gif|png|webp|bmp|svg)$/i.test(val) ||
-            (val.includes('supabase') && val.includes('image'));
+        // Check for common image extensions
+        if (/\.(jpeg|jpg|gif|png|webp|bmp|svg)$/i.test(val)) return true;
+        // Accept ANY Supabase storage URL (they're almost always images in this context)
+        if (val.includes('supabase') && val.includes('/storage/')) return true;
+        // Also accept URLs with image-related keywords
+        if (/image|photo|picture|img|thumb|cover/i.test(val)) return true;
+        return false;
     };
 
     let collected = [];
@@ -110,44 +93,60 @@ const getCardImages = (listing, width = 600, templateOrFields = null) => {
     }
 
     if (allFields.length > 0) {
-        // 1. Explicit Cover Image
+        // 1. Explicit Cover Image field
         const coverField = allFields.find(f => f.is_cover_image === true);
         if (coverField) {
             const val = listing.custom_fields?.[coverField.field_name];
             if (isValidUrl(val)) collected.push(val);
+            else if (Array.isArray(val) && val.length > 0) {
+                const firstUrl = typeof val[0] === 'object' ? val[0]?.url : val[0];
+                if (isValidUrl(firstUrl)) collected.push(firstUrl);
+            }
         }
 
-        // 2. Any field defined as 'image' or 'file' (that looks like an image)
-        allFields.filter(f => f.field_type === 'image' || f.field_type === 'file').forEach(f => {
-            const val = listing.custom_fields?.[f.field_name];
-            if (Array.isArray(val)) {
-                val.forEach(v => {
-                    const url = typeof v === 'object' ? v?.url : v;
+        // 2. Any field defined as 'image', 'file', or 'images' type
+        allFields.filter(f => ['image', 'file', 'images', 'photo', 'cover'].includes(f.field_type) ||
+            /image|photo|cover|logo|picture/i.test(f.field_name)).forEach(f => {
+                const val = listing.custom_fields?.[f.field_name];
+                if (Array.isArray(val)) {
+                    val.forEach(v => {
+                        const url = typeof v === 'object' ? (v?.url || v?.src || v?.path) : v;
+                        if (isLikelyImage(url)) collected.push(url);
+                    });
+                } else if (typeof val === 'object' && val !== null) {
+                    const url = val?.url || val?.src || val?.path;
                     if (isLikelyImage(url)) collected.push(url);
-                });
-            } else if (isLikelyImage(val)) {
-                collected.push(val);
-            }
-        });
+                } else if (isLikelyImage(val)) {
+                    collected.push(val);
+                }
+            });
     }
 
-    // --- STRATEGY 1: Standard Fields ---
+    // --- STRATEGY 1: Standard Fields (check common field names) ---
 
     // 1. Check 'images' array
     if (Array.isArray(listing.images)) {
         listing.images.forEach(img => {
-            const url = typeof img === 'object' ? img?.url : img;
+            const url = typeof img === 'object' ? (img?.url || img?.src) : img;
             if (isValidUrl(url)) collected.push(url);
         });
     }
 
-    // 2. Check 'image' string (often used for cover)
-    if (listing.image && isValidUrl(listing.image)) collected.push(listing.image);
+    // 2. Check common single image field names
+    ['image', 'cover_image', 'photo', 'thumbnail', 'logo', 'banner'].forEach(fieldName => {
+        const val = listing[fieldName] || listing.custom_fields?.[fieldName];
+        if (val && isValidUrl(val)) collected.push(val);
+        else if (Array.isArray(val) && val.length > 0) {
+            const firstUrl = typeof val[0] === 'object' ? val[0]?.url : val[0];
+            if (isValidUrl(firstUrl)) collected.push(firstUrl);
+        }
+    });
 
     // 3. Check 'media_urls' (Unified Media Format)
     if (Array.isArray(listing.media_urls)) {
         listing.media_urls.forEach(m => {
-            if (m.type === 'image' && isValidUrl(m.url)) collected.push(m.url);
+            const url = typeof m === 'object' ? m?.url : m;
+            if (isValidUrl(url)) collected.push(url);
         });
     }
 
@@ -205,31 +204,8 @@ const getCardImages = (listing, width = 600, templateOrFields = null) => {
     // Deduplicate & Optimize
     collected = [...new Set(collected)].map(optimizeUrl);
 
-    if (collected.length > 0) return collected;
-
-    // --- STRATEGY 3: Fallbacks ---
-    let categorySlug = 'default';
-    if (listing.category) {
-        if (typeof listing.category === 'string') categorySlug = listing.category.toLowerCase();
-        else if (listing.category.slug) categorySlug = listing.category.slug.toLowerCase();
-        else if (listing.category.name) categorySlug = listing.category.name.toLowerCase();
-    }
-
-    // Fallback for JOBS
-    if (categorySlug.includes('job') || categorySlug.includes('vacan') || categorySlug.includes('employ')) {
-        const hash = (listing.id || listing.title || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        const index = hash % JOB_IMAGES.length;
-        return [JOB_IMAGES[index]];
-    }
-
-    // Fallback for TENDERS
-    if (categorySlug.includes('tender') || categorySlug.includes('bid') || categorySlug.includes('procurement')) {
-        const hash = (listing.id || listing.title || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        const index = hash % TENDER_IMAGES.length;
-        return [TENDER_IMAGES[index]];
-    }
-
-    return [];
+    // Return collected images (empty array if none found - card will show "NO IMAGE")
+    return collected;
 };
 
 /**

@@ -342,7 +342,7 @@ const JobsPage = () => {
                           visible: { opacity: 1, y: 0 }
                         }}>
                           <DynamicListingCard
-                            listing={job}
+                            listing={{ ...job, category: job.category || { slug: 'jobs', name: 'Jobs' } }}
                             templateFields={templateFields}
                             viewMode="grid"
                           />
@@ -368,7 +368,7 @@ const JobsPage = () => {
                       regularJobs.map((job) => (
                         <Grid item xs={12} md={6} lg={4} key={job.id}>
                           <DynamicListingCard
-                            listing={job}
+                            listing={{ ...job, category: job.category || { slug: 'jobs', name: 'Jobs' } }}
                             templateFields={templateFields}
                             viewMode="grid"
                           />
