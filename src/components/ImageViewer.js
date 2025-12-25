@@ -172,22 +172,79 @@ const ImageViewer = ({ open, images, initialIndex = 0, onClose }) => {
 
     // Touch handlers for mobile
     const handleTouchStart = (e) => {
-        if (zoom > 1 && e.touches.length === 1) {
+        if (e.touches.length === 2) {
+            // Pinch to zoom - store initial distance
+            const touch1 = e.touches[0];
+            const touch2 = e.touches[1];
+            const distance = Math.hypot(
+                touch2.clientX - touch1.clientX,
+                touch2.clientY - touch1.clientY
+            );
+            setDragStart({ ...dragStart, pinchDistance: distance });
+        } else if (zoom > 1 && e.touches.length === 1) {
+            // Pan when zoomed
             setIsDragging(true);
             setDragStart({
                 x: e.touches[0].clientX - position.x,
-                y: e.touches[0].clientY - position.y
+                y: e.touches[0].clientY - position.y,
+                touchStartX: e.touches[0].clientX
+            });
+        } else if (zoom === 1 && e.touches.length === 1) {
+            // Swipe to navigate
+            setDragStart({
+                touchStartX: e.touches[0].clientX,
+                touchStartY: e.touches[0].clientY,
+                swipeStartTime: Date.now()
             });
         }
     };
 
     const handleTouchMove = (e) => {
-        if (isDragging && zoom > 1 && e.touches.length === 1) {
+        if (e.touches.length === 2) {
+            // Pinch to zoom
+            const touch1 = e.touches[0];
+            const touch2 = e.touches[1];
+            const distance = Math.hypot(
+                touch2.clientX - touch1.clientX,
+                touch2.clientY - touch1.clientY
+            );
+
+            if (dragStart.pinchDistance) {
+                const scale = distance / dragStart.pinchDistance;
+                const newZoom = Math.max(1, Math.min(5, zoom * scale));
+                setZoom(newZoom);
+                setDragStart({ ...dragStart, pinchDistance: distance });
+            }
+        } else if (isDragging && zoom > 1 && e.touches.length === 1) {
+            // Pan when zoomed
             setPosition({
                 x: e.touches[0].clientX - dragStart.x,
                 y: e.touches[0].clientY - dragStart.y
             });
         }
+    };
+
+    const handleTouchEnd = (e) => {
+        if (e.changedTouches.length === 1 && zoom === 1 && dragStart.touchStartX) {
+            // Swipe gesture detection
+            const touchEndX = e.changedTouches[0].clientX;
+            const touchEndY = e.changedTouches[0].clientY;
+            const deltaX = touchEndX - dragStart.touchStartX;
+            const deltaY = Math.abs(touchEndY - dragStart.touchStartY);
+            const swipeDuration = Date.now() - dragStart.swipeStartTime;
+
+            // Swipe threshold: 50px horizontal movement, less than 100px vertical, within 300ms
+            if (Math.abs(deltaX) > 50 && deltaY < 100 && swipeDuration < 300) {
+                if (deltaX > 0) {
+                    handlePrevious(); // Swipe right
+                } else {
+                    handleNext(); // Swipe left
+                }
+            }
+        }
+
+        setIsDragging(false);
+        setDragStart({});
     };
 
     if (!images || images.length === 0) return null;
@@ -221,7 +278,7 @@ const ImageViewer = ({ open, images, initialIndex = 0, onClose }) => {
                 onMouseLeave={handleMouseUp}
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
-                onTouchEnd={handleMouseUp}
+                onTouchEnd={handleTouchEnd}
             >
                 {/* Top Controls Bar */}
                 <Fade in={showControls}>
