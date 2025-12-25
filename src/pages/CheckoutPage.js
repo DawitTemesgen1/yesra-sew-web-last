@@ -339,7 +339,7 @@ const CheckoutPage = () => {
                     email: userProfile?.email || user.email,
                     firstName: userProfile?.full_name?.split(' ')[0] || 'User',
                     lastName: userProfile?.full_name?.split(' ')[1] || '',
-                    returnUrlPrefix: window.location.origin,
+                    returnUrlPrefix: 'https://www.yesrasewsolution.com',
                     metadata: {
                         plan_id: plan.id,
                         plan_name: plan.name,

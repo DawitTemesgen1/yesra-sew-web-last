@@ -128,7 +128,7 @@ const paymentService = {
                     action: 'initiate',
                     provider: 'arif_pay',
                     ...paymentData,
-                    returnUrlPrefix: window.location.origin
+                    returnUrlPrefix: 'https://www.yesrasewsolution.com'
                 }
             });
 
@@ -182,7 +182,7 @@ const paymentService = {
      */
     async initiateChapaPayment(paymentData) {
         try {
-            
+
 
             // Call Supabase Edge Function
             const { data: result, error: fnError } = await supabase.functions.invoke('payment-handler', {
@@ -190,12 +190,10 @@ const paymentService = {
                     action: 'initiate',
                     provider: 'chapa',
                     ...paymentData,
-                    returnUrlPrefix: window.location.origin
+                    returnUrlPrefix: 'https://www.yesrasewsolution.com'
                 }
             });
 
-            
-            );
 
             // Check for network/invocation errors first
             if (fnError) {
