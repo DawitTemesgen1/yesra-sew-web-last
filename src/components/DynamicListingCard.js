@@ -68,12 +68,19 @@ const getCardImages = (listing, width = 600, templateOrFields = null) => {
 
     const isLikelyImage = (val) => {
         if (!isValidUrl(val)) return false;
+
+        // Explicitly reject document extensions
+        if (/\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)$/i.test(val)) return false;
+
         // Check for common image extensions
         if (/\.(jpeg|jpg|gif|png|webp|bmp|svg)$/i.test(val)) return true;
-        // Accept ANY Supabase storage URL (they're almost always images in this context)
+
+        // Accept Supabase storage URL IF it doesn't look like a document
         if (val.includes('supabase') && val.includes('/storage/')) return true;
+
         // Also accept URLs with image-related keywords
         if (/image|photo|picture|img|thumb|cover/i.test(val)) return true;
+
         return false;
     };
 
