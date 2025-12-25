@@ -5,6 +5,7 @@ import {
     Divider, CircularProgress, LinearProgress, Checkbox, FormControlLabel,
     Fade, Slide, Chip, Alert, useTheme, Menu, MenuItem, Dialog, DialogTitle, DialogContent
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import {
     Visibility, VisibilityOff, Email, Phone, Lock, Person, Business,
     ArrowBack, Google, CheckCircle, Error as ErrorIcon, Timer,
@@ -18,6 +19,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useCustomTheme } from '../contexts/ThemeContext';
 import { Helmet } from 'react-helmet-async';
+import logo from '../assets/logo.png';
 
 const translations = {
     en: {
@@ -726,44 +728,67 @@ const EnhancedAuthPage = () => {
         return t.strong;
     };
 
+
+
     const theme = useTheme();
+    // Logic remains same ...
 
     return (
         <Box
             sx={{
                 minHeight: '100vh',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                bgcolor: '#0a192f',
+                background: 'linear-gradient(135deg, #0a192f 0%, #172a45 100%)',
                 display: 'flex',
                 alignItems: 'center',
-                py: 4
+                justifyContent: 'center',
+                py: 4,
+                position: 'relative'
             }}
         >
             <Helmet>
                 <title>{(authMode === 'login' ? t.login : t.createAccount) + ' | Yesira Sew'}</title>
-                <meta name="description" content="Securely login or create an account on Yesra Sew Solution - Ethiopia's Premier Marketplace." />
-                <meta name="keywords" content="login yesrasew, register yesrasew, sign up ethiopia, create account, ethiopian marketplace login" />
             </Helmet>
-            <Box sx={{ position: 'absolute', top: 20, right: 20, display: 'flex', gap: 1, zIndex: 10 }}>
-                <IconButton onClick={toggleTheme} sx={{ color: '#fff', bgcolor: 'rgba(0,0,0,0.2)', '&:hover': { bgcolor: 'rgba(0,0,0,0.3)' } }}>
-                    {themeMode === 'light' ? <DarkMode /> : <LightMode />}
-                </IconButton>
-                <IconButton onClick={(e) => setLanguageMenuAnchor(e.currentTarget)} sx={{ color: '#fff', bgcolor: 'rgba(0,0,0,0.2)', '&:hover': { bgcolor: 'rgba(0,0,0,0.3)' } }}>
-                    <Language />
-                </IconButton>
-                <Menu
-                    anchorEl={languageMenuAnchor}
-                    open={Boolean(languageMenuAnchor)}
-                    onClose={() => setLanguageMenuAnchor(null)}
-                    PaperProps={{ sx: { mt: 1 } }}
-                >
-                    {['en', 'am', 'om', 'ti'].map(lang => (
-                        <MenuItem key={lang} onClick={() => { changeLanguage(lang); setLanguageMenuAnchor(null); }} selected={language === lang}>
-                            {lang === 'en' ? 'English' : lang === 'am' ? 'አማርኛ' : lang === 'om' ? 'Afaan Oromoo' : 'ትግርኛ'}
-                        </MenuItem>
-                    ))}
-                </Menu>
+
+            {/* Header */}
+            <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 1, bgcolor: 'rgba(0,0,0,0.2)', backdropFilter: 'blur(10px)', color: 'white', py: 2, boxShadow: 2 }}>
+                <Container maxWidth="lg">
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Stack direction="row" spacing={2} alignItems="center">
+                            <IconButton onClick={() => navigate('/')} sx={{ color: 'white' }}>
+                                <ArrowBack />
+                            </IconButton>
+                            <Typography variant="h6" fontWeight="bold">
+                                Yesra Sew
+                            </Typography>
+                        </Stack>
+
+                        <Stack direction="row" spacing={1}>
+                            <IconButton onClick={toggleTheme} sx={{ color: '#fff' }}>
+                                {themeMode === 'light' ? <DarkMode /> : <LightMode />}
+                            </IconButton>
+                            <IconButton onClick={(e) => setLanguageMenuAnchor(e.currentTarget)} sx={{ color: '#fff' }}>
+                                <Language />
+                            </IconButton>
+                        </Stack>
+                    </Box>
+                </Container>
             </Box>
-            <Container maxWidth="sm">
+
+            <Menu
+                anchorEl={languageMenuAnchor}
+                open={Boolean(languageMenuAnchor)}
+                onClose={() => setLanguageMenuAnchor(null)}
+                PaperProps={{ sx: { mt: 1 } }}
+            >
+                {['en', 'am', 'om', 'ti'].map(lang => (
+                    <MenuItem key={lang} onClick={() => { changeLanguage(lang); setLanguageMenuAnchor(null); }} selected={language === lang}>
+                        {lang === 'en' ? 'English' : lang === 'am' ? 'አማርኛ' : lang === 'om' ? 'Afaan Oromoo' : 'ትግርኛ'}
+                    </MenuItem>
+                ))}
+            </Menu>
+
+            <Container maxWidth="sm" sx={{ mt: 8 }}>
                 <AnimatePresence>
                     {errors.general && (
                         <motion.div
@@ -778,6 +803,7 @@ const EnhancedAuthPage = () => {
                         </motion.div>
                     )}
                 </AnimatePresence>
+
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -786,46 +812,29 @@ const EnhancedAuthPage = () => {
                     <Paper
                         elevation={24}
                         sx={{
-                            p: 4,
-                            borderRadius: 3,
-                            background: theme.palette.mode === 'dark' ? 'rgba(30, 30, 30, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-                            backdropFilter: 'blur(10px)'
+                            p: { xs: 3, md: 5 },
+                            borderRadius: 4,
+                            boxShadow: `0 8px 32px ${alpha(theme.palette.common.black, 0.3)}`,
+                            backdropFilter: 'blur(20px)',
+                            backgroundColor: alpha(theme.palette.background.paper, 0.95), // Slight transparency
+                            border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
                         }}
                     >
-                        {/* Top Login Button for Register Mode */}
-                        {authMode === 'register' && (
-                            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
-                                <Button
-                                    onClick={() => switchMode('login')}
-                                    startIcon={<Login />}
-                                    variant="outlined"
-                                    sx={{
-                                        borderRadius: 5,
-                                        textTransform: 'none',
-                                        fontWeight: 'bold',
-                                        borderWidth: 2,
-                                        px: 3,
-                                        borderColor: 'primary.main',
-                                        '&:hover': {
-                                            borderWidth: 2,
-                                            background: 'rgba(102, 126, 234, 0.08)'
-                                        }
-                                    }}
-                                >
-                                    {t.login}
-                                </Button>
+                        {/* Logo Section */}
+                        <Box sx={{ textAlign: 'center', mb: 4 }}>
+                            <Box sx={{
+                                width: 80,
+                                height: 80,
+                                bgcolor: 'transparent',
+                                borderRadius: '50%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                mx: 'auto',
+                                mb: 2,
+                            }}>
+                                <img src={logo} alt="Yesra Sew Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                             </Box>
-                        )}
-                        {/* Header */}
-                        <Box sx={{ textAlign: 'center', mb: 3 }}>
-                            <motion.div
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                transition={{ delay: 0.2, type: 'spring' }}
-                            >
-                                <Security sx={{ fontSize: 60, color: 'primary.main', mb: 2 }} />
-                            </motion.div>
-
                             <Typography variant="h4" fontWeight="bold" gutterBottom>
                                 {authMode === 'login' ? t.welcomeTitle : authMode === 'register' ? t.createAccountTitle : t.resetPasswordTitle}
                             </Typography>
@@ -834,26 +843,65 @@ const EnhancedAuthPage = () => {
                             </Typography>
                         </Box>
 
+                        {/* Login/Register Toggle (Custom Tabs look) */}
+                        {authMode !== 'forgot' && (
+                            <Box sx={{ mb: 3, p: 0.5, bgcolor: alpha(theme.palette.action.hover, 0.1), borderRadius: 3, display: 'flex' }}>
+                                <Button
+                                    fullWidth
+                                    onClick={() => switchMode('login')}
+                                    sx={{
+                                        borderRadius: 2.5,
+                                        py: 1,
+                                        color: authMode === 'login' ? 'primary.main' : 'text.secondary',
+                                        bgcolor: authMode === 'login' ? 'background.paper' : 'transparent',
+                                        boxShadow: authMode === 'login' ? 1 : 0,
+                                        transition: 'all 0.3s ease',
+                                        '&:hover': { bgcolor: authMode === 'login' ? 'background.paper' : alpha(theme.palette.action.hover, 0.1) }
+                                    }}
+                                >
+                                    {t.login}
+                                </Button>
+                                <Button
+                                    fullWidth
+                                    onClick={() => switchMode('register')}
+                                    sx={{
+                                        borderRadius: 2.5,
+                                        py: 1,
+                                        color: authMode === 'register' ? 'primary.main' : 'text.secondary',
+                                        bgcolor: authMode === 'register' ? 'background.paper' : 'transparent',
+                                        boxShadow: authMode === 'register' ? 1 : 0,
+                                        transition: 'all 0.3s ease',
+                                        '&:hover': { bgcolor: authMode === 'register' ? 'background.paper' : alpha(theme.palette.action.hover, 0.1) }
+                                    }}
+                                >
+                                    {t.register}
+                                </Button>
+                            </Box>
+                        )}
+
                         {/* Progress indicator for registration */}
                         {authMode === 'register' && (
                             <Box sx={{ mb: 3 }}>
                                 <Stack direction="row" spacing={1} justifyContent="center" mb={1}>
                                     <Chip
+                                        align="center"
                                         label={t.stepDetails}
                                         color={!otpSent ? "primary" : "success"}
                                         icon={otpSent ? <CheckCircle /> : undefined}
                                         size="small"
+                                        variant={!otpSent ? "filled" : "outlined"}
                                     />
                                     <Chip
                                         label={t.stepVerify}
                                         color={otpSent ? "primary" : "default"}
                                         size="small"
+                                        variant={otpSent ? "filled" : "outlined"}
                                     />
                                 </Stack>
                                 <LinearProgress
                                     variant="determinate"
                                     value={otpSent ? 100 : 50}
-                                    sx={{ height: 6, borderRadius: 3 }}
+                                    sx={{ height: 4, borderRadius: 2 }}
                                 />
                             </Box>
                         )}
@@ -862,20 +910,30 @@ const EnhancedAuthPage = () => {
                         {authMode === 'register' && !otpSent && (
                             <Fade in timeout={500}>
                                 <Box sx={{ mb: 3 }}>
-                                    <Typography variant="body2" gutterBottom fontWeight="medium">
-                                        {t.accountType}
-                                    </Typography>
                                     <ToggleButtonGroup
                                         value={accountType}
                                         exclusive
                                         onChange={(e, v) => v && setAccountType(v)}
                                         fullWidth
+                                        sx={{
+                                            '& .MuiToggleButton-root': {
+                                                borderRadius: 3,
+                                                borderColor: alpha(theme.palette.divider, 0.2),
+                                                py: 1.5,
+                                                textTransform: 'none'
+                                            },
+                                            '& .Mui-selected': {
+                                                bgcolor: alpha(theme.palette.primary.main, 0.1) + '!important',
+                                                color: theme.palette.primary.main,
+                                                border: `1px solid ${theme.palette.primary.main} !important`
+                                            }
+                                        }}
                                     >
-                                        <ToggleButton value="individual">
-                                            <Person sx={{ mr: 1 }} /> {t.individual}
+                                        <ToggleButton value="individual" sx={{ mr: 1, border: 1 }}>
+                                            <Person sx={{ mr: 1, fontSize: 20 }} /> {t.individual}
                                         </ToggleButton>
-                                        <ToggleButton value="company">
-                                            <Business sx={{ mr: 1 }} /> {t.company}
+                                        <ToggleButton value="company" sx={{ border: 1 }}>
+                                            <Business sx={{ mr: 1, fontSize: 20 }} /> {t.company}
                                         </ToggleButton>
                                     </ToggleButtonGroup>
                                 </Box>
@@ -904,6 +962,7 @@ const EnhancedAuthPage = () => {
                                                     onChange={handleChange}
                                                     error={!!errors.firstName}
                                                     helperText={errors.firstName}
+                                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3 } }}
                                                     InputProps={{
                                                         startAdornment: (
                                                             <InputAdornment position="start">
@@ -921,6 +980,7 @@ const EnhancedAuthPage = () => {
                                                     onChange={handleChange}
                                                     error={!!errors.lastName}
                                                     helperText={errors.lastName}
+                                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3 } }}
                                                     InputProps={{
                                                         startAdornment: (
                                                             <InputAdornment position="start">
@@ -939,6 +999,7 @@ const EnhancedAuthPage = () => {
                                                         onChange={handleChange}
                                                         error={!!errors.companyName}
                                                         helperText={errors.companyName}
+                                                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3 } }}
                                                         InputProps={{
                                                             startAdornment: (
                                                                 <InputAdornment position="start">
@@ -952,7 +1013,7 @@ const EnhancedAuthPage = () => {
                                         </motion.div>
                                     )}
 
-                                    {/* Unified Identifier Input (Email or Phone) */}
+                                    {/* Unified Identifier Input */}
                                     {!otpSent && (
                                         <motion.div
                                             key="identifier-input"
@@ -970,6 +1031,8 @@ const EnhancedAuthPage = () => {
                                                 onChange={handleChange}
                                                 error={!!errors.identifier}
                                                 helperText={errors.identifier}
+                                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3 } }}
+                                                autoFocus={authMode === 'login' || authMode === 'register'}
                                                 InputProps={{
                                                     startAdornment: (
                                                         <InputAdornment position="start">
@@ -989,9 +1052,9 @@ const EnhancedAuthPage = () => {
                                             animate={{ opacity: 1, scale: 1 }}
                                             transition={{ duration: 0.3 }}
                                         >
-                                            <Alert severity="info" sx={{ mb: 2 }}>
+                                            <Alert severity="info" sx={{ mb: 2, borderRadius: 2 }}>
                                                 <Stack direction="row" alignItems="center" spacing={1}>
-                                                    <Timer />
+                                                    <Timer fontSize="small" />
                                                     <Typography variant="body2">
                                                         {otpTimer > 0
                                                             ? `${t.codeExpiresIn} ${Math.floor(otpTimer / 60)}:${(otpTimer % 60).toString().padStart(2, '0')}`
@@ -1009,14 +1072,15 @@ const EnhancedAuthPage = () => {
                                                 value={formData.otp}
                                                 onChange={handleChange}
                                                 autoFocus
-                                                inputProps={{ maxLength: 6, style: { textAlign: 'center', fontSize: '1.5rem', letterSpacing: '0.5rem' } }}
+                                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3 } }}
+                                                inputProps={{ maxLength: 6, style: { textAlign: 'center', fontSize: '1.5rem', letterSpacing: '0.5rem', fontWeight: 600 } }}
                                             />
 
                                             {canResendOtp && (
                                                 <Button
                                                     startIcon={<Refresh />}
                                                     onClick={handleResendOtp}
-                                                    sx={{ mt: 1 }}
+                                                    sx={{ mt: 1, textTransform: 'none' }}
                                                     size="small"
                                                 >
                                                     {t.resendCode}
@@ -1045,6 +1109,7 @@ const EnhancedAuthPage = () => {
                                                     onChange={handleChange}
                                                     error={!!errors.password}
                                                     helperText={errors.password}
+                                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3 } }}
                                                     InputProps={{
                                                         startAdornment: (
                                                             <InputAdornment position="start">
@@ -1096,6 +1161,7 @@ const EnhancedAuthPage = () => {
                                                 onChange={handleChange}
                                                 error={!!errors.confirmPassword}
                                                 helperText={errors.confirmPassword}
+                                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3 } }}
                                                 InputProps={{
                                                     startAdornment: (
                                                         <InputAdornment position="start">
@@ -1110,16 +1176,24 @@ const EnhancedAuthPage = () => {
 
                                 {/* Remember Me */}
                                 {authMode === 'login' && (
-                                    <FormControlLabel
-                                        control={
-                                            <Checkbox
-                                                checked={rememberMe}
-                                                onChange={(e) => setRememberMe(e.target.checked)}
-                                                color="primary"
-                                            />
-                                        }
-                                        label={t.rememberMe}
-                                    />
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <FormControlLabel
+                                            control={
+                                                <Checkbox
+                                                    checked={rememberMe}
+                                                    onChange={(e) => setRememberMe(e.target.checked)}
+                                                    color="primary"
+                                                />
+                                            }
+                                            label={t.rememberMe}
+                                        />
+                                        <Button
+                                            onClick={() => switchMode('forgot')}
+                                            sx={{ textTransform: 'none' }}
+                                        >
+                                            {t.forgotPassword}
+                                        </Button>
+                                    </Box>
                                 )}
 
                                 {/* Submit Button */}
@@ -1132,10 +1206,14 @@ const EnhancedAuthPage = () => {
                                     sx={{
                                         mt: 2,
                                         py: 1.5,
-                                        background: 'linear-gradient(45deg, #667eea 30%, #764ba2 90%)',
-                                        boxShadow: '0 3px 5px 2px rgba(102, 126, 234, .3)',
+                                        borderRadius: 3,
+                                        textTransform: 'none',
+                                        fontSize: '1rem',
+                                        fontWeight: 600,
+                                        background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                                        boxShadow: `0 8px 16px ${alpha(theme.palette.primary.main, 0.24)}`,
                                         '&:hover': {
-                                            background: 'linear-gradient(45deg, #764ba2 30%, #667eea 90%)',
+                                            background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
                                         }
                                     }}
                                 >
@@ -1151,16 +1229,6 @@ const EnhancedAuthPage = () => {
                                         t.sendResetCode
                                     )}
                                 </Button>
-
-                                {/* Forgot Password Link */}
-                                {authMode === 'login' && (
-                                    <Button
-                                        onClick={() => switchMode('forgot')}
-                                        sx={{ textTransform: 'none' }}
-                                    >
-                                        {t.forgotPassword}
-                                    </Button>
-                                )}
 
                                 {/* Back Button */}
                                 {authMode === 'forgot' && (
@@ -1178,10 +1246,15 @@ const EnhancedAuthPage = () => {
                         {/* Google Sign-In */}
                         {authMode !== 'forgot' && (
                             <>
-                                <Divider sx={{ my: 3 }}>{t.or}</Divider>
+                                <Divider sx={{ my: 3 }}>
+                                    <Typography variant="body2" color="text.secondary">
+                                        {t.or}
+                                    </Typography>
+                                </Divider>
                                 <Button
                                     variant="outlined"
                                     fullWidth
+                                    size="large"
                                     startIcon={
                                         loading ? (
                                             <CircularProgress size={20} />
@@ -1196,26 +1269,17 @@ const EnhancedAuthPage = () => {
                                     }
                                     onClick={handleGoogleSignIn}
                                     disabled={loading}
-                                    sx={{ py: 1.5 }}
+                                    sx={{
+                                        py: 1.5,
+                                        borderRadius: 3,
+                                        textTransform: 'none',
+                                        fontWeight: 600,
+                                        borderColor: alpha(theme.palette.text.primary, 0.2),
+                                    }}
                                 >
                                     {loading ? 'Processing...' : t.continueGoogle}
                                 </Button>
                             </>
-                        )}
-
-                        {/* Toggle Login/Register */}
-                        {authMode !== 'forgot' && (
-                            <Box sx={{ textAlign: 'center', mt: 3 }}>
-                                <Typography variant="body2">
-                                    {authMode === 'login' ? t.dontHaveAccount : t.alreadyHaveAccount}
-                                    <Button
-                                        onClick={() => switchMode(authMode === 'login' ? 'register' : 'login')}
-                                        sx={{ textTransform: 'none', fontWeight: 'bold' }}
-                                    >
-                                        {authMode === 'login' ? t.register : t.login}
-                                    </Button>
-                                </Typography>
-                            </Box>
                         )}
                     </Paper>
                 </motion.div>
