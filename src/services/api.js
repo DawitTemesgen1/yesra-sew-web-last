@@ -2,7 +2,7 @@ import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabaseClient';
 
 // Production-ready API configuration - uses environment variable or production URL
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.yesrasew.com';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.yesrasewsolution.com';
 
 // Re-export supabase for backward compatibility if needed within this file
 export { supabase };

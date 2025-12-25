@@ -90,8 +90,8 @@ const RedirectHandler = () => {
             const targetDomain = 'www.yesrasewsolution.com';
 
             // 1. Enforce HTTPS
-            if (protocol !== 'https:' && hostname !== 'localhost') {
-                window.location.href = `https://${hostname}${pathname}${search}${hash}`;
+            if (hostname !== 'www.yesrasewsolution.com') {
+                window.location.href = `https://www.yesrasewsolution.com${pathname}${search}${hash}`;
                 return;
             }
 

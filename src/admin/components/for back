@@ -759,7 +759,7 @@ export const dataService = {
 
 export default dataService;
 // API service for connecting to Yesra Sew backend
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.yesrasewsolution.com';
 
 class ApiService {
   constructor() {
