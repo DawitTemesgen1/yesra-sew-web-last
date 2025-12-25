@@ -432,7 +432,7 @@ const HomePage = () => {
     else if (['car', 'cars', 'vehicle'].some(s => rawSlug.includes(s))) key = 'cars';
 
     const fields = allTemplates[key];
-    return fields ? { steps: [{ fields }] } : null;
+    return fields || null;
   };
 
 
@@ -825,7 +825,7 @@ const HomePage = () => {
                         ...listing,
                         category: getCategoryForListing(listing) || listing.category
                       }}
-                      template={getTemplateForListing(listing)}
+                      templateFields={getTemplateForListing(listing)}
                       viewMode="grid"
                       onToggleFavorite={toggleFavorite}
                       isFavorite={favorites.includes(listing.id) || listing.is_favorited}
@@ -885,7 +885,7 @@ const HomePage = () => {
                       ...listing,
                       category: getCategoryForListing(listing) || listing.category
                     }}
-                    template={getTemplateForListing(listing)}
+                    templateFields={getTemplateForListing(listing)}
                     viewMode="grid"
                     onToggleFavorite={toggleFavorite}
                     isFavorite={favorites.includes(listing.id) || listing.is_favorited}

@@ -343,7 +343,7 @@ const JobsPage = () => {
                         }}>
                           <DynamicListingCard
                             listing={job}
-                            template={{ steps: [{ fields: templateFields }] }}
+                            templateFields={templateFields}
                             viewMode="grid"
                           />
                         </Grid>
@@ -369,7 +369,7 @@ const JobsPage = () => {
                         <Grid item xs={12} md={6} lg={4} key={job.id}>
                           <DynamicListingCard
                             listing={job}
-                            template={{ steps: [{ fields: templateFields }] }}
+                            templateFields={templateFields}
                             viewMode="grid"
                           />
                         </Grid>

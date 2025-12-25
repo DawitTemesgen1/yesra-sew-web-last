@@ -393,7 +393,7 @@ const CarsPage = () => {
                     }}>
                       <DynamicListingCard
                         listing={car}
-                        template={{ steps: [{ fields: templateFields }] }}
+                        templateFields={templateFields}
                         viewMode="grid"
                       />
                     </Grid>
@@ -420,7 +420,7 @@ const CarsPage = () => {
                     <Grid item xs={12} sm={6} lg={4} key={car.id}>
                       <DynamicListingCard
                         listing={car}
-                        template={{ steps: [{ fields: templateFields }] }}
+                        templateFields={templateFields}
                         viewMode="grid"
                       />
                     </Grid>

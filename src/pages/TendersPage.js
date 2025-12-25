@@ -406,7 +406,7 @@ const TendersPage = () => {
                         }}>
                           <DynamicListingCard
                             listing={tender}
-                            template={{ steps: [{ fields: templateFields }] }}
+                            templateFields={templateFields}
                             viewMode="grid"
                           />
                         </Grid>
@@ -432,7 +432,7 @@ const TendersPage = () => {
                         <Grid item xs={12} sm={6} lg={4} key={tender.id}>
                           <DynamicListingCard
                             listing={tender}
-                            template={{ steps: [{ fields: templateFields }] }}
+                            templateFields={templateFields}
                             viewMode="grid"
                           />
                         </Grid>
