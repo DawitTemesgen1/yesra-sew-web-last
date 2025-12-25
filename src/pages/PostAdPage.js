@@ -403,9 +403,10 @@ const PostAdPage = () => {
       Object.entries(formData).forEach(([key, value]) => {
         if (standardFields.includes(key)) {
           dbData[key] = value;
-        } else if (key === 'images' || key === 'video') {
-          // Handled via media_urls logic
+        } else if (key === 'video') {
+          // Skip video, handled via media_urls
         } else {
+          // Add everything else (including 'images' if present) to custom_fields
           dbData.custom_fields[key] = value;
         }
       });
@@ -422,14 +423,30 @@ const PostAdPage = () => {
 
       if (dbData.price) dbData.price = parseFloat(dbData.price) || 0;
 
-      // Map media fields
+      // Map media fields & Populate root images column
       const mediaFields = steps.flatMap(s => s.fields || []).filter(f => ['image', 'video', 'file'].includes(f.field_type));
+      const rootImages = [];
+
       mediaFields.forEach(field => {
-        const url = formData[field.field_name];
-        if (url) {
-          dbData.media_urls.push({ type: field.field_type, url: url, field_name: field.field_name });
+        const val = formData[field.field_name];
+        if (val) {
+          // Handle various value formats (string URL or array of URLs)
+          const urls = Array.isArray(val) ? val : [val];
+
+          urls.forEach(url => {
+            if (typeof url === 'string') {
+              dbData.media_urls.push({ type: field.field_type, url: url, field_name: field.field_name });
+              // Collect for root images column if it's an image field
+              if (field.field_type === 'image') {
+                rootImages.push(url);
+              }
+            }
+          });
         }
       });
+
+      // Ensure root images column is populated (vital for card display)
+      dbData.images = rootImages;
 
       const listingService = (await import('../services/listing-service')).default;
       let result;
