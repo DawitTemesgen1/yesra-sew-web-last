@@ -149,15 +149,18 @@ const MembershipTab = ({ userId }) => {
 
 const MembershipCard = ({ sub, theme, isMobile, getDaysRemaining, formatDate, getCategoryIcon, getCategoryColor }) => {
     const plan = sub.membership_plans;
+    if (!plan) return null; // Handle deleted plan gracefully
+
     const daysLeft = getDaysRemaining(sub.end_date);
     const isExpiring = daysLeft <= 5;
 
-    // Use usage from ROW COUNTING (fallback to stored JSON if missing, though typically obsolete)
-    const postUsageMap = sub.real_post_usage || sub.category_usage || {};
-    const viewUsageMap = sub.real_view_usage || sub.view_usage || {};
-
     const postLimits = plan.category_limits || {};
     const viewLimits = plan.permissions?.view_access || {};
+
+    // Use persistent usage from DB column instead of real-time count
+    const postUsageMap = sub.category_usage || {};
+    // View usage might still want to be real-time or persistent, usually view is just access check
+    const viewUsageMap = sub.view_usage || {};
 
     // Filter to relevant limits
     const relevantPostLimits = Object.entries(postLimits).filter(([_, limit]) => limit !== 0 && limit !== "0" && limit !== false);

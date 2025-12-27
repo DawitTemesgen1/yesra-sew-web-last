@@ -394,11 +394,11 @@ const CheckoutPage = () => {
     const formatDuration = (value, unit) => {
         if (!value || !unit) return `1 ${t.month}`;
         const v = parseInt(value);
-        // Map unit to translation key (remove 's' for simple singular check if needed, strictly reliance on keys here)
-        // unit usually 'months', 'days'
-        let unitKey = unit;
-        if (v === 1 && unit.endsWith('s')) unitKey = unit.slice(0, -1);
-        else if (v > 1 && !unit.endsWith('s')) unitKey = unit + 's';
+        let normalizedUnit = unit.toLowerCase();
+        let unitKey = normalizedUnit;
+
+        if (v === 1 && normalizedUnit.endsWith('s')) unitKey = normalizedUnit.slice(0, -1);
+        else if (v > 1 && !normalizedUnit.endsWith('s')) unitKey = normalizedUnit + 's';
 
         const translatedUnit = t[unitKey] || unit;
         return `${v} ${translatedUnit}`;

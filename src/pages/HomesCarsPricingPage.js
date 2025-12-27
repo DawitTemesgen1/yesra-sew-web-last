@@ -249,7 +249,13 @@ const HomesCarsPricingPage = ({ category: propCategory }) => {
 
         // Duration formatting
         const durationValue = plan.duration_value || 1;
-        const durationUnit = plan.duration_unit || 'months';
+        let durationUnit = plan.duration_unit || 'months';
+
+        // Fix pluralization for months
+        if (durationUnit.toLowerCase().includes('month')) {
+            durationUnit = durationValue === 1 ? 'Month' : 'Months';
+        }
+
         features.push({ text: `${durationValue} ${durationUnit} ${t.active}`, included: true });
 
         // Add features from the features array or string

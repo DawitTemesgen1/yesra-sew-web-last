@@ -20,30 +20,12 @@ const supabaseAuthService = {
         throw new Error('Phone number already registered');
       }
 
-      const tempEmail = `phone_${formattedPhone.replace('+', '')}@yesrasew.com`;
-
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: tempEmail,
-        password: password,
-        options: {
-          data: {
-            phone: formattedPhone,
-            first_name: firstName,
-            last_name: lastName,
-            account_type: accountType || 'individual',
-            company_name: accountType === 'company' ? companyName : null,
-            is_ethiopian_phone: true
-          }
-        }
-      });
-
-      if (authError) throw authError;
-
       // SMS: Use original send-ethiopian-sms
+      // We do NOT create the user yet. We wait for verification.
       const { data: otpData, error: otpError } = await supabase.functions.invoke('send-ethiopian-sms', {
         body: {
           phone: formattedPhone,
-          userId: authData.user.id,
+          // userId: null, // User not created yet
           purpose: 'registration'
         }
       });
@@ -77,19 +59,30 @@ const supabaseAuthService = {
       if (error) throw error;
       if (!data.success) throw new Error(data.message);
 
+      // OTP Verified! Now Create the Account.
       const tempEmail = `phone_${formattedPhone.replace('+', '')}@yesrasew.com`;
 
-      const { data: sessionData, error: signInError } = await supabase.auth.signInWithPassword({
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email: tempEmail,
-        password: registrationData.password
+        password: registrationData.password,
+        options: {
+          data: {
+            phone: formattedPhone,
+            first_name: registrationData.firstName,
+            last_name: registrationData.lastName,
+            account_type: registrationData.accountType || 'individual',
+            company_name: registrationData.accountType === 'company' ? registrationData.companyName : null,
+            is_ethiopian_phone: true
+          }
+        }
       });
 
-      if (signInError) throw signInError;
+      if (authError) throw authError;
 
       return {
         success: true,
-        user: sessionData.user,
-        session: sessionData.session
+        user: authData.user,
+        session: authData.session
       };
     } catch (error) {
       console.error('OTP verification error:', error);

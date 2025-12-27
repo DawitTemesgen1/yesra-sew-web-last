@@ -171,10 +171,36 @@ const PricingPage = () => {
     const [plans, setPlans] = useState([]);
     const [loading, setLoading] = useState(true);
     const [billingCycle, setBillingCycle] = useState('monthly');
+    const [hasUsedFreePlan, setHasUsedFreePlan] = useState(false);
 
     useEffect(() => {
         fetchPlans();
     }, []);
+
+    useEffect(() => {
+        if (user) {
+            checkFreeUsage();
+        }
+    }, [user]);
+
+    const checkFreeUsage = async () => {
+        try {
+            // Check if user has any history of free plan usage
+            // We join with membership_plans to check price = 0
+            const { data, error } = await supabase
+                .from('user_subscriptions')
+                .select('id, membership_plans!inner(price)')
+                .eq('user_id', user.id)
+                .eq('membership_plans.price', 0)
+                .limit(1);
+
+            if (!error && data && data.length > 0) {
+                setHasUsedFreePlan(true);
+            }
+        } catch (err) {
+            console.error('Error checking free plan usage:', err);
+        }
+    };
 
     const fetchPlans = async () => {
         try {
@@ -193,7 +219,7 @@ const PricingPage = () => {
                 ...plan,
                 features: typeof plan.features === 'string' ? JSON.parse(plan.features) : plan.features,
                 limits: typeof plan.limits === 'string' ? JSON.parse(plan.limits) : plan.limits
-            }));
+            })).sort((a, b) => a.price - b.price); // Force sort: Free -> Min -> Max
 
             setPlans(formattedPlans);
         } catch (error) {
@@ -214,6 +240,11 @@ const PricingPage = () => {
 
         // For FREE plans (price = 0), activate immediately
         if (plan.price === 0) {
+            if (hasUsedFreePlan) {
+                toast.error('You have already used your one-time free plan.');
+                return;
+            }
+
             try {
                 // Use RPC function to activate plan (bypasses RLS)
                 const { data, error } = await supabase.rpc('activate_user_plan', {
@@ -234,6 +265,9 @@ const PricingPage = () => {
                 }
 
                 toast.success(`${plan.name} activated successfully! You can now post ads.`);
+                // Update local state to prevent re-click
+                setHasUsedFreePlan(true);
+
                 // Redirect to post ad page after short delay
                 setTimeout(() => {
                     navigate('/post-ad');
@@ -484,6 +518,7 @@ const PricingPage = () => {
                                                 fullWidth
                                                 variant="contained"
                                                 onClick={() => handleSelectPlan(plan)}
+                                                disabled={plan.price === 0 && hasUsedFreePlan}
                                                 sx={{
                                                     py: 1.5,
                                                     borderRadius: 3,
@@ -494,7 +529,7 @@ const PricingPage = () => {
                                                     }
                                                 }}
                                             >
-                                                {plan.price === 0 ? t.getStarted : t.subscribeNow}
+                                                {plan.price === 0 ? (hasUsedFreePlan ? "One Time Only" : t.getStarted) : t.subscribeNow}
                                             </Button>
                                         </CardContent>
                                     </Card>

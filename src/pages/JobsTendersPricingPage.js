@@ -157,7 +157,7 @@ const JobsTendersPricingPage = ({ category = 'jobs' }) => {
     const fetchPlans = async () => {
         try {
             setLoading(true);
-            
+
 
             // Fetch directly using the shared supabase client (handles public/user auth correctly)
             const { data: allPlans, error } = await supabase
@@ -171,7 +171,7 @@ const JobsTendersPricingPage = ({ category = 'jobs' }) => {
                 throw error;
             }
 
-            
+
 
             const filteredPlans = (allPlans || []).filter(p => {
                 if (!p) return false;
@@ -195,7 +195,7 @@ const JobsTendersPricingPage = ({ category = 'jobs' }) => {
                 limits: typeof plan.limits === 'string' ? JSON.parse(plan.limits) : (plan.limits || {})
             }));
 
-            
+
             setPlans(filteredPlans);
         } catch (error) {
             console.error('Error fetching plans:', error);
@@ -286,7 +286,13 @@ const JobsTendersPricingPage = ({ category = 'jobs' }) => {
 
         // Duration formatting
         const durationValue = plan.duration_value || 1;
-        const durationUnit = plan.duration_unit || 'months';
+        let durationUnit = plan.duration_unit || 'months';
+
+        // Fix pluralization for months
+        if (durationUnit.toLowerCase().includes('month')) {
+            durationUnit = durationValue === 1 ? 'Month' : 'Months';
+        }
+
         features.push({ text: `${durationValue} ${durationUnit} ${t.visibility}`, included: true });
 
         // Add features from the features array or string

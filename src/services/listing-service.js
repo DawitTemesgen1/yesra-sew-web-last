@@ -49,6 +49,53 @@ const listingService = {
                 .single();
 
             if (error) throw error;
+
+            // Increment Subscription Usage (Persistent Counting)
+            // This ensures usage counts up even if listings are deleted later
+            try {
+                // 1. Get Category Slug
+                const { data: cat } = await supabase
+                    .from('categories')
+                    .select('slug')
+                    .eq('id', listingData.category_id)
+                    .single();
+
+                if (cat && cat.slug) {
+                    // normalize slug (remove 's' or keep consistent with plan/usage keys)
+                    // Usage keys usually match plan keys: 'jobs', 'tenders', 'homes', 'cars'
+                    let slug = cat.slug.toLowerCase();
+
+                    // 2. Get Active Subscription
+                    const { data: sub } = await supabase
+                        .from('user_subscriptions')
+                        .select('id, category_usage')
+                        .eq('user_id', user.id)
+                        .eq('status', 'active')
+                        .gte('end_date', new Date().toISOString())
+                        .maybeSingle(); // Use maybeSingle to avoid 406 if no sub
+
+                    if (sub) {
+                        const usage = sub.category_usage || {};
+                        // Ensure we handle 'job' vs 'jobs' - prefer plural as per plan keys
+                        if (!slug.endsWith('s')) slug += 's';
+
+                        const currentCount = usage[slug] || 0;
+                        const newCount = currentCount + 1;
+
+                        // 3. Update Usage
+                        await supabase
+                            .from('user_subscriptions')
+                            .update({
+                                category_usage: { ...usage, [slug]: newCount }
+                            })
+                            .eq('id', sub.id);
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to increment subscription usage:", err);
+                // Non-blocking: don't fail the listing creation
+            }
+
             return { success: true, listing: data };
         } catch (error) {
             console.error('Error creating listing:', error);
