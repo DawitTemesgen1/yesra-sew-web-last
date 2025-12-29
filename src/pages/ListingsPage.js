@@ -216,7 +216,7 @@ const ListingsPage = () => {
         { key: 'cars', match: ['cars', 'car', 'vehicle', 'vehicles', 'automotive'] }
       ];
 
-      for (const mapping of categoryMappings) {
+      await Promise.all(categoryMappings.map(async (mapping) => {
         // Find the category that matches one of the keywords
         const cat = cats.find(c => {
           const s = (c.slug || '').toLowerCase();
@@ -234,7 +234,7 @@ const ListingsPage = () => {
             console.warn(`Failed to load template for ${mapping.key}`, e);
           }
         }
-      }
+      }));
       return templates;
     } catch (err) {
       console.error('Error fetching listings templates', err);
@@ -325,7 +325,7 @@ const ListingsPage = () => {
     },
     {
       keepPreviousData: true,
-      staleTime: 5000,
+      staleTime: 60000,
       retry: 1
     }
   );
@@ -439,7 +439,7 @@ const ListingsPage = () => {
                 {listings.map((listing, index) => (
                   <Grid item xs={12} sm={viewMode === 'grid' ? 6 : 12} md={viewMode === 'grid' ? 4 : 12} key={listing.id}>
                     <motion.div
-                      layout
+                      // layout - Removed for performance optimization on mobile
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.9 }}

@@ -3,7 +3,7 @@ import {
   Box, Drawer, List, ListItem, ListItemIcon, ListItemText,
   Divider, AppBar, Toolbar, Typography, IconButton, Tooltip,
   useTheme, alpha, useMediaQuery, Button, Menu as MenuComponent, MenuItem,
-  Container, Grid, Fab, Card, CardContent, Avatar, Badge
+  Container, Grid, Fab, Card, CardContent, Avatar, Badge, CssBaseline
 } from '@mui/material';
 import {
   ChevronLeft, MenuOpen,
@@ -14,9 +14,6 @@ import {
   PlayArrow, Smartphone, Gavel, Work, Home, DirectionsCar, Close,
   KeyboardArrowUp, Notifications, AccountCircle, Logout, LightMode, DarkMode, Menu, Business
 } from '@mui/icons-material';
-import { useTranslation } from 'react-i18next';
-
-// Note: CSS files removed - styling now handled inline
 
 // Icon mapping
 const iconMap = {
@@ -60,21 +57,13 @@ const ResponsiveAdminLayout = ({
   const [mobileMenuAnchor, setMobileMenuAnchor] = useState(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
-  const drawerWidth = isMobile ? 320 : 280;
+  const drawerWidth = 280;
 
   const handleTabChange = (tabId) => {
     setActiveTab(tabId);
     if (isMobile) {
-      setMobileMenuAnchor(null);
+      setDrawerOpen(false); // Close mobile drawer on selection
     }
-  };
-
-  const handleMobileMenuOpen = (event) => {
-    setMobileMenuAnchor(event.currentTarget);
-  };
-
-  const handleMobileMenuClose = () => {
-    setMobileMenuAnchor(null);
   };
 
   const handleDrawerToggle = () => {
@@ -82,7 +71,7 @@ const ResponsiveAdminLayout = ({
   };
 
   // Scroll to top functionality
-  React.useEffect(() => {
+  useEffect(() => {
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 300);
     };
@@ -95,343 +84,237 @@ const ResponsiveAdminLayout = ({
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const renderMobileMenu = () => (
-    <MenuComponent
-      anchorEl={mobileMenuAnchor}
-      open={Boolean(mobileMenuAnchor)}
-      onClose={handleMobileMenuClose}
-      PaperProps={{
-        sx: {
-          mt: 1.5,
-          width: 280,
-          maxHeight: '70vh',
-          overflow: 'auto'
-        }
-      }}
-    >
-      <Box sx={{ p: 2, borderBottom: `1px solid ${theme.palette.divider}` }}>
-        <Typography variant="h6" noWrap component="div">
+  const drawerContent = (
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <Toolbar sx={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        px: 3, minHeight: '64px!important',
+        background: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'white'
+      }}>
+        <Typography
+          variant="h6"
+          noWrap
+          component="div"
+          sx={{
+            background: 'linear-gradient(45deg, #4F46E5 30%, #EC4899 90%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            fontWeight: 800,
+            fontSize: '1.25rem',
+            cursor: 'pointer'
+          }}
+          onClick={() => setActiveTab(0)}
+        >
           YesraSew Admin
         </Typography>
-      </Box>
-      <List sx={{ p: 1 }}>
-        {menuItems.map((item) => {
-          const IconComponent = iconMap[item.icon] || DashboardIcon;
-          return (
-            <MenuItem
-              key={item.id}
-              selected={activeTab === item.id}
-              onClick={() => handleTabChange(item.id)}
-              sx={{
-                borderRadius: 1,
-                mb: 0.5,
-                '&.Mui-selected': {
-                  bgcolor: alpha(theme.palette.primary.main, 0.1),
-                  color: theme.palette.primary.main,
+        {isMobile && (
+          <IconButton onClick={handleDrawerToggle}>
+            <ChevronLeft />
+          </IconButton>
+        )}
+      </Toolbar>
+      <Divider />
+      <Box sx={{ overflow: 'auto', flex: 1, px: 2, py: 2 }}>
+        <List>
+          {menuItems.map((item) => {
+            const IconComponent = iconMap[item.icon] || DashboardIcon;
+            const isSelected = activeTab === item.id;
+            return (
+              <ListItem
+                key={item.id}
+                button
+                selected={isSelected}
+                onClick={() => handleTabChange(item.id)}
+                sx={{
+                  borderRadius: 2,
+                  mb: 0.5,
+                  py: 1.5,
+                  px: 2,
+                  transition: 'all 0.2s ease-in-out',
+                  backgroundColor: isSelected ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
+                  color: isSelected ? theme.palette.primary.main : 'inherit',
+                  borderLeft: isSelected ? `4px solid ${theme.palette.primary.main}` : '4px solid transparent',
                   '&:hover': {
-                    bgcolor: alpha(theme.palette.primary.main, 0.15),
+                    backgroundColor: alpha(theme.palette.primary.main, 0.15),
+                    transform: 'translateX(4px)',
                   },
-                  '& .MuiListItemIcon-root': {
-                    color: theme.palette.primary.main,
-                  },
-                },
-                '&:hover': {
-                  bgcolor: alpha(theme.palette.action.hover, 0.08),
-                },
-              }}
-            >
-              <ListItemIcon sx={{ minWidth: 40 }}>
-                <IconComponent />
-              </ListItemIcon>
-              <ListItemText
-                primary={t(item.label)}
-                primaryTypographyProps={{
-                  fontSize: '0.875rem',
-                  fontWeight: activeTab === item.id ? 600 : 400,
                 }}
-              />
-            </MenuItem>
-          );
-        })}
-      </List>
-    </MenuComponent>
+              >
+                <ListItemIcon sx={{
+                  minWidth: 40,
+                  color: isSelected ? theme.palette.primary.main : theme.palette.text.secondary
+                }}>
+                  <IconComponent fontSize="small" />
+                </ListItemIcon>
+                <ListItemText
+                  primary={t(item.label)}
+                  primaryTypographyProps={{
+                    fontSize: '0.9rem',
+                    fontWeight: isSelected ? 600 : 500,
+                  }}
+                />
+              </ListItem>
+            );
+          })}
+        </List>
+      </Box>
+      <Box sx={{ p: 2 }}>
+        <Typography variant="caption" color="text.secondary" align="center" display="block">
+          v1.2.0 • YesraSew Solution
+        </Typography>
+      </Box>
+    </Box>
   );
 
-  // Determine main content margin based on drawer state
-  const mainMargin = (!isMobile && drawerOpen) ? 0 : 0; // If flex, margin is handled by flex flow? NOT if fixed.
-  // Standard MUI Persistent drawer pattern:
-  // If we render Drawer as a sibling in a flex row, it takes space.
-  // If drawerOpen is FALSE, we want it to take 0 space.
-
-  // FIX: Force render Drawer always, but control visibility via 'open' prop
-  // AND ensure the Drawer component handles the 'persistent' width correctly.
-
   return (
-    <Box sx={{ display: 'flex', bgcolor: 'background.default', minHeight: '100vh' }}>
-      {isMobile && renderMobileMenu()}
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
+      <CssBaseline />
 
-      {/* Drawer - Always render on desktop, control via open prop */}
-      {(!isMobile) && (
+      {/* 1. Header (Fixed AppBar) */}
+      <AppBar
+        position="fixed"
+        sx={{
+          width: { md: `calc(100% - ${drawerOpen ? drawerWidth : 0}px)` },
+          ml: { md: `${drawerOpen ? drawerWidth : 0}px` },
+          boxShadow: 'none',
+          borderBottom: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+          bgcolor: theme.palette.mode === 'light' ? 'rgba(255,255,255,0.9)' : alpha(theme.palette.background.paper, 0.9),
+          backdropFilter: 'blur(8px)',
+          color: theme.palette.text.primary,
+          transition: theme.transitions.create(['width', 'margin'], {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.leavingScreen,
+          }),
+          zIndex: (theme) => theme.zIndex.drawer + 1
+        }}
+      >
+        <Toolbar>
+          <IconButton
+            color="inherit"
+            aria-label="open drawer"
+            edge="start"
+            onClick={handleDrawerToggle}
+            sx={{ mr: 2, display: { md: 'none' } }}
+          >
+            <Menu />
+          </IconButton>
+
+          {/* Desktop Toggle (only if closed) */}
+          <IconButton
+            color="inherit"
+            edge="start"
+            onClick={handleDrawerToggle}
+            sx={{ mr: 2, display: { xs: 'none', md: drawerOpen ? 'none' : 'block' } }}
+          >
+            <MenuOpen />
+          </IconButton>
+
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 700 }}>
+            {t(menuItems.find(item => item.id === activeTab)?.label || 'dashboard')}
+          </Typography>
+
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Tooltip title={theme.palette.mode === 'dark' ? 'Light Mode' : 'Dark Mode'}>
+              <IconButton onClick={toggleTheme} color="inherit">
+                {theme.palette.mode === 'dark' ? <LightMode /> : <DarkMode />}
+              </IconButton>
+            </Tooltip>
+            <IconButton color="inherit">
+              <Badge badgeContent={4} color="error">
+                <Notifications />
+              </Badge>
+            </IconButton>
+            <IconButton color="inherit">
+              <AccountCircle />
+            </IconButton>
+          </Box>
+        </Toolbar>
+      </AppBar>
+
+      {/* 2. Navigation Drawer */}
+      <Box
+        component="nav"
+        sx={{ width: { md: drawerOpen ? drawerWidth : 0 }, flexShrink: { md: 0 }, transition: 'width 0.2s' }}
+        aria-label="admin navigation"
+      >
+        {/* Mobile Drawer (Temporary) */}
+        <Drawer
+          container={typeof window !== 'undefined' ? () => window.document.body : undefined}
+          variant="temporary"
+          open={isMobile && drawerOpen}
+          onClose={handleDrawerToggle}
+          ModalProps={{
+            keepMounted: true, // Better open performance on mobile.
+          }}
+          sx={{
+            display: { xs: 'block', md: 'none' },
+            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            zIndex: (theme) => theme.zIndex.drawer + 2
+          }}
+        >
+          {drawerContent}
+        </Drawer>
+
+        {/* Desktop Drawer (Persistent) */}
         <Drawer
           variant="persistent"
-          anchor="left"
-          open={drawerOpen}
           sx={{
-            width: drawerOpen ? drawerWidth : 0,
-            flexShrink: 0,
-            transition: theme.transitions.create('width', {
-              easing: theme.transitions.easing.sharp,
-              duration: theme.transitions.duration.enteringScreen,
-            }),
+            display: { xs: 'none', md: 'block' },
             '& .MuiDrawer-paper': {
-              width: drawerWidth,
               boxSizing: 'border-box',
+              width: drawerWidth,
               borderRight: `1px solid ${theme.palette.divider}`,
-              // If closed, the persistent drawer hides itself? 
-              // MUI persistent drawer translates the paper, but root width stays?
-              // We manually animate root width to 0 to collapse layout.
+              top: 0, // Ensure it starts from top
+              height: '100%',
+              bgcolor: 'background.paper'
             },
           }}
-        >
-          {/* Drawer Inner Content - Same as before */}
-          <Toolbar sx={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            px: 3, minHeight: '64px!important'
-          }}>
-            <Typography
-              variant="h6"
-              noWrap
-              component="div"
-              sx={{
-                background: 'linear-gradient(45deg, #4F46E5 30%, #EC4899 90%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                fontWeight: 800,
-                fontSize: '1.25rem'
-              }}
-            >
-              YesraSew Admin
-            </Typography>
-            <IconButton onClick={handleDrawerToggle} size="small">
-              <ChevronLeft />
-            </IconButton>
-          </Toolbar>
-
-          <Box sx={{ overflow: 'auto', flex: 1, px: 2, py: 2 }}>
-            <List>
-              {menuItems.map((item) => {
-                const IconComponent = iconMap[item.icon] || DashboardIcon;
-                return (
-                  <ListItem
-                    key={item.id}
-                    button
-                    selected={activeTab === item.id}
-                    onClick={() => handleTabChange(item.id)}
-                    sx={{
-                      borderRadius: 2,
-                      mb: 0.5,
-                      py: 1.5,
-                      px: 2,
-                      transition: 'all 0.2s ease-in-out',
-                      '&.Mui-selected': {
-                        background: `linear-gradient(90deg, ${alpha(theme.palette.primary.main, 0.15)} 0%, ${alpha(theme.palette.primary.main, 0.05)} 100%)`,
-                        color: theme.palette.primary.main,
-                        borderLeft: `3px solid ${theme.palette.primary.main}`,
-                        '&:hover': { background: alpha(theme.palette.primary.main, 0.2) },
-                        '& .MuiListItemIcon-root': { color: theme.palette.primary.main },
-                      },
-                      '&:not(.Mui-selected):hover': {
-                        transform: 'translateX(4px)',
-                        bgcolor: alpha(theme.palette.text.primary, 0.04)
-                      },
-                    }}
-                  >
-                    <ListItemIcon sx={{ minWidth: 40, color: activeTab === item.id ? 'inherit' : theme.palette.text.secondary }}>
-                      <IconComponent fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={t(item.label)}
-                      primaryTypographyProps={{ fontSize: '0.875rem', fontWeight: activeTab === item.id ? 600 : 500 }}
-                    />
-                  </ListItem>
-                );
-              })}
-            </List>
-          </Box>
-        </Drawer>
-      )}
-
-      {/* Drawer for Mobile */}
-      {isMobile && (
-        <Drawer
-          variant="temporary"
-          anchor="left"
           open={drawerOpen}
-          onClose={handleDrawerToggle}
-          ModalProps={{ keepMounted: true, BackdropProps: { sx: { backdropFilter: 'blur(4px)' } } }}
-          sx={{
-            width: drawerWidth,
-            flexShrink: 0,
-            zIndex: 1300,
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
-          }}
         >
-          <Toolbar sx={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            px: 3, minHeight: '64px!important'
-          }}>
-            <Typography variant="h6" noWrap component="div" sx={{
-              background: 'linear-gradient(45deg, #4F46E5 30%, #EC4899 90%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              fontWeight: 800,
-              fontSize: '1.25rem'
-            }}>
-              Menu
-            </Typography>
-            <IconButton onClick={handleDrawerToggle} size="small">
-              <Close />
-            </IconButton>
-          </Toolbar>
-          <Box sx={{ overflow: 'auto', flex: 1, px: 2, py: 2 }}>
-            <List>
-              {menuItems.map((item) => {
-                const IconComponent = iconMap[item.icon] || DashboardIcon;
-                return (
-                  <ListItem
-                    key={item.id}
-                    button
-                    selected={activeTab === item.id}
-                    onClick={() => handleTabChange(item.id)}
-                    sx={{
-                      borderRadius: 2,
-                      mb: 0.5,
-                      py: 1.5,
-                      px: 2,
-                      transition: 'all 0.2s ease-in-out',
-                      '&.Mui-selected': {
-                        background: `linear-gradient(90deg, ${alpha(theme.palette.primary.main, 0.15)} 0%, ${alpha(theme.palette.primary.main, 0.05)} 100%)`,
-                        color: theme.palette.primary.main,
-                        borderLeft: `3px solid ${theme.palette.primary.main}`,
-                        '&:hover': { background: alpha(theme.palette.primary.main, 0.2) },
-                        '& .MuiListItemIcon-root': { color: theme.palette.primary.main },
-                      },
-                      '&:not(.Mui-selected):hover': {
-                        transform: 'translateX(4px)',
-                        bgcolor: alpha(theme.palette.text.primary, 0.04)
-                      },
-                    }}
-                  >
-                    <ListItemIcon sx={{ minWidth: 40, color: activeTab === item.id ? 'inherit' : theme.palette.text.secondary }}>
-                      <IconComponent fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={t(item.label)}
-                      primaryTypographyProps={{ fontSize: '0.875rem', fontWeight: activeTab === item.id ? 600 : 500 }}
-                    />
-                  </ListItem>
-                );
-              })}
-            </List>
-          </Box>
+          {drawerContent}
         </Drawer>
-      )}
+      </Box>
 
-      {/* Helper functions were inlined into the main return statement for better state access */}
-
+      {/* 3. Main Content Area */}
       <Box
         component="main"
         sx={{
           flexGrow: 1,
-          background: theme.palette.mode === 'light'
-            ? 'linear-gradient(to bottom right, #F3F4F6 0%, #F9FAFB 100%)'
-            : 'transparent',
+          p: { xs: 2, sm: 3 },
+          width: { md: `calc(100% - ${drawerOpen ? drawerWidth : 0}px)` },
           minHeight: '100vh',
-          width: '100%', // Take remaining space
-          marginLeft: 0, // Flex layout handles spacing
+          transition: theme.transitions.create(['width', 'margin'], {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.leavingScreen,
+          }),
         }}
       >
-        <AppBar
-          position="sticky"
-          sx={{
-            boxShadow: 'none',
-            borderBottom: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
-            top: 0, zIndex: 1100
-          }}
-        >
-          <Toolbar sx={{ px: { xs: 2, sm: 4 }, gap: 1 }}>
-            {/* Toggle Button for Desktop if Closed */}
-            {!isMobile && !drawerOpen && (
-              <IconButton onClick={handleDrawerToggle} edge="start" sx={{ mr: 2 }}>
-                <MenuOpen />
-              </IconButton>
-            )}
+        {/* Spacer for Fixed AppBar */}
+        <Toolbar />
 
-            {/* Toggle Button for Mobile */}
-            {isMobile && (
-              <IconButton onClick={handleDrawerToggle} edge="start" sx={{ mr: 1 }}>
-                <Menu />
-              </IconButton>
-            )}
-
-            <Box sx={{ flexGrow: 1 }}>
-              <Typography variant="h6" fontWeight={700} color="text.primary">
-                {t(menuItems.find(item => item.id === activeTab)?.label || 'dashboard')}
-              </Typography>
-            </Box>
-
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <Tooltip title="Toggle Theme">
-                <IconButton size="small" color="inherit" onClick={toggleTheme}>
-                  {theme.palette.mode === 'dark' ? <LightMode fontSize="small" /> : <DarkMode fontSize="small" />}
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Notifications">
-                <IconButton size="small" color="inherit">
-                  <Badge badgeContent={4} color="error"><Notifications fontSize="small" /></Badge>
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Settings">
-                <IconButton size="small" color="inherit">
-                  <Settings fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            </Box>
-          </Toolbar>
-        </AppBar>
-
-
-        <Container
-          maxWidth={false}
-          sx={{
-            py: 4,
-            px: { xs: 2, sm: 4, md: 6 },
-            maxWidth: '1920px'
-          }}
-        >
-          <Box sx={{
-            animation: 'fadeIn 0.5s ease-out',
-            '@keyframes fadeIn': {
-              '0%': { opacity: 0, transform: 'translateY(10px)' },
-              '100%': { opacity: 1, transform: 'translateY(0)' }
-            }
-          }}>
-            {children}
-          </Box>
-        </Container>
+        {/* Content Children */}
+        <Box sx={{
+          animation: 'fadeIn 0.3s ease-in',
+          '@keyframes fadeIn': {
+            '0%': { opacity: 0, transform: 'translateY(10px)' },
+            '100%': { opacity: 1, transform: 'translateY(0)' }
+          }
+        }}>
+          {children}
+        </Box>
       </Box>
 
+      {/* Scroll to Top Button */}
       {showScrollTop && (
         <Fab
           color="primary"
-          size="small"
+          size="medium"
           onClick={scrollToTop}
           sx={{
             position: 'fixed',
             bottom: 24,
             right: 24,
-            zIndex: 1000,
-            boxShadow: '0 4px 12px rgba(79, 70, 229, 0.4)'
+            zIndex: 2000
           }}
         >
           <KeyboardArrowUp />

@@ -53,6 +53,10 @@ const DynamicPage = React.lazy(() => import('./pages/DynamicPage'));
 const TermsOfService = React.lazy(() => import('./pages/TermsOfService'));
 const PrivacyPolicy = React.lazy(() => import('./pages/PrivacyPolicy'));
 const AboutUs = React.lazy(() => import('./pages/AboutUs'));
+const ContactUsPage = React.lazy(() => import('./pages/ContactUsPage'));
+const SupportPage = React.lazy(() => import('./pages/SupportPage'));
+const BlogPage = React.lazy(() => import('./pages/BlogPage'));
+const BlogDetailPage = React.lazy(() => import('./pages/BlogDetailPage'));
 
 
 const Layout = ({ children }) => {
@@ -62,7 +66,8 @@ const Layout = ({ children }) => {
     const isProfilePage = location.pathname === '/profile';
     const isAdminPage = location.pathname.startsWith('/admin-panel') || location.pathname === '/admin-login';
     const isChatPage = location.pathname.startsWith('/chat');
-    const hideNavFooter = isAuthPage || isProfilePage || isAdminPage || isChatPage;
+    const isBlogDetailPage = location.pathname.startsWith('/blog/');
+    const hideNavFooter = isAuthPage || isProfilePage || isAdminPage || isChatPage || isBlogDetailPage;
 
     // Initialize GA4 (Placeholder)
     React.useEffect(() => {
@@ -189,6 +194,10 @@ const AnimatedRoutes = () => {
                 <Route path="/terms" element={<TermsOfService />} />
                 <Route path="/privacy" element={<PrivacyPolicy />} />
                 <Route path="/about" element={<AboutUs />} />
+                <Route path="/contact" element={<ContactUsPage />} />
+                <Route path="/support" element={<SupportPage />} />
+                <Route path="/blog" element={<BlogPage />} />
+                <Route path="/blog/:id" element={<BlogDetailPage />} />
 
                 {/* Membership & Pricing */}
                 <Route path="/upgrade-plan" element={<ProtectedRoute><UpgradePlanPage /></ProtectedRoute>} />

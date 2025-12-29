@@ -467,7 +467,7 @@ const DynamicListingCard = ({
                             }}
                             onError={(e) => {
                                 e.target.style.display = 'none';
-                                e.target.nextSibling.style.display = 'flex'; // Show fallback safely
+                                if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex'; // Show fallback safely if it exists nearby
                             }}
                         />
                     ) : null}

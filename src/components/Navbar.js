@@ -192,7 +192,19 @@ const Navbar = ({ activeTab, setActiveTab }) => {
 
   const handleNav = (path, index) => {
     setActiveTab(index);
-    navigate(path);
+    if (path === location.pathname) return;
+
+    // Check if both current and target are top-level routes
+    const topLevelRoutes = ['/', '/tenders', '/jobs', '/homes', '/cars'];
+    const isCurrentTopLevel = topLevelRoutes.includes(location.pathname);
+    const isTargetTopLevel = topLevelRoutes.includes(path);
+
+    // If switching between main tabs, replace history to keep stack flat
+    if (isCurrentTopLevel && isTargetTopLevel) {
+      navigate(path, { replace: true });
+    } else {
+      navigate(path);
+    }
   };
 
   const handleLogoutClick = () => {

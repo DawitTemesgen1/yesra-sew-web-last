@@ -5,6 +5,12 @@ import { supabase } from './api';
  * Handles membership plans, subscriptions, and access control
  */
 
+const plansCache = {
+    data: null,
+    timestamp: 0,
+    TTL: 5 * 60 * 1000 // 5 minutes
+};
+
 const membershipService = {
     // ============================================
     // MEMBERSHIP PLANS
@@ -15,6 +21,12 @@ const membershipService = {
      */
     async getPlans(includeInactive = false) {
         try {
+            // Return cached data if valid and we're not asking for inactive (admin usually asks for all)
+            // For public/auth flow (includeInactive=false), cache is safe.
+            if (!includeInactive && plansCache.data && (Date.now() - plansCache.timestamp < plansCache.TTL)) {
+                return plansCache.data;
+            }
+
             let query = supabase
                 .from('membership_plans')
                 .select('*')
@@ -26,6 +38,12 @@ const membershipService = {
 
             const { data, error } = await query;
             if (error) throw error;
+
+            if (!includeInactive) {
+                plansCache.data = data;
+                plansCache.timestamp = Date.now();
+            }
+
             return data;
         } catch (error) {
             console.error('Error fetching plans:', error);

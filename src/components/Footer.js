@@ -29,7 +29,10 @@ const translations = {
       tenders: "Browse Tenders",
       cars: "Used Cars",
       homes: "Real Estate",
-      about: "About Us"
+      about: "About Us",
+      blog: "Blog",
+      contact: "Contact Us",
+      support: "Help & Support"
     }
   },
   am: {
@@ -45,7 +48,10 @@ const translations = {
       tenders: "ጨረታዎችን ያስሱ",
       cars: "ያገለገሉ መኪናዎች",
       homes: "ሪል እስቴት",
-      about: "ስለ እኛ"
+      about: "ስለ እኛ",
+      blog: "ብሎግ",
+      contact: "ያግኙን",
+      support: "እርዳታ እና ድጋፍ"
     }
   },
   om: {
@@ -61,7 +67,10 @@ const translations = {
       tenders: "Caalbaasiiwwan Sakatta'i",
       cars: "Konkolaattota Fayyadamoo",
       homes: "Qabeenya Dhugaa",
-      about: "Waa'ee Keenya"
+      about: "Waa'ee Keenya",
+      blog: "Blogii",
+      contact: "Nuun Dubbadhaa",
+      support: "Gargaarsa"
     }
   },
   ti: {
@@ -77,7 +86,10 @@ const translations = {
       tenders: "ጨረታታት ኣስተውዕሉ",
       cars: "ዝተጠቐምሉ መካይን",
       homes: "ሓቀኛ ንብረት",
-      about: "ብዛዕባና"
+      about: "ብዛዕባና",
+      blog: "ብሎግ",
+      contact: "ተወከሱና",
+      support: "ሓገዝ"
     }
   }
 };
@@ -218,8 +230,10 @@ const Footer = () => {
                   {t.legal}
                 </Typography>
                 <Stack spacing={2}>
-                  <Link href="/homes" color="text.secondary" underline="none" sx={{ fontSize: '0.875rem', '&:hover': { color: BRAND_COLORS.gold } }}>{t.links.homes}</Link>
                   <Link href="/about" color="text.secondary" underline="none" sx={{ fontSize: '0.875rem', '&:hover': { color: BRAND_COLORS.gold } }}>{t.links.about}</Link>
+                  <Link href="/blog" color="text.secondary" underline="none" sx={{ fontSize: '0.875rem', '&:hover': { color: BRAND_COLORS.gold } }}>{t.links.blog}</Link>
+                  <Link href="/contact" color="text.secondary" underline="none" sx={{ fontSize: '0.875rem', '&:hover': { color: BRAND_COLORS.gold } }}>{t.links.contact}</Link>
+                  <Link href="/support" color="text.secondary" underline="none" sx={{ fontSize: '0.875rem', '&:hover': { color: BRAND_COLORS.gold } }}>{t.links.support}</Link>
                   <Link href="/privacy" color="text.secondary" underline="none" sx={{ fontSize: '0.875rem', '&:hover': { color: BRAND_COLORS.gold } }}>{t.privacy}</Link>
                   <Link href="/terms" color="text.secondary" underline="none" sx={{ fontSize: '0.875rem', '&:hover': { color: BRAND_COLORS.gold } }}>{t.terms}</Link>
                 </Stack>

@@ -56,6 +56,11 @@ const PagesManagementScreen = lazyWithRetry(() => import('./components/PagesMana
 const PostTemplateScreen = lazyWithRetry(() => import('./components/PostTemplateScreen'));
 const EmailSettingsPage = lazyWithRetry(() => import('./components/EmailSettingsPage'));
 
+// Blog & Content Management
+const AdminBlogManagement = lazyWithRetry(() => import('../components/admin/AdminBlogManagement'));
+const AdminContactMessages = lazyWithRetry(() => import('../components/admin/AdminContactMessages'));
+const AdminFAQManagement = lazyWithRetry(() => import('../components/admin/AdminFAQManagement'));
+
 const AdminDashboard = () => {
   const { t } = useTranslation();
   // Theme State
@@ -212,6 +217,9 @@ const AdminDashboard = () => {
       case 29: return <PagesManagementScreen {...commonProps} />;
       case 30: return <PostTemplateScreen {...commonProps} />;
       case 31: return <EmailSettingsPage {...commonProps} />;
+      case 32: return <AdminBlogManagement {...commonProps} />;
+      case 33: return <AdminContactMessages {...commonProps} />;
+      case 34: return <AdminFAQManagement {...commonProps} />;
       default: return <Box p={3}><Typography>{t('featureUnderDevelopment')}</Typography></Box>;
     }
   };

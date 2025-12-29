@@ -25,6 +25,9 @@ export const MENU_ITEMS = [
   { id: 29, icon: 'Article', label: 'pagesManagement', category: 'integrated', badge: 'New' },
   { id: 30, icon: 'PostAdd', label: 'postTemplates', category: 'integrated', badge: 'New' },
   { id: 31, icon: 'Email', label: 'emailSettings', category: 'integrated', badge: 'New' },
+  { id: 32, icon: 'Article', label: 'blogManagement', category: 'integrated', badge: 'New' },
+  { id: 33, icon: 'Message', label: 'contactMessages', category: 'integrated', badge: 'New' },
+  { id: 34, icon: 'HelpOutline', label: 'faqManagement', category: 'integrated', badge: 'New' },
 
   // ========================================
   // PENDING IMPLEMENTATION (Mock Data) - Hidden for Production Polish

@@ -67,7 +67,6 @@ const translations = {
 };
 
 // Helper to render text with clickable links
-// Helper to render text with clickable links
 const renderWithLinks = (text) => {
   if (typeof text !== 'string') return text;
 
@@ -309,7 +308,9 @@ const ListingDetailPage = () => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [blockDialogOpen, setBlockDialogOpen] = useState(false);
+
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
+  const [posting, setPosting] = useState(false);
 
   // 1. Fetch Listing & Comments in Parallel
   const { data: listing, isLoading: loadingListing, error } = useQuery(
@@ -370,9 +371,49 @@ const ListingDetailPage = () => {
   };
 
   const handleCallSeller = () => {
-    const phone = listing?.phone_number || listing?.contact_phone || listing?.seller?.phone;
-    if (phone) window.location.href = `tel:${phone}`;
-    else toast.error(t.phoneNotAvailable);
+    // 1. Direct Keys & Seller Profile (Standard locations)
+    let phone =
+      listing?.phone_number ||
+      listing?.contact_phone ||
+      listing?.seller?.phone;
+
+    // 2. Common Custom Field Keys (If not found in standard)
+    if (!phone && listing?.custom_fields) {
+      const cf = listing.custom_fields;
+      phone = cf.phone_number || cf.contact_phone || cf.phone || cf.mobile || cf.tel || cf.contact || cf.whatsapp || cf.call;
+    }
+
+    // 3. Aggressive Search Regex (Ethiopian & General formats)
+    // Matches: 0911234567, +251911234567, 0911-23-45-67, and variations
+    const phoneRegex = /(?:\+?251|0)(?:9|7)\d{2}[-\s]?\d{3}[-\s]?\d{3}/;
+
+    // 4. Scan All Custom Fields Values
+    if (!phone && listing?.custom_fields) {
+      const values = Object.values(listing.custom_fields);
+      for (const val of values) {
+        if (typeof val === 'string') {
+          const match = val.match(phoneRegex);
+          if (match) {
+            phone = match[0];
+            break;
+          }
+        }
+      }
+    }
+
+    // 5. Scan Description (Last Resort)
+    if (!phone && listing?.description) {
+      const match = listing.description.match(phoneRegex);
+      if (match) phone = match[0];
+    }
+
+    if (phone) {
+      // Clean for tel: link (remove spaces, dashes, etc)
+      const cleanPhone = phone.toString().replace(/[^\d+]/g, '');
+      window.location.href = `tel:${cleanPhone}`;
+    } else {
+      toast.error(t.phoneNotAvailable);
+    }
   };
 
   const handleShare = async () => {
@@ -387,13 +428,28 @@ const ListingDetailPage = () => {
   };
 
   const handlePostComment = async () => {
+    // 1. Check if authenticated
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast.error(t.loginToComment);
+      // Optional: navigate to login page
+      navigate('/login', { state: { from: window.location.pathname } });
+      return;
+    }
+
     if (!comment.trim()) return;
+
+    setPosting(true);
     try {
       await apiService.addListingComment(id, comment);
       queryClient.invalidateQueries(['comments', id]);
       setComment('');
       toast.success(t.commentPosted);
-    } catch (err) { toast.error(t.loginToComment); }
+    } catch (err) {
+      toast.error(t.loginToComment);
+    } finally {
+      setPosting(false);
+    }
   };
 
   // Helper to get value from various possible locations
@@ -619,7 +675,7 @@ const ListingDetailPage = () => {
                 overflow: 'hidden',
                 position: isMobile ? 'relative' : 'sticky',
                 top: isMobile ? 0 : 80,
-                bgcolor: 'black',  // Ensure black background for images
+                // Removed bgcolor: 'black'
                 minHeight: isMobile ? 300 : 500
               }}
               elevation={isMobile ? 0 : 3}
@@ -627,7 +683,31 @@ const ListingDetailPage = () => {
               {loadingListing ? (
                 <Skeleton variant="rectangular" width="100%" height={isMobile ? 300 : 500} animation="wave" />
               ) : (
-                <Box sx={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Box sx={{
+                  position: 'relative',
+                  width: '100%',
+                  height: '100%',
+                  minHeight: isMobile ? 300 : 500,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  bgcolor: 'grey.100', // Fallback
+                  overflow: 'hidden'
+                }}>
+                  {/* Premium Blurred Background Layer */}
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: 0, left: 0, right: 0, bottom: 0,
+                      backgroundImage: `url(${images[currentImageIndex]})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      filter: 'blur(20px) brightness(0.7)',
+                      transform: 'scale(1.1)', // Prevent blur edges
+                    }}
+                  />
+
+                  {/* Main Image */}
                   <Box
                     component="img"
                     src={images[currentImageIndex]}
@@ -636,6 +716,8 @@ const ListingDetailPage = () => {
                       setImageViewerOpen(true);
                     }}
                     sx={{
+                      position: 'relative',
+                      zIndex: 1,
                       width: '100%',
                       height: 'auto',
                       maxHeight: isMobile ? 500 : 700,
@@ -643,9 +725,6 @@ const ListingDetailPage = () => {
                       display: 'block',
                       cursor: 'pointer',
                       transition: 'transform 0.2s',
-                      '&:hover': {
-                        transform: 'scale(1.02)'
-                      }
                     }}
                     onError={(e) => {
                       e.target.onerror = null;
@@ -901,10 +980,15 @@ const ListingDetailPage = () => {
                         placeholder={t.addComment}
                         value={comment}
                         onChange={(e) => setComment(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && handlePostComment()}
+                        onKeyPress={(e) => e.key === 'Enter' && !posting && handlePostComment()}
+                        disabled={posting}
                       />
-                      <IconButton color="primary" onClick={handlePostComment}>
-                        <Send />
+                      <IconButton
+                        color="primary"
+                        onClick={handlePostComment}
+                        disabled={posting || !comment.trim()}
+                      >
+                        {posting ? <CircularProgress size={24} /> : <Send />}
                       </IconButton>
                     </Stack>
 

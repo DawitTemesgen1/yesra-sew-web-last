@@ -44,61 +44,33 @@ const ImageViewer = ({ open, images, initialIndex = 0, onClose }) => {
         setCurrentIndex(initialIndex);
     }, [initialIndex]);
 
-    // Keyboard navigation
+    // History State Management for Back Button
     useEffect(() => {
-        if (!open) return;
+        if (open) {
+            // Push a new history entry when viewer opens
+            window.history.pushState({ viewerOpen: true }, '', window.location.href);
 
-        const handleKeyDown = (e) => {
-            switch (e.key) {
-                case 'ArrowLeft':
-                    handlePrevious();
-                    break;
-                case 'ArrowRight':
-                    handleNext();
-                    break;
-                case 'Escape':
-                    onClose();
-                    break;
-                case '+':
-                case '=':
-                    handleZoomIn();
-                    break;
-                case '-':
-                    handleZoomOut();
-                    break;
-                case '0':
-                    handleResetZoom();
-                    break;
-                default:
-                    break;
-            }
-        };
+            const handlePopState = (event) => {
+                // When back button is pressed, close the viewer
+                // The history state has already been popped by the browser
+                onClose();
+            };
 
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [open, currentIndex, zoom]);
+            window.addEventListener('popstate', handlePopState);
 
-    // Auto-hide controls
-    useEffect(() => {
-        if (!open) return;
+            return () => {
+                window.removeEventListener('popstate', handlePopState);
+                // NOTE: We do NOT explicitly go back here on unmount to avoid fighting with the browser
+                // or router if the user navigated away differently.
+                // The cleanup strategy relies on the specific close handlers below.
+            };
+        }
+    }, [open, onClose]);
 
-        let timeout;
-        const resetTimeout = () => {
-            setShowControls(true);
-            clearTimeout(timeout);
-            timeout = setTimeout(() => setShowControls(false), 3000);
-        };
-
-        resetTimeout();
-        window.addEventListener('mousemove', resetTimeout);
-        window.addEventListener('touchstart', resetTimeout);
-
-        return () => {
-            clearTimeout(timeout);
-            window.removeEventListener('mousemove', resetTimeout);
-            window.removeEventListener('touchstart', resetTimeout);
-        };
-    }, [open]);
+    // Internal handler for manual close actions
+    const handleManualClose = useCallback(() => {
+        window.history.back();
+    }, []);
 
     const handleNext = useCallback(() => {
         if (images.length > 1) {
@@ -127,6 +99,62 @@ const ImageViewer = ({ open, images, initialIndex = 0, onClose }) => {
         setZoom(1);
         setPosition({ x: 0, y: 0 });
     };
+
+    // Keyboard navigation
+    useEffect(() => {
+        if (!open) return;
+
+        const handleKeyDown = (e) => {
+            switch (e.key) {
+                case 'ArrowLeft':
+                    handlePrevious();
+                    break;
+                case 'ArrowRight':
+                    handleNext();
+                    break;
+                case 'Escape':
+                    handleManualClose();
+                    break;
+                case '+':
+                case '=':
+                    handleZoomIn();
+                    break;
+                case '-':
+                    handleZoomOut();
+                    break;
+                case '0':
+                    handleResetZoom();
+                    break;
+                default:
+                    break;
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [open, currentIndex, zoom, handleManualClose, handlePrevious, handleNext]);
+
+    // Auto-hide controls
+    useEffect(() => {
+        if (!open) return;
+
+        let timeout;
+        const resetTimeout = () => {
+            setShowControls(true);
+            clearTimeout(timeout);
+            timeout = setTimeout(() => setShowControls(false), 3000);
+        };
+
+        resetTimeout();
+        window.addEventListener('mousemove', resetTimeout);
+        window.addEventListener('touchstart', resetTimeout);
+
+        return () => {
+            clearTimeout(timeout);
+            window.removeEventListener('mousemove', resetTimeout);
+            window.removeEventListener('touchstart', resetTimeout);
+        };
+    }, [open]);
 
     // Mouse drag handlers
     const handleMouseDown = (e) => {
@@ -234,7 +262,7 @@ const ImageViewer = ({ open, images, initialIndex = 0, onClose }) => {
     return (
         <Dialog
             open={open}
-            onClose={onClose}
+            onClose={handleManualClose}
             maxWidth={false}
             fullScreen
             PaperProps={{
@@ -283,7 +311,7 @@ const ImageViewer = ({ open, images, initialIndex = 0, onClose }) => {
                         </Typography>
 
                         <IconButton
-                            onClick={onClose}
+                            onClick={handleManualClose}
                             sx={{
                                 color: 'white',
                                 bgcolor: alpha('#fff', 0.1),

@@ -100,7 +100,7 @@ const optimizedListingService = {
             // Check cache first
             const cached = getCached(cacheKey);
             if (cached) {
-                
+
                 return cached;
             }
 
@@ -156,6 +156,11 @@ const optimizedListingService = {
             // Type filter (Sale/Rent)
             if (filters.type) {
                 query = query.eq('type', filters.type);
+            }
+
+            // Premium filter
+            if (filters.is_premium === true) {
+                query = query.eq('is_premium', true);
             }
 
             // Search
@@ -226,7 +231,7 @@ const optimizedListingService = {
             const cacheKey = `listing_${id}`;
             const cached = getCached(cacheKey);
             if (cached) {
-                
+
                 return cached;
             }
 

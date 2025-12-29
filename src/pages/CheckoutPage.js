@@ -329,10 +329,13 @@ const CheckoutPage = () => {
             const controller = new AbortController();
             const timeoutSignal = setTimeout(() => controller.abort(), 25000); // 25s internal timeout
 
+            // Use 'free' provider if price is 0 to skip payment gateway logic
+            const effectiveProvider = plan.price === 0 ? 'free' : paymentProvider;
+
             const { data, error } = await supabase.functions.invoke('payment-handler', {
                 body: {
                     action: 'initiate',
-                    provider: paymentProvider,
+                    provider: effectiveProvider,
                     amount: plan.price,
                     currency: 'ETB',
                     userId: user.id,
@@ -362,10 +365,16 @@ const CheckoutPage = () => {
                 throw new Error('No response from payment service. Please try again.');
             }
 
-            if (data?.success && data?.checkoutUrl) {
-                // Redirect to payment gateway
-                toast.success('Redirecting to payment gateway...');
-                window.location.href = data.checkoutUrl;
+            if (data?.success) {
+                if (data.checkoutUrl) {
+                    // Redirect to payment gateway
+                    toast.success('Redirecting to payment gateway...');
+                    window.location.href = data.checkoutUrl;
+                } else {
+                    // Success but no checkout URL (e.g. free plan activated directly)
+                    toast.success(t.planActivated || 'Plan activated successfully!');
+                    navigate('/profile?tab=membership');
+                }
             } else {
                 const errorMsg = data?.message || data?.error || 'Failed to initialize payment';
                 throw new Error(errorMsg);
@@ -700,7 +709,7 @@ const CheckoutPage = () => {
                                         variant="contained"
                                         size="large"
                                         onClick={handlePayment}
-                                        disabled={processing || plan.price === 0 || enabledProviders.length === 0}
+                                        disabled={processing || (plan.price > 0 && enabledProviders.length === 0)}
                                         sx={{
                                             py: 2,
                                             background: BRAND_COLORS.gradient,

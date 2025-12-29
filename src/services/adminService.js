@@ -816,10 +816,16 @@ const adminService = {
                 .from('user_subscriptions')
                 .select('*, membership_plans(*)')
                 .eq('user_id', userId)
-                .eq('status', 'active')
-                .gt('end_date', new Date().toISOString());
+                .eq('status', 'active');
+            // Removed .gt('end_date') here to handle indefinite (null) dates in JS
 
             if (error) throw error;
+
+            // Filter out expired subscriptions (active if end_date is null or > now)
+            const validSubs = subs?.filter(sub => {
+                if (!sub.end_date) return true; // Lifetime/Indefinite
+                return new Date(sub.end_date) > new Date();
+            }) || [];
 
             // Default permissions for non-subscribers (Free tier)
             // Jobs/Tenders require subscription, Homes/Cars are open
@@ -830,9 +836,9 @@ const adminService = {
                 active_plans: []
             };
 
-            if (subs && subs.length > 0) {
+            if (validSubs && validSubs.length > 0) {
                 permissions.is_premium = true;
-                subs.forEach(sub => {
+                validSubs.forEach(sub => {
                     const plan = sub.membership_plans;
                     if (!plan) return;
 

@@ -271,28 +271,28 @@ const HomePage = () => {
       name: t.landing.categories.jobs,
       icon: <Work fontSize="large" />,
       key: 'jobs',
-      bgImage: "url('https://images.unsplash.com/photo-1542744173-8e7e53415bb0?q=80&w=800&auto=format&fit=crop')"
+      bgImage: "url('https://images.unsplash.com/photo-1542744173-8e7e53415bb0?q=80&w=600&auto=format&fit=crop')"
     },
     {
       id: 2,
       name: t.landing.categories.homes,
       icon: <Apartment fontSize="large" />,
       key: 'homes',
-      bgImage: "url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800&auto=format&fit=crop')"
+      bgImage: "url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=600&auto=format&fit=crop')"
     },
     {
       id: 3,
       name: t.landing.categories.cars,
       icon: <DirectionsCar fontSize="large" />,
       key: 'cars',
-      bgImage: "url('https://images.unsplash.com/photo-1617788138017-80ad40651399?q=80&w=800&auto=format&fit=crop')"
+      bgImage: "url('https://images.unsplash.com/photo-1617788138017-80ad40651399?q=80&w=600&auto=format&fit=crop')"
     },
     {
       id: 4,
       name: t.landing.categories.tenders,
       icon: <Gavel fontSize="large" />,
       key: 'tenders',
-      bgImage: "url('https://images.unsplash.com/photo-1504307651254-35680f356dfd?q=80&w=800&auto=format&fit=crop')"
+      bgImage: "url('https://images.unsplash.com/photo-1504307651254-35680f356dfd?q=80&w=600&auto=format&fit=crop')"
     }
   ];
 
@@ -324,12 +324,9 @@ const HomePage = () => {
     ['premiumListings', language],
     async () => {
       try {
-        // Fetch premium listings - limit requested is 10
-        const response = await apiService.getListings({ is_premium: true, limit: 15 });
-        const items = response.listings || response || [];
-
-        // Strict Client-Side Filter: Only allow truly premium items in this section
-        return items.filter(listing => listing.is_premium === true);
+        // Fetch premium listings - limit to 8 for horizontal scroll
+        const response = await apiService.getListings({ is_premium: true, limit: 8 });
+        return response.listings || response || [];
       } catch (err) {
         console.error("Error fetching premium listings:", err);
         throw err;
@@ -610,8 +607,10 @@ const HomePage = () => {
                     boxShadow: theme.palette.mode === 'dark' ? '0 30px 60px rgba(0,0,0,0.4)' : '0 30px 60px rgba(0,0,0,0.1)',
                   }}>
                     <img
-                      src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1000&auto=format&fit=crop"
+                      src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=600&auto=format&fit=crop"
                       alt="Modern Home"
+                      width="380"
+                      height="480"
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     />
                     {/* Floating Label inside */}
@@ -642,8 +641,10 @@ const HomePage = () => {
                     border: theme.palette.mode === 'dark' ? '4px solid #1e293b' : '4px solid white'
                   }}>
                     <img
-                      src="https://images.unsplash.com/photo-1617788138017-80ad40651399?q=80&w=800&auto=format&fit=crop"
+                      src="https://images.unsplash.com/photo-1617788138017-80ad40651399?q=80&w=400&auto=format&fit=crop"
                       alt="Luxury Car"
+                      width="260"
+                      height="180"
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     />
                     <Box sx={{ position: 'absolute', top: 10, right: 10, bgcolor: '#0d47a1', color: 'white', px: 1, py: 0.5, borderRadius: 2 }}>
@@ -668,8 +669,10 @@ const HomePage = () => {
                     border: theme.palette.mode === 'dark' ? '4px solid #1e293b' : '4px solid white'
                   }}>
                     <img
-                      src="https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?q=80&w=800&auto=format&fit=crop"
+                      src="https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?q=80&w=300&auto=format&fit=crop"
                       alt="Professional"
+                      width="160"
+                      height="160"
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     />
                   </Card>

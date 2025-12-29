@@ -275,7 +275,8 @@ const ProfilePage = () => {
           ...data,
           social_media: data.social_media || {}
         });
-      }
+      },
+      staleTime: 30000,
     }
   );
 
@@ -283,7 +284,7 @@ const ProfilePage = () => {
   const { data: listingsData } = useQuery(
     ['userListings', authUser?.id],
     () => apiService.getListings({ user_id: authUser?.id, status: 'all' }),
-    { enabled: !!authUser }
+    { enabled: !!authUser, staleTime: 30000 }
   );
   const userListings = listingsData?.listings || listingsData || [];
 
@@ -291,7 +292,7 @@ const ProfilePage = () => {
   const { data: rawFavorites } = useQuery(
     ['userFavorites', authUser?.id],
     apiService.users.getFavorites,
-    { enabled: !!authUser }
+    { enabled: !!authUser, staleTime: 30000 }
   );
 
   // Fix for "userFavorites.map is not a function": Ensure it checks for array before usage
@@ -335,8 +336,8 @@ const ProfilePage = () => {
         { key: 'cars', match: ['cars', 'car', 'vehicle', 'vehicles', 'automotive'] }
       ];
 
-      for (const mapping of categoryMappings) {
-        // Find the category that matches one of the keywords
+      // Use Promise.all for parallel fetching
+      await Promise.all(categoryMappings.map(async (mapping) => {
         const cat = cats.find(c => {
           const s = (c.slug || '').toLowerCase();
           const n = (c.name || '').toLowerCase();
@@ -353,7 +354,8 @@ const ProfilePage = () => {
             console.warn(`Failed to load template for ${mapping.key}`, e);
           }
         }
-      }
+      }));
+
       return templates;
     } catch (err) {
       console.error('Error fetching profile templates', err);
@@ -932,36 +934,7 @@ const ProfilePage = () => {
                 </motion.div>
               )}
 
-              {/* Favorites Tab - HIDDEN */}
-              {false && activeTab === 1 && (
-                <motion.div
-                  key="favorites"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                >
-                  {userFavorites.length === 0 ? (
-                    <Box sx={{ textAlign: 'center', py: 8 }}>
-                      <Favorite sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
-                      <Typography variant="h6" color="text.secondary">
-                        {t.noFavoritesYet}
-                      </Typography>
-                    </Box>
-                  ) : (
-                    <Grid container spacing={2}>
-                      {userFavorites.map((listing) => (
-                        <Grid item xs={12} sm={6} md={4} key={listing.id}>
-                          <DynamicListingCard
-                            listing={listing}
-                            isFavorite={true}
-                            onToggleFavorite={handleToggleFavorite}
-                          />
-                        </Grid>
-                      ))}
-                    </Grid>
-                  )}
-                </motion.div>
-              )}
+
 
               {/* Chats Tab */}
               {activeTab === 1 && (

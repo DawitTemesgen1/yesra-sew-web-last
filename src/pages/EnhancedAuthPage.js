@@ -15,6 +15,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import authService from '../services/supabase-auth';
+import membershipService from '../services/membershipService';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useCustomTheme } from '../contexts/ThemeContext';
@@ -576,6 +577,18 @@ const EnhancedAuthPage = () => {
                         const result = await authService.verifyPhoneOtp(formData.identifier, formData.otp, tempRegData);
                         toast.dismiss('verify');
                         if (result.success) {
+                            // Auto-subscribe to Free Plan
+                            try {
+                                const plans = await membershipService.getPlans();
+                                const freePlan = plans.find(p => p.price === 0 || p.price === '0' || p.price === 0.0);
+                                const userId = result.user?.id || result.session?.user?.id;
+                                if (freePlan && userId) {
+                                    await membershipService.subscribeToPlan(userId, freePlan.id);
+                                }
+                            } catch (subError) {
+                                console.error('Failed to auto-subscribe to free plan:', subError);
+                            }
+
                             toast.success(t.accountCreated);
                             navigate(from, { replace: true });
                         } else throw new Error(result.error);
@@ -640,6 +653,18 @@ const EnhancedAuthPage = () => {
                         const result = await authService.verifyEmailOtp(formData.identifier, formData.otp, tempRegData);
                         toast.dismiss('verify');
                         if (result.success) {
+                            // Auto-subscribe to Free Plan
+                            try {
+                                const plans = await membershipService.getPlans();
+                                const freePlan = plans.find(p => p.price === 0 || p.price === '0' || p.price === 0.0);
+                                const userId = result.user?.id || result.session?.user?.id;
+                                if (freePlan && userId) {
+                                    await membershipService.subscribeToPlan(userId, freePlan.id);
+                                }
+                            } catch (subError) {
+                                console.error('Failed to auto-subscribe to free plan:', subError);
+                            }
+
                             toast.success(t.accountCreated);
                             navigate(from, { replace: true });
                         } else throw new Error(result.error);

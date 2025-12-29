@@ -60,6 +60,76 @@ serve(async (req) => {
         if (action === 'initiate') {
             const { amount, currency, userId, subscriptionId, metadata, email, firstName, lastName, returnUrlPrefix } = params;
 
+            // --- FREE PLAN ACTIVATION ---
+            if (Number(amount) === 0 || provider === 'free') {
+                console.log(`Processing free plan activation for user ${userId} and plan ${metadata?.plan_id}`);
+
+                // 1. Create Transaction (Completed)
+                const { data: transaction, error: txError } = await supabaseClient
+                    .from('payment_transactions')
+                    .insert({
+                        user_id: userId,
+                        subscription_id: subscriptionId,
+                        transaction_type: 'subscription',
+                        amount: 0,
+                        currency: 'ETB',
+                        provider: 'free',
+                        status: 'completed',
+                        metadata
+                    })
+                    .select()
+                    .single();
+
+                if (txError) throw txError;
+
+                // 2. Activate Plan via RPC
+                const planId = metadata?.plan_id;
+                if (planId) {
+                    // Calculate duration days
+                    let days = 30; // default
+                    const val = parseInt(String(metadata.duration_value)) || 1;
+                    const unit = (String(metadata.duration_unit) || 'months').toLowerCase();
+
+                    if (unit.includes('day')) days = val;
+                    else if (unit.includes('week')) days = val * 7;
+                    else if (unit.includes('month')) days = val * 30;
+                    else if (unit.includes('year')) days = val * 365;
+
+                    const { data: subData, error: subError } = await supabaseClient.rpc('activate_user_plan', {
+                        p_user_id: userId,
+                        p_plan_id: planId,
+                        p_duration_days: days
+                    });
+
+                    if (subError) {
+                        console.error('Error activating free plan via RPC:', subError);
+                        throw new Error('Failed to activate free plan subscription');
+                    }
+
+                    if (subData && subData.success && subData.subscription_id) {
+                        // Link subscription to transaction
+                        await supabaseClient
+                            .from('payment_transactions')
+                            .update({ subscription_id: subData.subscription_id })
+                            .eq('id', transaction.id);
+
+                        // Update subscription with 'free' method
+                        await supabaseClient
+                            .from('user_subscriptions')
+                            .update({
+                                payment_method: 'free',
+                                notes: `Free Plan Activation`
+                            })
+                            .eq('id', subData.subscription_id);
+                    }
+                }
+
+                return new Response(
+                    JSON.stringify({ success: true, message: 'Free plan activated successfully' }),
+                    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                );
+            }
+
             // 1. Create Transaction (Pending)
             const { data: transaction, error: txError } = await supabaseClient
                 .from('payment_transactions')
