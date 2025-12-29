@@ -65,14 +65,15 @@ const listingService = {
                     // Usage keys usually match plan keys: 'jobs', 'tenders', 'homes', 'cars'
                     let slug = cat.slug.toLowerCase();
 
-                    // 2. Get Active Subscription
-                    const { data: sub } = await supabase
+                    // 2. Get Active Subscription (Handle NULL/Indefinite end_date)
+                    const { data: subs } = await supabase
                         .from('user_subscriptions')
-                        .select('id, category_usage')
+                        .select('id, category_usage, end_date')
                         .eq('user_id', user.id)
-                        .eq('status', 'active')
-                        .gte('end_date', new Date().toISOString())
-                        .maybeSingle(); // Use maybeSingle to avoid 406 if no sub
+                        .eq('status', 'active');
+
+                    // Filter in JS: Active if end_date is NULL OR in the future
+                    const sub = subs?.find(s => !s.end_date || new Date(s.end_date) > new Date());
 
                     if (sub) {
                         const usage = sub.category_usage || {};

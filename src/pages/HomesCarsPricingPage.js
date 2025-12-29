@@ -4,6 +4,7 @@ import { supabase } from '../services/api';
 import { useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import adminService from '../services/adminService';
+import membershipService from '../services/membershipService';
 import { useAuth } from '../context/AuthContext';
 import {
     Box, Container, Typography, Grid, Card, CardContent, Button,
@@ -213,10 +214,59 @@ const HomesCarsPricingPage = ({ category: propCategory }) => {
         setSubscribingId(plan.id);
 
         if (plan.price === 0) {
-            toast.success('Free plan activated!');
-            setTimeout(() => {
-                navigate(`/post-ad?category=${category}`);
-            }, 1000);
+            try {
+                // Direct subscription activation for free plans
+                const { data: existingSub } = await supabase
+                    .from('user_subscriptions')
+                    .select('id, status')
+                    .eq('user_id', currentUser.id)
+                    .eq('plan_id', plan.id)
+                    .maybeSingle();
+
+                if (existingSub) {
+                    // Update existing subscription
+                    const { error: updateError } = await supabase
+                        .from('user_subscriptions')
+                        .update({
+                            status: 'active',
+                            start_date: new Date().toISOString(),
+                            end_date: null,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('id', existingSub.id);
+
+                    if (updateError) throw updateError;
+                } else {
+                    // Create new subscription
+                    const { error: insertError } = await supabase
+                        .from('user_subscriptions')
+                        .insert({
+                            user_id: currentUser.id,
+                            plan_id: plan.id,
+                            status: 'active',
+                            start_date: new Date().toISOString(),
+                            end_date: null
+                        });
+
+                    if (insertError) throw insertError;
+                }
+
+                toast.success('Free plan activated!');
+                setTimeout(() => {
+                    navigate(`/post-ad?category=${category}`);
+                }, 1000);
+            } catch (error) {
+                console.error('Error activating plan:', error);
+                if (error.message && error.message.includes('already has an active subscription')) {
+                    toast.success('You already have this plan activated!');
+                    setTimeout(() => {
+                        navigate(`/post-ad?category=${category}`);
+                    }, 1000);
+                } else {
+                    toast.error(`Failed to activate plan: ${error.message}`);
+                }
+                setSubscribingId(null);
+            }
             return;
         }
 

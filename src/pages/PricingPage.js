@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../services/api';
 import adminService from '../services/adminService';
+import membershipService from '../services/membershipService';
 import toast from 'react-hot-toast';
 import {
     Box, Container, Typography, Grid, Card, CardContent, Button,
@@ -246,22 +247,41 @@ const PricingPage = () => {
             }
 
             try {
-                // Use RPC function to activate plan (bypasses RLS)
-                const { data, error } = await supabase.rpc('activate_user_plan', {
-                    p_user_id: user.id,
-                    p_plan_id: plan.id,
-                    p_duration_days: 30
-                });
+                // Direct subscription activation for free plans
+                // Check if subscription already exists
+                const { data: existingSub } = await supabase
+                    .from('user_subscriptions')
+                    .select('id, status')
+                    .eq('user_id', user.id)
+                    .eq('plan_id', plan.id)
+                    .maybeSingle();
 
-                if (error) throw error;
+                if (existingSub) {
+                    // Update existing subscription
+                    const { error: updateError } = await supabase
+                        .from('user_subscriptions')
+                        .update({
+                            status: 'active',
+                            start_date: new Date().toISOString(),
+                            end_date: null, // Free plans are indefinite
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('id', existingSub.id);
 
-                if (!data.success) {
-                    if (data.already_active) {
-                        toast.success('You already have this plan activated!');
-                    } else {
-                        toast.error(data.error || 'Failed to activate plan');
-                    }
-                    return;
+                    if (updateError) throw updateError;
+                } else {
+                    // Create new subscription
+                    const { error: insertError } = await supabase
+                        .from('user_subscriptions')
+                        .insert({
+                            user_id: user.id,
+                            plan_id: plan.id,
+                            status: 'active',
+                            start_date: new Date().toISOString(),
+                            end_date: null, // Free plans are indefinite
+                        });
+
+                    if (insertError) throw insertError;
                 }
 
                 toast.success(`${plan.name} activated successfully! You can now post ads.`);
@@ -274,7 +294,12 @@ const PricingPage = () => {
                 }, 1500);
             } catch (error) {
                 console.error('Error activating plan:', error);
-                toast.error(`Failed to activate plan: ${error.message}`);
+
+                if (error.message && error.message.includes('already has an active subscription')) {
+                    toast.success('You already have this plan activated!');
+                } else {
+                    toast.error(`Failed to activate plan: ${error.message}`);
+                }
             }
             return;
         }

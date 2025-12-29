@@ -245,6 +245,7 @@ const membershipService = {
                         listings_limit: plan.max_listings,
                         payment_provider: paymentProvider,
                         start_date: plan.price === 0 ? new Date().toISOString() : null,
+                        end_date: plan.price === 0 ? null : undefined, // Clearing end_date for free plans is CRITICAL
                         updated_at: new Date().toISOString()
                     })
                     .eq('id', existingPlanSub.id)
@@ -260,7 +261,8 @@ const membershipService = {
                         status: plan.price === 0 ? 'active' : 'pending',
                         listings_limit: plan.max_listings,
                         payment_provider: paymentProvider,
-                        start_date: plan.price === 0 ? new Date().toISOString() : null
+                        start_date: plan.price === 0 ? new Date().toISOString() : null,
+                        end_date: plan.price === 0 ? null : undefined // Ensure new free plans have null end_date
                     })
                     .select()
                     .single());
