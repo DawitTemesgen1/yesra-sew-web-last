@@ -44,6 +44,7 @@ const AdminLoginPage = React.lazy(() => import('./pages/AdminLoginPage'));
 const AdminDashboard = React.lazy(() => import('./admin/AdminDashboard'));
 const PostTemplateScreen = React.lazy(() => import('./admin/components/PostTemplateScreen'));
 const PricingPage = React.lazy(() => import('./pages/PricingPage'));
+const SimplifiedPricingPage = React.lazy(() => import('./pages/SimplifiedPricingPage'));
 const JobsTendersPricingPage = React.lazy(() => import('./pages/JobsTendersPricingPage'));
 const HomesCarsPricingPage = React.lazy(() => import('./pages/HomesCarsPricingPage'));
 const SearchPage = React.lazy(() => import('./pages/SearchPage'));
@@ -201,12 +202,13 @@ const AnimatedRoutes = () => {
 
                 {/* Membership & Pricing */}
                 <Route path="/upgrade-plan" element={<ProtectedRoute><UpgradePlanPage /></ProtectedRoute>} />
-                <Route path="/pricing" element={<ProtectedRoute><PricingPage /></ProtectedRoute>} />
+                <Route path="/pricing" element={<ProtectedRoute><SimplifiedPricingPage /></ProtectedRoute>} />
+                <Route path="/pricing/old" element={<ProtectedRoute><PricingPage /></ProtectedRoute>} />
                 <Route path="/pricing/jobs" element={<ProtectedRoute><JobsTendersPricingPage category="jobs" /></ProtectedRoute>} />
                 <Route path="/pricing/tenders" element={<ProtectedRoute><JobsTendersPricingPage category="tenders" /></ProtectedRoute>} />
                 <Route path="/pricing/homes" element={<ProtectedRoute><HomesCarsPricingPage category="homes" /></ProtectedRoute>} />
                 <Route path="/pricing/cars" element={<ProtectedRoute><HomesCarsPricingPage category="cars" /></ProtectedRoute>} />
-                <Route path="/membership-plans" element={<ProtectedRoute><PricingPage /></ProtectedRoute>} />
+                <Route path="/membership-plans" element={<ProtectedRoute><SimplifiedPricingPage /></ProtectedRoute>} />
                 <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
 
                 {/* Dynamic Pages (Privacy, Terms, etc.) - Must be last */}
