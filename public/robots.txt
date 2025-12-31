@@ -38,8 +38,7 @@ Allow: /search?q=$
 Allow: /category/*?location=$
 
 # Sitemap location
-Sitemap: https://www.yesrasewsolution.com/sitemap.xml
-Sitemap: https://www.yesrasewsolution.com/sitemap-index.xml
+Sitemap: https://ncknykhbbralsfejdaiq.supabase.co/functions/v1/sitemap
 
 # Crawl delay (optional, be careful with this)
 Crawl-delay: 1
