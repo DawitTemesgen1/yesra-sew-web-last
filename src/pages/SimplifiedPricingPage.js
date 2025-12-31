@@ -29,10 +29,10 @@ const translations = {
         viewAll: "View All",
         viewUnlimited: "Unlimited Viewing",
         categories: {
-            cars: { name: "Cars & Vehicles", desc: "Sell your car faster" },
-            homes: { name: "Homes & Real Estate", desc: "List your property" },
-            jobs: { name: "Jobs & Recruitment", desc: "Find top talent" },
-            tenders: { name: "Tenders & Bids", desc: "Win more contracts" }
+            cars: { name: "Cars & Vehicles", desc: "Post your car or browse thousands of listings" },
+            homes: { name: "Homes & Real Estate", desc: "List your property or find your dream home" },
+            jobs: { name: "Jobs & Recruitment", desc: "Post jobs or discover career opportunities" },
+            tenders: { name: "Tenders & Bids", desc: "Post tenders or find business opportunities" }
         }
     },
     am: {
@@ -50,10 +50,10 @@ const translations = {
         viewAll: "ሁሉንም ይመልከቱ",
         viewUnlimited: "ያልተገደበ መመልከት",
         categories: {
-            cars: { name: "መኪናዎች እና ተሽከርካሪዎች", desc: "መኪናዎን በፍጥነት ይሽጡ" },
-            homes: { name: "ቤቶች እና ሪል እስቴት", desc: "ንብረትዎን ይዘርዝሩ" },
-            jobs: { name: "ስራዎች እና ቅጥር", desc: "ከፍተኛ ተሰጥኦ ያግኙ" },
-            tenders: { name: "ጨረታዎች", desc: "ብዙ ኮንትራቶችን ያሸንፉ" }
+            cars: { name: "መኪናዎች እና ተሽከርካሪዎች", desc: "መኪናዎን ያስተዋውቁ ወይም በሺዎች የሚቆጠሩ ዝርዝሮችን ይመልከቱ" },
+            homes: { name: "ቤቶች እና ሪል እስቴት", desc: "ንብረትዎን ይዘርዝሩ ወይም የህልም ቤትዎን ያግኙ" },
+            jobs: { name: "ስራዎች እና ቅጥር", desc: "ስራዎችን ያስተዋውቁ ወይም የስራ እድሎችን ያግኙ" },
+            tenders: { name: "ጨረታዎች", desc: "ጨረታዎችን ያስተዋውቁ ወይም የንግድ እድሎችን ያግኙ" }
         }
     },
     om: {
@@ -71,10 +71,10 @@ const translations = {
         viewAll: "Hunda Ilaali",
         viewUnlimited: "Ilaaluu Daangaa Hin Qabne",
         categories: {
-            cars: { name: "Konkolaataa fi Geejjibaa", desc: "Konkolaata keessan dafaa gurguraa" },
-            homes: { name: "Manneen fi Qabeenya", desc: "Qabeenya keessan tarreessaa" },
-            jobs: { name: "Hojiiwwan fi Qacarta", desc: "Dandeettii olaanaa argadhaa" },
-            tenders: { name: "Caalbaasii", desc: "Kontiraatota baay'ee mo'aa" }
+            cars: { name: "Konkolaataa fi Geejjibaa", desc: "Konkolaata keessan beeksisaa ykn tarreeffama kumaatama ilaali" },
+            homes: { name: "Manneen fi Qabeenya", desc: "Qabeenya keessan tarreessaa ykn mana abjuu keessan argadhaa" },
+            jobs: { name: "Hojiiwwan fi Qacarta", desc: "Hojii beeksisaa ykn carraa hojii argadhaa" },
+            tenders: { name: "Caalbaasii", desc: "Caalbaasii beeksisaa ykn carraa daldalaa argadhaa" }
         }
     },
     ti: {
@@ -92,10 +92,10 @@ const translations = {
         viewAll: "ኩሉ ረአ",
         viewUnlimited: "ዘይተገደበ ምርኣይ",
         categories: {
-            cars: { name: "መካይንን ተሽከርካሪታትን", desc: "መኪናኹም ብቕልጡፍ ሽጡ" },
-            homes: { name: "ኣባይትን ንብረትን", desc: "ንብረትኩም ዘርዝሩ" },
-            jobs: { name: "ስራሕትን ቆጽራን", desc: "ብሉጻት ተውህቦ ርከቡ" },
-            tenders: { name: "ጨረታታት", desc: "ብዙሕ ኮንትራት ዓውቱ" }
+            cars: { name: "መካይንን ተሽከርካሪታትን", desc: "መኪናኹም ኣስተዋውቑ ወይ ብኣሽሓት ዝቑጸሩ ዝርዝራት ርአዩ" },
+            homes: { name: "ኣባይትን ንብረትን", desc: "ንብረትኩም ዘርዝሩ ወይ ናይ ሕልምኹም ገዛ ርከቡ" },
+            jobs: { name: "ስራሕትን ቆጽራን", desc: "ስራሕ ኣስተዋውቑ ወይ ናይ ስራሕ ዕድላት ርከቡ" },
+            tenders: { name: "ጨረታታት", desc: "ጨረታታት ኣስተዋውቑ ወይ ናይ ንግዲ ዕድላት ርከቡ" }
         }
     }
 };
