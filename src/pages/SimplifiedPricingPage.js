@@ -138,6 +138,15 @@ const SimplifiedPricingPage = () => {
     const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || null);
     const [plans, setPlans] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [subscribing, setSubscribing] = useState(null); // Track which plan is being subscribed to
+
+    // Sync selectedCategory with URL params
+    useEffect(() => {
+        const categoryFromUrl = searchParams.get('category');
+        if (categoryFromUrl && categoryFromUrl !== selectedCategory) {
+            setSelectedCategory(categoryFromUrl);
+        }
+    }, [searchParams]);
 
     useEffect(() => {
         if (selectedCategory) {
@@ -194,6 +203,14 @@ const SimplifiedPricingPage = () => {
             return;
         }
 
+        // Prevent multiple simultaneous subscriptions
+        if (subscribing) {
+            toast.error('Please wait, processing subscription...');
+            return;
+        }
+
+        setSubscribing(plan.id);
+
         if (plan.price === 0) {
             try {
                 const { data: existingSub } = await supabase
@@ -230,15 +247,19 @@ const SimplifiedPricingPage = () => {
                 }
 
                 toast.success(`${plan.name} activated! You can now post.`);
-                setTimeout(() => navigate('/post-ad'), 1500);
+                // Redirect to post-ad with category parameter to maintain context
+                setTimeout(() => navigate(`/post-ad?category=${selectedCategory}`), 1500);
             } catch (error) {
                 console.error('Error:', error);
                 toast.error('Failed to activate plan');
+                setSubscribing(null); // Reset on error
             }
             return;
         }
 
-        navigate(`/checkout?plan=${plan.slug || plan.id}`, { state: { plan } });
+        // For paid plans, go to checkout with category context
+        setSubscribing(null); // Reset before navigation
+        navigate(`/checkout?plan=${plan.slug || plan.id}&category=${selectedCategory}`, { state: { plan, category: selectedCategory } });
     };
 
     // Category Selection Screen
