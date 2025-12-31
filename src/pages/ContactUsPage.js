@@ -458,6 +458,8 @@ const ContactUsPage = () => {
                     </Box>
                 )}
             </Box>
+        </Box>
+    );
 };
 
-            export default ContactUsPage;
+export default ContactUsPage;
