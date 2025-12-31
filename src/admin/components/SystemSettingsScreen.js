@@ -21,6 +21,10 @@ const SystemSettingsScreen = ({ t, systemSettings }) => {
     site_description: "Connecting Technology and Careers in Ethiopia",
     contact_email: "info@yesrasew.com",
     phone_number: "+251 911 234 567",
+    address: "Bole Medhanialem, Addis Ababa",
+    working_hours: "Mon-Fri from 8am to 5pm",
+    map_link: "",
+    map_embed_url: "",
     enable_caching: true,
     enable_compression: true,
     debug_mode: false,
@@ -273,6 +277,39 @@ const SystemSettingsScreen = ({ t, systemSettings }) => {
                     value={localSettings.phone_number}
                     onChange={(e) => handleChange('phone_number', e.target.value)}
                     sx={{ mt: 2 }}
+                  />
+                  <TextField
+                    fullWidth
+                    label="Address / Location"
+                    value={localSettings.address}
+                    onChange={(e) => handleChange('address', e.target.value)}
+                    sx={{ mt: 2 }}
+                    placeholder="e.g. Bole Medhanialem, Addis Ababa"
+                  />
+                  <TextField
+                    fullWidth
+                    label="Working Hours"
+                    value={localSettings.working_hours}
+                    onChange={(e) => handleChange('working_hours', e.target.value)}
+                    sx={{ mt: 2 }}
+                    placeholder="e.g. Mon-Fri 8am - 5pm"
+                  />
+                  <TextField
+                    fullWidth
+                    label="Google Maps Share Link"
+                    value={localSettings.map_link}
+                    onChange={(e) => handleChange('map_link', e.target.value)}
+                    sx={{ mt: 2 }}
+                    placeholder="https://maps.app.goo.gl/..."
+                  />
+                  <TextField
+                    fullWidth
+                    label="Google Maps Embed URL (src)"
+                    value={localSettings.map_embed_url}
+                    onChange={(e) => handleChange('map_embed_url', e.target.value)}
+                    sx={{ mt: 2 }}
+                    placeholder="https://www.google.com/maps/embed?pb=..."
+                    helperText="Paste the 'src' attribute from the Google Maps 'Embed a map' HTML"
                   />
                 </MuiBox>
 

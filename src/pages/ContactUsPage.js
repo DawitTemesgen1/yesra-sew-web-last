@@ -160,7 +160,7 @@ const ContactUsPage = () => {
             icon: <PhoneIcon fontSize="large" color="primary" />,
             title: t.callUs,
             detail: settings.phone_number || "+251 911 234 567",
-            subDetail: t.callTime
+            subDetail: settings.working_hours || t.callTime
         },
         {
             icon: <EmailIcon fontSize="large" color="primary" />,
@@ -179,7 +179,7 @@ const ContactUsPage = () => {
     return (
         <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', pb: 8 }}>
 
-            {/* Hero Section */}
+            {/* Hero Section - Unchanged */}
             <Box sx={{
                 background: `linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)`,
                 color: 'white',
@@ -419,21 +419,45 @@ const ContactUsPage = () => {
                 </Grid>
             </Container>
 
-            {/* Map Placeholder */}
-            <Box sx={{ mt: 8 }}>
+            {/* Map Section */}
+            <Box sx={{ mt: 8, position: 'relative' }}>
                 <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3940.5422899388334!2d38.7891673153523!3d9.014295393529342!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x164b859666d92ec3%3A0x768ee7f5e1376d4!2sBole%20Medhanialem%20Church!5e0!3m2!1sen!2set!4v1672304859000!5m2!1sen!2set"
+                    src={settings.map_embed_url || "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3940.5422899388334!2d38.7891673153523!3d9.014295393529342!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x164b859666d92ec3%3A0x768ee7f5e1376d4!2sBole%20Medhanialem%20Church!5e0!3m2!1sen!2set!4v1672304859000!5m2!1sen!2set"}
                     width="100%"
-                    height="400"
-                    style={{ border: 0, filter: 'grayscale(0.5)' }}
+                    height="450"
+                    style={{ border: 0, filter: 'grayscale(0.2)' }}
                     allowFullScreen=""
                     loading="lazy"
                     referrerPolicy="no-referrer-when-downgrade"
                     title="Our Location"
                 ></iframe>
+
+                {/* Open in Maps Overlay/Button */}
+                {settings.map_link && (
+                    <Box sx={{
+                        position: 'absolute',
+                        bottom: 20,
+                        right: 20,
+                        bgcolor: 'background.paper',
+                        p: 1.5,
+                        borderRadius: 2,
+                        boxShadow: 3,
+                        display: 'flex',
+                        zIndex: 10
+                    }}>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            startIcon={<LocationIcon />}
+                            href={settings.map_link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            Open in Google Maps
+                        </Button>
+                    </Box>
+                )}
             </Box>
-        </Box>
-    );
 };
 
-export default ContactUsPage;
+            export default ContactUsPage;
