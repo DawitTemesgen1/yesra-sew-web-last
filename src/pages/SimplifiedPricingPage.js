@@ -25,6 +25,9 @@ const translations = {
         unlimited: "Unlimited",
         posts: "posts",
         month: "month",
+        viewAccess: "View Access",
+        viewAll: "View All",
+        viewUnlimited: "Unlimited Viewing",
         categories: {
             cars: { name: "Cars & Vehicles", desc: "Sell your car faster" },
             homes: { name: "Homes & Real Estate", desc: "List your property" },
@@ -43,6 +46,9 @@ const translations = {
         unlimited: "ያልተገደበ",
         posts: "ልጥፎች",
         month: "ወር",
+        viewAccess: "የመመልከት መብት",
+        viewAll: "ሁሉንም ይመልከቱ",
+        viewUnlimited: "ያልተገደበ መመልከት",
         categories: {
             cars: { name: "መኪናዎች እና ተሽከርካሪዎች", desc: "መኪናዎን በፍጥነት ይሽጡ" },
             homes: { name: "ቤቶች እና ሪል እስቴት", desc: "ንብረትዎን ይዘርዝሩ" },
@@ -61,6 +67,9 @@ const translations = {
         unlimited: "Daangaa Hin Qabne",
         posts: "maxxansawwan",
         month: "ji'a",
+        viewAccess: "Mirga Ilaaluu",
+        viewAll: "Hunda Ilaali",
+        viewUnlimited: "Ilaaluu Daangaa Hin Qabne",
         categories: {
             cars: { name: "Konkolaataa fi Geejjibaa", desc: "Konkolaata keessan dafaa gurguraa" },
             homes: { name: "Manneen fi Qabeenya", desc: "Qabeenya keessan tarreessaa" },
@@ -79,6 +88,9 @@ const translations = {
         unlimited: "ዘይተገደበ",
         posts: "ልጥፋት",
         month: "ወርሒ",
+        viewAccess: "መሰል ምርኣይ",
+        viewAll: "ኩሉ ረአ",
+        viewUnlimited: "ዘይተገደበ ምርኣይ",
         categories: {
             cars: { name: "መካይንን ተሽከርካሪታትን", desc: "መኪናኹም ብቕልጡፍ ሽጡ" },
             homes: { name: "ኣባይትን ንብረትን", desc: "ንብረትኩም ዘርዝሩ" },
@@ -144,10 +156,16 @@ const SimplifiedPricingPage = () => {
 
             if (error) throw error;
 
-            // Filter plans that have posting limits for this category
+            // Filter plans that have posting limits OR viewing access for this category
             const filteredPlans = (allPlans || []).filter(p => {
                 const limit = p.category_limits?.[category];
-                return limit !== undefined && limit !== 0;
+                const viewAccess = p.permissions?.view_access?.[category];
+
+                // Show plan if it has posting capability OR viewing access
+                const canPost = limit !== undefined && limit !== 0;
+                const canView = viewAccess === true || viewAccess === -1 || (typeof viewAccess === 'number' && viewAccess > 0);
+
+                return canPost || canView;
             });
 
             setPlans(filteredPlans);
@@ -447,12 +465,42 @@ const SimplifiedPricingPage = () => {
                                                     {/* Plan Features */}
                                                     <CardContent sx={{ p: 4 }}>
                                                         <Stack spacing={2} mb={4}>
-                                                            <Box display="flex" alignItems="center" gap={2}>
-                                                                <Check sx={{ color: config.color, fontSize: 24 }} />
-                                                                <Typography variant="h6" fontWeight="bold">
-                                                                    {limit === -1 ? t.unlimited : limit} {t.posts}
-                                                                </Typography>
-                                                            </Box>
+                                                            {/* Posting Limit */}
+                                                            {limit !== undefined && limit !== 0 && (
+                                                                <Box display="flex" alignItems="center" gap={2}>
+                                                                    <Check sx={{ color: config.color, fontSize: 24 }} />
+                                                                    <Typography variant="h6" fontWeight="bold">
+                                                                        {limit === -1 ? t.unlimited : limit} {t.posts}
+                                                                    </Typography>
+                                                                </Box>
+                                                            )}
+
+                                                            {/* Viewing Access */}
+                                                            {(() => {
+                                                                const viewAccess = plan.permissions?.view_access?.[selectedCategory];
+                                                                if (viewAccess === -1 || viewAccess === true) {
+                                                                    return (
+                                                                        <Box display="flex" alignItems="center" gap={2}>
+                                                                            <Check sx={{ color: config.color, fontSize: 24 }} />
+                                                                            <Typography variant="h6" fontWeight="bold">
+                                                                                {t.viewUnlimited}
+                                                                            </Typography>
+                                                                        </Box>
+                                                                    );
+                                                                } else if (typeof viewAccess === 'number' && viewAccess > 0) {
+                                                                    return (
+                                                                        <Box display="flex" alignItems="center" gap={2}>
+                                                                            <Check sx={{ color: config.color, fontSize: 24 }} />
+                                                                            <Typography variant="h6" fontWeight="bold">
+                                                                                {t.viewAll} {viewAccess} {t.posts}
+                                                                            </Typography>
+                                                                        </Box>
+                                                                    );
+                                                                }
+                                                                return null;
+                                                            })()}
+
+                                                            {/* Additional Features */}
                                                             {(Array.isArray(plan.features) ? plan.features : []).map((feature, idx) => (
                                                                 <Box key={idx} display="flex" alignItems="start" gap={2}>
                                                                     <Check sx={{ color: config.color, fontSize: 20, mt: 0.3 }} />
