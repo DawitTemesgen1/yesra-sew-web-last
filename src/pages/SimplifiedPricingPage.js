@@ -16,7 +16,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 const translations = {
     en: {
         title: "Choose Your Category",
-        subtitle: "Select the category you want to post in",
+        subtitle: "Select a category to post listings or view opportunities",
         backToCategories: "Back to Categories",
         choosePlan: "Choose Plan",
         subscribe: "Subscribe Now",
@@ -36,8 +36,8 @@ const translations = {
         }
     },
     am: {
-        title: "ምድብዎን ይምረጡ",
-        subtitle: "መለጠፍ የሚፈልጉበትን ምድብ ይምረጡ",
+        title: "የአገልግሎት ዓይነት ይምረጡ",
+        subtitle: "ለመለጠፍ ወይም ዝርዝሮችን ለመመልከት የሚፈልጉትን ምድብ ይምረጡ",
         backToCategories: "ወደ ምድቦች ተመለስ",
         choosePlan: "እቅድ ይምረጡ",
         subscribe: "አሁን ይመዝገቡ",
@@ -58,7 +58,7 @@ const translations = {
     },
     om: {
         title: "Gita Keessan Filadhaa",
-        subtitle: "Gita maxxansuu barbaaddan filadhaa",
+        subtitle: "Maxxansuuf yookiin ilaaluuf gita barbaaddan filadhaa",
         backToCategories: "Gara Gitaawwaniitti Deebi'aa",
         choosePlan: "Karoora Filadhaa",
         subscribe: "Amma Galmaa'aa",
@@ -79,7 +79,7 @@ const translations = {
     },
     ti: {
         title: "ምድብኩም ምረጹ",
-        subtitle: "ክትለጥፍዎ እትደልዩ ምድብ ምረጹ",
+        subtitle: "ንምልጣፍ ወይ ንምርኣይ እትደልዩዎ ምድብ ምረጹ",
         backToCategories: "ናብ ምድባት ተመለሱ",
         choosePlan: "መደብ ምረጹ",
         subscribe: "ሕጂ ተመዝገቡ",
