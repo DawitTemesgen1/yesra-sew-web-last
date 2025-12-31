@@ -8,7 +8,8 @@ import {
     Box, Container, Typography, Card, CardContent, Button,
     Grid, Divider, Stack, Chip, CircularProgress, Radio,
     RadioGroup, FormControlLabel, FormControl, Paper, alpha,
-    List, ListItem, ListItemIcon, ListItemText, useTheme
+    List, ListItem, ListItemIcon, ListItemText, useTheme,
+    Dialog, DialogContent
 } from '@mui/material';
 import {
     Check, ArrowBack, CreditCard, AccountBalance,
@@ -182,6 +183,113 @@ const BRAND_COLORS = {
     gradient: 'linear-gradient(135deg, #1E3A8A 0%, #3B82F6 50%, #FFD700 100%)',
 };
 
+// --- Payment Processing Modal ---
+const PaymentProcessingModal = ({ open, status, error, onRetry, onClose }) => {
+    const theme = useTheme();
+
+    return (
+        <Dialog
+            open={open}
+            maxWidth="xs"
+            fullWidth
+            PaperProps={{
+                sx: {
+                    borderRadius: 4,
+                    p: 2,
+                    textAlign: 'center',
+                    background: 'rgba(255, 255, 255, 0.95)',
+                    backdropFilter: 'blur(10px)'
+                }
+            }}
+        >
+            <DialogContent>
+                <Box py={3}>
+                    {status === 'processing' && (
+                        <motion.div
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                        >
+                            <Box sx={{ position: 'relative', display: 'inline-flex', mb: 3 }}>
+                                <CircularProgress size={80} thickness={2} sx={{ color: BRAND_COLORS.blue }} />
+                                <Box
+                                    sx={{
+                                        top: 0,
+                                        left: 0,
+                                        bottom: 0,
+                                        right: 0,
+                                        position: 'absolute',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                    }}
+                                >
+                                    <Security color="primary" sx={{ fontSize: 32 }} />
+                                </Box>
+                            </Box>
+                            <Typography variant="h6" fontWeight="bold" gutterBottom>
+                                Securing Transaction
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                Please wait while we connect to the secure payment gateway...
+                            </Typography>
+                        </motion.div>
+                    )}
+
+                    {status === 'redirecting' && (
+                        <motion.div
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                        >
+                            <Box sx={{ mb: 3, display: 'inline-flex', p: 2, borderRadius: '50%', bgcolor: alpha(theme.palette.success.main, 0.1) }}>
+                                <Check sx={{ fontSize: 50, color: theme.palette.success.main }} />
+                            </Box>
+                            <Typography variant="h6" fontWeight="bold" gutterBottom>
+                                Connection Established
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                Redirecting you to complete your payment...
+                            </Typography>
+                            <Box sx={{ mt: 3, width: '100%', height: 4, bgcolor: alpha(theme.palette.success.main, 0.2), borderRadius: 2, overflow: 'hidden' }}>
+                                <motion.div
+                                    initial={{ x: '-100%' }}
+                                    animate={{ x: '0%' }}
+                                    transition={{ duration: 1.5, ease: "easeInOut" }}
+                                    style={{ width: '100%', height: '100%', background: theme.palette.success.main }}
+                                />
+                            </Box>
+                        </motion.div>
+                    )}
+
+                    {status === 'error' && (
+                        <motion.div
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                        >
+                            <Box sx={{ mb: 3, display: 'inline-flex', p: 2, borderRadius: '50%', bgcolor: alpha(theme.palette.error.main, 0.1) }}>
+                                <Typography variant="h3" color="error">!</Typography>
+                            </Box>
+                            <Typography variant="h6" fontWeight="bold" gutterBottom color="error">
+                                Payment Failed
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" paragraph>
+                                {error || "Unable to initiate payment transaction."}
+                            </Typography>
+                            <Stack direction="row" spacing={2} justifyContent="center" mt={3}>
+                                <Button variant="outlined" onClick={onClose} color="inherit">
+                                    Cancel
+                                </Button>
+                                <Button variant="contained" onClick={onRetry} color="primary">
+                                    Try Again
+                                </Button>
+                            </Stack>
+                        </motion.div>
+                    )}
+                </Box>
+            </DialogContent>
+        </Dialog>
+    );
+};
+
 const CheckoutPage = () => {
     const theme = useTheme();
     const navigate = useNavigate();
@@ -196,7 +304,11 @@ const CheckoutPage = () => {
 
     const [plan, setPlan] = useState(preloadedPlan || null);
     const [loading, setLoading] = useState(!preloadedPlan);
-    const [processing, setProcessing] = useState(false);
+    // New Payment States
+    const [paymentStatus, setPaymentStatus] = useState('idle'); // idle, processing, redirecting, error
+    const [paymentError, setPaymentError] = useState('');
+
+    // Original states
     const [paymentProvider, setPaymentProvider] = useState('');
     const [userProfile, setUserProfile] = useState(null);
     const [enabledProviders, setEnabledProviders] = useState([]);
@@ -316,18 +428,21 @@ const CheckoutPage = () => {
     const handlePayment = async () => {
         if (!user || !plan) return;
 
-        setProcessing(true);
+        setPaymentStatus('processing');
+        setPaymentError('');
 
-        // Set a timeout to prevent indefinite loading
+        // Timeout handler
         const timeoutId = setTimeout(() => {
-            setProcessing(false);
-            toast.error('Payment request timed out. Please try again or contact support.');
-        }, 30000); // 30 second timeout
+            if (paymentStatus === 'processing') {
+                setPaymentStatus('error');
+                setPaymentError('Payment request timed out. Please try again.');
+            }
+        }, 45000); // 45 seconds timeout
 
         try {
             // Call Supabase Edge Function with timeout
             const controller = new AbortController();
-            const timeoutSignal = setTimeout(() => controller.abort(), 25000); // 25s internal timeout
+            const timeoutSignal = setTimeout(() => controller.abort(), 40000); // 40s internal
 
             // Use 'free' provider if price is 0 to skip payment gateway logic
             const effectiveProvider = plan.price === 0 ? 'free' : paymentProvider;
@@ -350,7 +465,8 @@ const CheckoutPage = () => {
                         duration_value: plan.duration_value,
                         duration_unit: plan.duration_unit
                     }
-                }
+                },
+                signal: controller.signal // Pass signal to fetch
             });
 
             clearTimeout(timeoutSignal);
@@ -367,37 +483,47 @@ const CheckoutPage = () => {
 
             if (data?.success) {
                 if (data.checkoutUrl) {
-                    // Redirect to payment gateway
-                    toast.success('Redirecting to payment gateway...');
-                    window.location.href = data.checkoutUrl;
+                    // Show redirect state
+                    setPaymentStatus('redirecting');
+
+                    // Small artificial delay to let user see "Redirecting" message
+                    setTimeout(() => {
+                        window.location.href = data.checkoutUrl;
+                    }, 1500);
                 } else {
-                    // Success but no checkout URL (e.g. free plan activated directly)
+                    // Free plan success
+                    setPaymentStatus('idle'); // Close modal
                     toast.success(t.planActivated || 'Plan activated successfully!');
                     navigate('/profile?tab=membership');
                 }
             } else {
-                const errorMsg = data?.message || data?.error || 'Failed to initialize payment';
-                throw new Error(errorMsg);
+                throw new Error(data?.message || data?.error || 'Failed to initialize payment');
             }
         } catch (error) {
             clearTimeout(timeoutId);
             console.error('Payment error:', error);
 
-            // User-friendly error messages
             let errorMessage = 'Payment initialization failed';
-
             if (error.name === 'AbortError') {
-                errorMessage = 'Payment request timed out. Please check your internet connection and try again.';
+                errorMessage = 'Payment request timed out. Check your connection.';
             } else if (error.message.includes('network') || error.message.includes('fetch')) {
-                errorMessage = 'Network error. Please check your internet connection.';
+                errorMessage = 'Network error. Check your connection.';
             } else if (error.message) {
                 errorMessage = error.message;
             }
 
-            toast.error(errorMessage);
-        } finally {
-            setProcessing(false);
+            setPaymentError(errorMessage);
+            setPaymentStatus('error');
         }
+    };
+
+    const handleRetry = () => {
+        handlePayment();
+    };
+
+    const handleCloseModal = () => {
+        setPaymentStatus('idle');
+        setPaymentError('');
     };
 
     const formatDuration = (value, unit) => {
@@ -709,7 +835,7 @@ const CheckoutPage = () => {
                                         variant="contained"
                                         size="large"
                                         onClick={handlePayment}
-                                        disabled={processing || (plan.price > 0 && enabledProviders.length === 0)}
+                                        disabled={paymentStatus === 'processing' || (plan.price > 0 && enabledProviders.length === 0)}
                                         sx={{
                                             py: 2,
                                             background: BRAND_COLORS.gradient,
@@ -720,7 +846,7 @@ const CheckoutPage = () => {
                                             }
                                         }}
                                     >
-                                        {processing ? (
+                                        {paymentStatus === 'processing' ? (
                                             <CircularProgress size={24} color="inherit" />
                                         ) : plan.price === 0 ? (
                                             t.activateFree
@@ -737,10 +863,18 @@ const CheckoutPage = () => {
                         </motion.div>
                     </Grid>
                 </Grid>
+
+                {/* Mount the Payment Modal */}
+                <PaymentProcessingModal
+                    open={paymentStatus !== 'idle'}
+                    status={paymentStatus}
+                    error={paymentError}
+                    onRetry={handleRetry}
+                    onClose={handleCloseModal}
+                />
             </Container>
         </Box>
     );
 };
 
-export default CheckoutPage;
 
