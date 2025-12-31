@@ -8,9 +8,10 @@ import {
     Box, Container, Typography, Card, CardContent, Button,
     Grid, Divider, Stack, Chip, CircularProgress, Radio,
     RadioGroup, FormControlLabel, FormControl, Paper, alpha,
-    List, ListItem, ListItemIcon, ListItemText, useTheme,
-    Dialog, DialogContent
+    List, ListItem, ListItemIcon, ListItemText, useTheme
 } from '@mui/material';
+import Dialog from '@mui/material/Dialog';
+import DialogContent from '@mui/material/DialogContent';
 import {
     Check, ArrowBack, CreditCard, AccountBalance,
     Security, Verified, Star
