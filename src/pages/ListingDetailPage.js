@@ -21,6 +21,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import ReportDialog from '../components/ReportDialog';
 import BlockUserDialog from '../components/BlockUserDialog';
 import ImageViewer from '../components/ImageViewer';
+import useListingAccess from '../hooks/useListingAccess';
 import { Flag, Block as BlockIcon } from '@mui/icons-material';
 
 const translations = {
@@ -302,6 +303,7 @@ const ListingDetailPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const queryClient = useQueryClient();
+  const { isListingLocked } = useListingAccess('all');
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [comment, setComment] = useState('');
@@ -499,6 +501,38 @@ const ListingDetailPage = () => {
       <Container maxWidth="lg" sx={{ py: 6 }}>
         <Alert severity="error">{error || t.listingNotFound}</Alert>
         <Button onClick={() => navigate(-1)} sx={{ mt: 2 }}>{t.goBack}</Button>
+      </Container>
+    );
+  }
+
+  // Check for restricted access
+  if (listing && isListingLocked(listing)) {
+    return (
+      <Container maxWidth="sm" sx={{ py: 10, textAlign: 'center' }}>
+        <Paper sx={{ p: 5, borderRadius: 4, bgcolor: 'background.paper' }}>
+          <Lock sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
+          <Typography variant="h5" fontWeight="bold" gutterBottom>
+            {t.premiumContent || "Premium Content"}
+          </Typography>
+          <Typography color="text.secondary" paragraph sx={{ mb: 4 }}>
+            {t.subscribe || "Please upgrade your plan to view this premium listing."}
+          </Typography>
+          <Button
+            variant="contained"
+            size="large"
+            onClick={() => navigate('/pricing')}
+            sx={{ borderRadius: 2, px: 4 }}
+          >
+            View Plans
+          </Button>
+          <Button
+            variant="text"
+            onClick={() => navigate(-1)}
+            sx={{ mt: 2, display: 'block', mx: 'auto' }}
+          >
+            {t.goBack}
+          </Button>
+        </Paper>
       </Container>
     );
   }

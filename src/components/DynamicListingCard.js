@@ -360,13 +360,14 @@ const DynamicListingCard = ({
     const summaryFields = useMemo(() => getSummaryFields(activeTemplate, listing), [activeTemplate, listing]);
 
     // --- Access Control ---
-    const { permissions } = useListingAccess('all');
+    const { isListingLocked } = useListingAccess('all');
+
     // Lock logic:
     // 1. If isLocked prop is passed, use it directly (override).
-    // 2. Otherwise, lock if listing is Premium AND user lacks 'is_premium' permission.
+    // 2. Otherwise, use the smart locking logic from the hook
     const locked = isLocked !== undefined
         ? isLocked
-        : (listing?.is_premium === true && (!permissions || !permissions.is_premium));
+        : isListingLocked(listing);
 
 
 
