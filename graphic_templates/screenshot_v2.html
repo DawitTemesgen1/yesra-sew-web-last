@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="am">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Ad V2 - Fully Optimized</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Ethiopic:wght@400;700;900&display=swap');
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #222;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Noto Sans Ethiopic', sans-serif;
+        }
+
+        /* STRICT 600x600 CONTAINER */
+        .ad-card {
+            width: 600px;
+            height: 600px;
+            position: relative;
+            background-image: url('./yesra_sew_ad_template_v2.png');
+            background-size: cover;
+            background-position: center;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            /* Text at bottom */
+        }
+
+        /* Compact Glass Panel */
+        .glass-panel {
+            margin: 20px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            /* Slightly darker for better readability */
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: white;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 26px;
+            /* Reduced to fit perfectly */
+            margin: 0 0 10px 0;
+            line-height: 1.3;
+            background: linear-gradient(90deg, #fff, #ffd700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 900;
+        }
+
+        p {
+            font-size: 15px;
+            margin: 6px 0;
+            line-height: 1.4;
+            color: #ddd;
+        }
+
+        .cta-btn {
+            display: inline-block;
+            background: linear-gradient(45deg, #ffd700, #ff8c00);
+            color: black;
+            font-size: 20px;
+            font-weight: bold;
+            padding: 10px 30px;
+            border-radius: 50px;
+            margin: 12px 0;
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+        }
+
+        .url {
+            font-family: monospace;
+            font-size: 13px;
+            letter-spacing: 1px;
+            color: #cbd5e1;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="ad-card">
+        <div class="glass-panel">
+            <h1>የህልምዎን ቤትና መኪና<br>ያለ ደላላ ይገበያዩ</h1>
+
+            <p>
+                ለመግዛትም ሆነ ለመከራዬት<br>
+                ሻጭም ሆኑ አከራይም በቀላሉ በድጅታል መፍትሄ<br>
+                መሸጥም ማከራዬትም ይችላሉ
+            </p>
+
+            <p style="color: #fbbf24; font-weight: bold; font-size: 14px; margin-top: 10px;">
+                ቀጥታ ገዡ ከሻጩ እና ተከራዩ የሚገናኙበት ዘመናዊ መፍትሄ
+            </p>
+
+            <div class="cta-btn">አሁኑኑ ይጀምሩ</div>
+
+            <div class="url">www.yesrasewsolution.com</div>
+        </div>
+    </div>
+
+</body>
+
+</html>

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="am">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Ad V2 - Corrected</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Ethiopic:wght@400;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&display=swap');
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #222;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Noto Sans Ethiopic', sans-serif;
+        }
+
+        /* 600x600 CONTAINER */
+        .ad-card {
+            width: 600px;
+            height: 600px;
+            position: relative;
+            /* Use the CLEAN image as background */
+            background-image: url('./yesra_sew_ad_template_v2_clean.png');
+            background-size: cover;
+            background-position: center;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            /* Text at bottom */
+        }
+
+        /* Central Glass Panel for Amharic */
+        .glass-panel {
+            margin: 0 20px 20px 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.7);
+            /* Slightly reduced opacity */
+            backdrop-filter: blur(8px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* NEW: English Text Overlay (Bottom Left) matching previous style */
+        .english-overlay {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            text-align: left;
+            z-index: 5;
+            /* The user wanted to replace existing text, but we removed it. 
+               Since we have the central glass panel, putting text behind it might be cluttered.
+               Let's integrate the English text nicely. */
+            display: none;
+            /* Hiding this approach in favor of integrating into the main panel or layout */
+        }
+
+        /* Let's put the English text the user asked for in a professional spot */
+        .brand-text-overlay {
+            position: absolute;
+            bottom: 160px;
+            /* Above the glass panel or part of the background aesthetic */
+            left: 30px;
+            font-family: 'Montserrat', sans-serif;
+            text-transform: uppercase;
+            text-align: left;
+            z-index: 2;
+            opacity: 0.9;
+        }
+
+        .brand-name {
+            font-size: 28px;
+            font-weight: 900;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .brand-sub {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fbbf24;
+            /* Gold */
+            margin-bottom: 5px;
+        }
+
+        .brand-tagline {
+            font-size: 12px;
+            font-weight: 500;
+            color: #cbd5e1;
+            letter-spacing: 1px;
+        }
+
+        /* Amharic Styles */
+        h1 {
+            font-size: 24px;
+            margin: 0 0 8px 0;
+            line-height: 1.3;
+            background: linear-gradient(90deg, #fff, #ffd700);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 900;
+        }
+
+        p {
+            font-size: 14px;
+            margin: 5px 0;
+            line-height: 1.4;
+            color: #ddd;
+        }
+
+        .cta-btn {
+            display: inline-block;
+            background: linear-gradient(45deg, #ffd700, #ff8c00);
+            color: black;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 8px 25px;
+            border-radius: 50px;
+            margin: 10px 0;
+        }
+
+        .url {
+            font-family: monospace;
+            font-size: 12px;
+            letter-spacing: 1px;
+            color: #cbd5e1;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="ad-card">
+
+        <!-- The specific English text requested to replace the garbled text -->
+        <div class="brand-text-overlay">
+            <div class="brand-name">YESRA SEW SOLUTION</div>
+            <div class="brand-sub">PREMIUM DIGITAL</div>
+            <div class="brand-tagline">YOUR NUMBER ONE DIGITAL MARKET PLACE</div>
+        </div>
+
+        <div class="glass-panel">
+            <h1>የህልምዎን ቤትና መኪና<br>ያለ ደላላ ይገበያዩ</h1>
+
+            <p>
+                ለመግዛትም ሆነ ለመከራዬት<br>
+                ሻጭም ሆኑ አከራይም በቀላሉ በድጅታል መፍትሄ
+            </p>
+
+            <div class="cta-btn">አሁኑኑ ይጀምሩ</div>
+
+            <div class="url">www.yesrasewsolution.com</div>
+        </div>
+    </div>
+
+</body>
+
+</html>

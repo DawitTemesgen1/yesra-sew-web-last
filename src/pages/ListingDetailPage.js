@@ -776,9 +776,16 @@ const ListingDetailPage = () => {
                           left: 16,
                           top: '50%',
                           transform: 'translateY(-50%)',
+                          zIndex: 10,
                           bgcolor: 'rgba(0,0,0,0.5)',
                           color: 'white',
-                          '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' }
+                          backdropFilter: 'blur(4px)',
+                          border: '1px solid rgba(255,255,255,0.1)',
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            bgcolor: 'rgba(0,0,0,0.7)',
+                            transform: 'translateY(-50%) scale(1.1)'
+                          }
                         }}
                       >
                         <ArrowBackIosNew />
@@ -790,9 +797,16 @@ const ListingDetailPage = () => {
                           right: 16,
                           top: '50%',
                           transform: 'translateY(-50%)',
+                          zIndex: 10,
                           bgcolor: 'rgba(0,0,0,0.5)',
                           color: 'white',
-                          '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' }
+                          backdropFilter: 'blur(4px)',
+                          border: '1px solid rgba(255,255,255,0.1)',
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            bgcolor: 'rgba(0,0,0,0.7)',
+                            transform: 'translateY(-50%) scale(1.1)'
+                          }
                         }}
                       >
                         <ArrowForwardIos />

@@ -4,6 +4,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'dart:io';
+import 'dart:async';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class WebViewScreen extends StatefulWidget {
   const WebViewScreen({super.key});
@@ -19,6 +21,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
   bool _isError = false;
   String _initialUrl = 'https://www.yesrasewsolution.com/welcome';
   final Color _brandColor = const Color(0xFF00A651);
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
 
   @override
   void initState() {
@@ -41,6 +44,14 @@ class _WebViewScreenState extends State<WebViewScreen> {
     if (Platform.isAndroid) {
       _requestPermissions();
     }
+
+    // Check initial connectivity
+    _checkConnectivity();
+
+    // Listen for connectivity changes
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen(
+      _updateConnectionStatus,
+    );
   }
 
   Future<void> _checkAuthAndSetUrl() async {
@@ -80,14 +91,14 @@ class _WebViewScreenState extends State<WebViewScreen> {
     await [
       Permission.camera,
       Permission.microphone,
-      Permission.storage,
-      Permission.photos,
-      Permission.videos,
+      Permission.camera,
+      Permission.microphone,
     ].request();
   }
 
   @override
   void dispose() {
+    _connectivitySubscription?.cancel();
     _webViewController = null;
     super.dispose();
   }
@@ -98,6 +109,34 @@ class _WebViewScreenState extends State<WebViewScreen> {
       _isLoading = true;
     });
     _webViewController?.reload();
+  }
+
+  Future<void> _checkConnectivity() async {
+    final results = await Connectivity().checkConnectivity();
+    _updateConnectionStatus(results);
+  }
+
+  void _updateConnectionStatus(List<ConnectivityResult> results) {
+    if (!mounted) return;
+
+    // If we have no connection types, or the only one is 'none'
+    bool isOffline =
+        results.isEmpty ||
+        (results.length == 1 && results.first == ConnectivityResult.none);
+
+    if (isOffline) {
+      setState(() {
+        _isError = true;
+        // _isLoading = false; // Optional: stop loading spinner if offline
+      });
+      debugPrint('❌ Lost connection');
+    } else {
+      // We are online
+      if (_isError) {
+        debugPrint('✅ Connection restored - reloading');
+        _reload();
+      }
+    }
   }
 
   @override
