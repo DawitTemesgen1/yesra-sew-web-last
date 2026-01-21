@@ -26,6 +26,7 @@ const PaymentCallbackPage = () => {
     const [status, setStatus] = useState('processing'); // processing, success, failed
     const [message, setMessage] = useState('Verifying your payment...');
     const [subscriptionDetails, setSubscriptionDetails] = useState(null);
+    const [countdown, setCountdown] = useState(3); // Countdown for redirect
 
     const txRef = searchParams.get('tx_ref') || searchParams.get('id');
     const provider = searchParams.get('provider') || 'chapa';
@@ -38,6 +39,25 @@ const PaymentCallbackPage = () => {
             setMessage('Invalid payment reference');
         }
     }, [txRef]);
+
+    // Auto-redirect after successful payment with countdown
+    useEffect(() => {
+        if (status === 'success') {
+            // Start countdown
+            const countdownInterval = setInterval(() => {
+                setCountdown((prev) => {
+                    if (prev <= 1) {
+                        clearInterval(countdownInterval);
+                        navigate('/profile?tab=membership');
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+
+            return () => clearInterval(countdownInterval);
+        }
+    }, [status, navigate]);
 
     const verifyPayment = async () => {
         try {
@@ -57,7 +77,7 @@ const PaymentCallbackPage = () => {
                 // We just need to fetch the details to show the user.
                 await fetchActiveSubscription();
                 setStatus('success');
-                setMessage('Payment successful! Your subscription is now active.');
+                setMessage('Payment successful! Redirecting you to your membership dashboard...');
                 toast.success('Subscription activated successfully!');
             } else {
                 setStatus('failed');
@@ -179,20 +199,21 @@ const PaymentCallbackPage = () => {
                                             variant="contained"
                                             size="large"
                                             onClick={() => navigate('/profile?tab=membership')}
+                                            disabled={countdown > 0}
                                             sx={{
                                                 background: BRAND_COLORS.gradient,
                                                 py: 1.5,
                                                 fontWeight: 'bold'
                                             }}
                                         >
-                                            View My Subscription
+                                            {countdown > 0 ? `Redirecting in ${countdown}s...` : 'View My Subscription'}
                                         </Button>
                                         <Button
                                             fullWidth
                                             variant="outlined"
                                             onClick={() => navigate('/post-ad')}
                                         >
-                                            Start Posting
+                                            Start Posting Now
                                         </Button>
                                     </>
                                 )}
@@ -232,4 +253,3 @@ const PaymentCallbackPage = () => {
 };
 
 export default PaymentCallbackPage;
-
