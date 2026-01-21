@@ -163,7 +163,7 @@ serve(async (req) => {
                     last_name: lastName,
                     tx_ref: transaction.id,
                     callback_url: `${req.headers.get('origin')}/api/webhooks/chapa`,
-                    return_url: `${returnUrlPrefix || 'http://localhost:3000'}/payment/success?tx_ref=${transaction.id}&provider=chapa`,
+                    return_url: `${returnUrlPrefix || 'https://www.yesrasewsolution.com'}/payment/success?tx_ref=${transaction.id}&provider=chapa`,
                     customization: {
                         title: 'YesraSew',  // Max 16 chars for Chapa
                         description: metadata?.plan_name || 'Membership Plan'
