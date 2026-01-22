@@ -155,6 +155,11 @@ serve(async (req) => {
                 const secret = config.secret_key || config.api_key;
                 if (!secret) throw new Error('Chapa secret key is missing in database');
 
+                // Construct return_url cleanly
+                const baseUrl = (returnUrlPrefix || 'https://www.yesrasewsolution.com').replace(/\/$/, '');
+                const returnUrl = `${baseUrl}/payment/success?tx_ref=${transaction.id}&provider=chapa`;
+                console.log('Chapa Return URL:', returnUrl);
+
                 const chapaPayload = {
                     amount: amount,
                     currency: currency || 'ETB',
@@ -163,9 +168,9 @@ serve(async (req) => {
                     last_name: lastName,
                     tx_ref: transaction.id,
                     callback_url: `${req.headers.get('origin')}/api/webhooks/chapa`,
-                    return_url: `${returnUrlPrefix || 'https://www.yesrasewsolution.com'}/payment/success?tx_ref=${transaction.id}&provider=chapa`,
+                    return_url: returnUrl,
                     customization: {
-                        title: 'YesraSew',  // Max 16 chars for Chapa
+                        title: 'YesraSew',
                         description: metadata?.plan_name || 'Membership Plan'
                     }
                 };

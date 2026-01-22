@@ -458,7 +458,7 @@ const CheckoutPage = () => {
                     email: userProfile?.email || user.email,
                     firstName: userProfile?.full_name?.split(' ')[0] || 'User',
                     lastName: userProfile?.full_name?.split(' ')[1] || '',
-                    returnUrlPrefix: 'https://www.yesrasewsolution.com',
+                    returnUrlPrefix: window.location.origin,
                     metadata: {
                         plan_id: plan.id,
                         plan_name: plan.name,
