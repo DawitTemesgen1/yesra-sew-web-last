@@ -4,7 +4,7 @@ import {
     Dialog, DialogTitle, DialogContent, DialogActions, Switch,
     FormControlLabel, Chip, IconButton, Tooltip, Alert, Divider,
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-    MenuItem, Select, FormControl, InputLabel, InputAdornment
+    MenuItem, Select, FormControl, InputLabel, InputAdornment, Autocomplete
 } from '@mui/material';
 import {
     Add, Edit, Delete, Star, Visibility, CheckCircle,
@@ -47,6 +47,14 @@ const MembershipPlansScreen = ({ t }) => {
         duration_value: 1,
         duration_unit: 'months'
     });
+
+    // Subscriber Management State
+    const [subscribersDialog, setSubscribersDialog] = useState(false);
+    const [currentPlanSubscribers, setCurrentPlanSubscribers] = useState([]);
+    const [viewingPlan, setViewingPlan] = useState(null);
+    const [addSubscriberOpen, setAddSubscriberOpen] = useState(false);
+    const [userOptions, setUserOptions] = useState([]);
+    const [selectedUser, setSelectedUser] = useState(null);
 
     useEffect(() => {
         fetchData();
@@ -242,6 +250,47 @@ const MembershipPlansScreen = ({ t }) => {
         return `Every ${v} ${unitName}`;
     };
 
+    const handleViewSubscribers = async (plan) => {
+        setViewingPlan(plan);
+        try {
+            // Fetch fresh subscribers
+            const subs = await adminService.getPlanSubscribers(plan.id);
+            setCurrentPlanSubscribers(subs || []);
+            setSubscribersDialog(true);
+        } catch (error) {
+            toast.error('Failed to load subscribers');
+        }
+    };
+
+    const handleSearchUsers = async (event, query) => {
+        // Debounce or just wait for typing?
+        // simple implementation
+        if (!query || query.length < 2) return;
+        try {
+            const { users } = await adminService.getUsers({ search: query, limit: 10 });
+            setUserOptions(users || []);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const handleGrantSubscription = async () => {
+        if (!selectedUser || !viewingPlan) return;
+        try {
+            await adminService.grantSubscription(
+                selectedUser.id,
+                viewingPlan.id,
+                viewingPlan.duration_value,
+                viewingPlan.duration_unit
+            );
+            toast.success(`Subscription granted to ${selectedUser.name || selectedUser.full_name}`);
+            setAddSubscriberOpen(false);
+            handleViewSubscribers(viewingPlan); // Refresh list
+        } catch (error) {
+            toast.error('Failed to grant subscription');
+        }
+    };
+
     return (
         <Box>
             {/* Header */}
@@ -390,6 +439,8 @@ const MembershipPlansScreen = ({ t }) => {
                                         label={`${getSubscriberCount(plan.id)} subscribers`}
                                         size="small"
                                         variant="outlined"
+                                        onClick={() => handleViewSubscribers(plan)}
+                                        sx={{ cursor: 'pointer' }}
                                     />
                                 </Box>
 
@@ -798,6 +849,100 @@ const MembershipPlansScreen = ({ t }) => {
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            {/* Subscriber List Dialog */}
+            <Dialog open={subscribersDialog} onClose={() => setSubscribersDialog(false)} maxWidth="md" fullWidth>
+                <DialogTitle>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Typography variant="h6">Subscribers - {viewingPlan?.name}</Typography>
+                        <Button startIcon={<Add />} variant="contained" size="small" onClick={() => setAddSubscriberOpen(true)}>
+                            Add Subscriber
+                        </Button>
+                    </Box>
+                </DialogTitle>
+                <DialogContent>
+                    <TableContainer>
+                        <Table>
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell>User</TableCell>
+                                    <TableCell>Start Date</TableCell>
+                                    <TableCell>End Date</TableCell>
+                                    <TableCell>Status</TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {currentPlanSubscribers.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={4} align="center">No active subscribers</TableCell>
+                                    </TableRow>
+                                ) : (
+                                    currentPlanSubscribers.map((sub) => (
+                                        <TableRow key={sub.id}>
+                                            <TableCell>
+                                                <Typography variant="body2" fontWeight="bold">
+                                                    {sub.profile?.full_name || 'Unknown'}
+                                                </Typography>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    {sub.profile?.email}
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell>{new Date(sub.start_date).toLocaleDateString()}</TableCell>
+                                            <TableCell>{new Date(sub.end_date).toLocaleDateString()}</TableCell>
+                                            <TableCell>
+                                                <Chip
+                                                    label={sub.status}
+                                                    size="small"
+                                                    color={sub.status === 'active' ? 'success' : 'default'}
+                                                />
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setSubscribersDialog(false)}>Close</Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Add Subscriber Dialog */}
+            <Dialog open={addSubscriberOpen} onClose={() => setAddSubscriberOpen(false)} maxWidth="sm" fullWidth>
+                <DialogTitle>Grant Subscription</DialogTitle>
+                <DialogContent>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        Manually grant a <strong>{formatBillingCycle(viewingPlan?.duration_value, viewingPlan?.duration_unit)}</strong> subscription to <strong>{viewingPlan?.name}</strong>.
+                    </Typography>
+
+                    <Autocomplete
+                        options={userOptions}
+                        getOptionLabel={(option) => `${option.full_name} (${option.email})`}
+                        onInputChange={handleSearchUsers}
+                        onChange={(event, newValue) => setSelectedUser(newValue)}
+                        renderInput={(params) => (
+                            <TextField
+                                {...params}
+                                label="Search User"
+                                placeholder="Type name or email..."
+                                fullWidth
+                            />
+                        )}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setAddSubscriberOpen(false)}>Cancel</Button>
+                    <Button
+                        variant="contained"
+                        onClick={handleGrantSubscription}
+                        disabled={!selectedUser}
+                    >
+                        Grant Access
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
         </Box >
     );
 };

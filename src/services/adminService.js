@@ -1337,6 +1337,60 @@ const adminService = {
         }
     },
 
+    // --- Subscription Management ---
+    async getPlanSubscribers(planId) {
+        try {
+            const { data, error } = await supabase
+                .from('user_subscriptions')
+                .select(`
+                    *,
+                    profile:user_id (id, full_name, email, phone)
+                `)
+                .eq('plan_id', planId)
+                .eq('status', 'active');
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error('Error fetching plan subscribers:', error);
+            throw error;
+        }
+    },
+
+    async grantSubscription(userId, planId, durationValue = 1, durationUnit = 'months') {
+        try {
+            const startDate = new Date();
+            let endDate = new Date();
+
+            if (durationUnit === 'days') endDate.setDate(startDate.getDate() + durationValue);
+            if (durationUnit === 'weeks') endDate.setDate(startDate.getDate() + (durationValue * 7));
+            if (durationUnit === 'months') endDate.setMonth(startDate.getMonth() + durationValue);
+            if (durationUnit === 'years') endDate.setFullYear(startDate.getFullYear() + durationValue);
+
+            const { data, error } = await supabase
+                .from('user_subscriptions')
+                .insert({
+                    user_id: userId,
+                    plan_id: planId,
+                    status: 'active',
+                    start_date: startDate.toISOString(),
+                    end_date: endDate.toISOString(),
+                    payment_status: 'paid', // Admin granted
+                    payment_provider: 'admin_grant',
+                    amount_paid: 0,
+                    currency: 'ETB'
+                })
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error('Error granting subscription:', error);
+            throw error;
+        }
+    },
+
     // --- Template Steps ---
     async createStep(stepData) {
         try {
