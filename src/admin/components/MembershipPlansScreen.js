@@ -12,6 +12,7 @@ import {
 } from '@mui/icons-material';
 import adminService from '../../services/adminService';
 import toast from 'react-hot-toast';
+import { useAdminAuth } from '../../context/AdminAuthContext';
 
 const MembershipPlansScreen = ({ t }) => {
     const [plans, setPlans] = useState([]);
@@ -55,6 +56,25 @@ const MembershipPlansScreen = ({ t }) => {
     const [addSubscriberOpen, setAddSubscriberOpen] = useState(false);
     const [userOptions, setUserOptions] = useState([]);
     const [selectedUser, setSelectedUser] = useState(null);
+
+    const { adminUser } = useAdminAuth();
+    const [currentRole, setCurrentRole] = useState(adminUser?.user_metadata?.role || 'user');
+
+    useEffect(() => {
+        const fetchRole = async () => {
+            if (adminUser?.id) {
+                try {
+                    const profile = await adminService.getUserById(adminUser.id);
+                    if (profile?.role) setCurrentRole(profile.role);
+                } catch (e) {
+                    console.error('Error fetching role:', e);
+                }
+            }
+        };
+        fetchRole();
+    }, [adminUser]);
+
+    const isOwner = currentRole === 'owner' || currentRole === 'super_admin';
 
     useEffect(() => {
         fetchData();
@@ -303,9 +323,11 @@ const MembershipPlansScreen = ({ t }) => {
                     <Button variant="outlined" startIcon={<Refresh />} onClick={fetchData}>
                         Refresh
                     </Button>
-                    <Button variant="contained" startIcon={<Add />} onClick={handleCreatePlan}>
-                        Create Plan
-                    </Button>
+                    {isOwner && (
+                        <Button variant="contained" startIcon={<Add />} onClick={handleCreatePlan}>
+                            Create Plan
+                        </Button>
+                    )}
                 </Box>
             </Box>
 
@@ -459,25 +481,26 @@ const MembershipPlansScreen = ({ t }) => {
                                     />
                                 </Box>
 
-                                {/* Actions */}
-                                <Box sx={{ display: 'flex', gap: 1 }}>
-                                    <Button
-                                        variant="outlined"
-                                        startIcon={<Edit />}
-                                        onClick={() => handleEditPlan(plan)}
-                                        fullWidth
-                                    >
-                                        Edit
-                                    </Button>
-                                    <Tooltip title="Delete Plan">
-                                        <IconButton
-                                            color="error"
-                                            onClick={() => handleDeletePlan(plan.id)}
+                                {isOwner && (
+                                    <Box sx={{ display: 'flex', gap: 1 }}>
+                                        <Button
+                                            variant="outlined"
+                                            startIcon={<Edit />}
+                                            onClick={() => handleEditPlan(plan)}
+                                            fullWidth
                                         >
-                                            <Delete />
-                                        </IconButton>
-                                    </Tooltip>
-                                </Box>
+                                            Edit
+                                        </Button>
+                                        <Tooltip title="Delete Plan">
+                                            <IconButton
+                                                color="error"
+                                                onClick={() => handleDeletePlan(plan.id)}
+                                            >
+                                                <Delete />
+                                            </IconButton>
+                                        </Tooltip>
+                                    </Box>
+                                )}
                             </CardContent>
                         </Card>
                     </Grid>
@@ -856,9 +879,11 @@ const MembershipPlansScreen = ({ t }) => {
                 <DialogTitle>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Typography variant="h6">Subscribers - {viewingPlan?.name}</Typography>
-                        <Button startIcon={<Add />} variant="contained" size="small" onClick={() => setAddSubscriberOpen(true)}>
-                            Add Subscriber
-                        </Button>
+                        {isOwner && (
+                            <Button startIcon={<Add />} variant="contained" size="small" onClick={() => setAddSubscriberOpen(true)}>
+                                Add Subscriber
+                            </Button>
+                        )}
                     </Box>
                 </DialogTitle>
                 <DialogContent>

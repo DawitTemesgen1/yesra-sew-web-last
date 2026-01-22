@@ -1391,9 +1391,6 @@ const adminService = {
                     status: 'active',
                     start_date: startDate.toISOString(),
                     end_date: endDate.toISOString(),
-                    payment_status: 'paid', // Admin granted
-                    payment_provider: 'admin_grant',
-                    amount_paid: 0,
                     updated_at: new Date().toISOString()
                 }, { onConflict: 'user_id, plan_id' })
                 .select()

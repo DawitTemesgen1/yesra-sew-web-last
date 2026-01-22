@@ -11,6 +11,7 @@ import {
 } from '@mui/icons-material';
 import adminService from '../../services/adminService';
 import toast from 'react-hot-toast';
+import { useAdminAuth } from '../../context/AdminAuthContext';
 
 const PaymentIntegrationScreen = ({ t }) => {
     const [providers, setProviders] = useState([]);
@@ -24,6 +25,25 @@ const PaymentIntegrationScreen = ({ t }) => {
     const [initializing, setInitializing] = useState(false);
     const [fetchError, setFetchError] = useState(null);
 
+    const { adminUser } = useAdminAuth();
+    const [currentRole, setCurrentRole] = useState(adminUser?.user_metadata?.role || 'user');
+
+    useEffect(() => {
+        const fetchRole = async () => {
+            if (adminUser?.id) {
+                try {
+                    const profile = await adminService.getUserById(adminUser.id);
+                    if (profile?.role) setCurrentRole(profile.role);
+                } catch (e) {
+                    console.error('Error fetching role:', e);
+                }
+            }
+        };
+        fetchRole();
+    }, [adminUser]);
+
+    const isOwner = currentRole === 'owner' || currentRole === 'super_admin';
+
     useEffect(() => {
         fetchData();
     }, []);
@@ -36,7 +56,7 @@ const PaymentIntegrationScreen = ({ t }) => {
                 adminService.getPaymentProviders(),
                 adminService.getAllTransactions({ limit: 50 })
             ]);
-            
+
             setProviders(providersData || []);
             setTransactions(transactionsData || []);
         } catch (error) {
@@ -53,7 +73,7 @@ const PaymentIntegrationScreen = ({ t }) => {
             setInitializing(true);
             setFetchError(null);
             const result = await adminService.initializePaymentProviders();
-            
+
             toast.success('Payment providers initialized successfully!');
             await fetchData();
         } catch (error) {
@@ -174,7 +194,7 @@ const PaymentIntegrationScreen = ({ t }) => {
                                     color="primary"
                                     startIcon={<Settings />}
                                     onClick={handleInitializeProviders}
-                                    disabled={initializing}
+                                    disabled={initializing || !isOwner}
                                     sx={{ minWidth: 250, py: 1.5, fontSize: '1.1rem' }}
                                 >
                                     {initializing ? 'Creating Providers...' : 'Create Payment Providers'}
@@ -221,6 +241,7 @@ const PaymentIntegrationScreen = ({ t }) => {
                                                             checked={provider.is_enabled}
                                                             onChange={() => handleToggleProvider(provider)}
                                                             color="success"
+                                                            disabled={!isOwner}
                                                         />
                                                     }
                                                     label={provider.is_enabled ? 'Enabled' : 'Disabled'}
@@ -308,6 +329,7 @@ const PaymentIntegrationScreen = ({ t }) => {
                                                     startIcon={<Settings />}
                                                     onClick={() => handleEditProvider(provider)}
                                                     fullWidth
+                                                    disabled={!isOwner}
                                                 >
                                                     Configure
                                                 </Button>
