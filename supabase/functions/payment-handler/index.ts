@@ -172,6 +172,9 @@ serve(async (req) => {
                     customization: {
                         title: 'YesraSew',
                         description: metadata?.plan_name || 'Membership Plan'
+                    },
+                    meta: {
+                        hide_receipt: "true"
                     }
                 };
 
