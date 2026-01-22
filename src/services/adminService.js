@@ -1340,17 +1340,33 @@ const adminService = {
     // --- Subscription Management ---
     async getPlanSubscribers(planId) {
         try {
-            const { data, error } = await supabase
+            // 1. Fetch subscriptions
+            const { data: subs, error: subsError } = await supabase
                 .from('user_subscriptions')
-                .select(`
-                    *,
-                    profile:user_id (id, full_name, email, phone)
-                `)
+                .select('*')
                 .eq('plan_id', planId)
                 .eq('status', 'active');
 
-            if (error) throw error;
-            return data;
+            if (subsError) throw subsError;
+            if (!subs || subs.length === 0) return [];
+
+            // 2. Fetch associated profiles
+            const userIds = subs.map(s => s.user_id);
+            const { data: profiles, error: profilesError } = await supabase
+                .from('profiles')
+                .select('id, full_name, email, phone')
+                .in('id', userIds);
+
+            if (profilesError) throw profilesError;
+
+            // 3. Map profiles to subscriptions
+            const profileMap = {};
+            profiles.forEach(p => profileMap[p.id] = p);
+
+            return subs.map(s => ({
+                ...s,
+                profile: profileMap[s.user_id] || { full_name: 'Unknown', email: 'Unknown' }
+            }));
         } catch (error) {
             console.error('Error fetching plan subscribers:', error);
             throw error;
