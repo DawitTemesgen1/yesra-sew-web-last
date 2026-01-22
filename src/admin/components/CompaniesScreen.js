@@ -33,7 +33,7 @@ const CompaniesScreen = ({ t, handleRefresh, refreshing, searchTerm, setSearchTe
   const fetchCompanies = async () => {
     try {
       setLoading(true);
-      const data = await adminService.getUsers({ account_type: 'company' });
+      const { users: data } = await adminService.getUsers({ account_type: 'company' });
       // Transform data to match UI expectations if necessary
       const transformedData = data.map(user => ({
         id: user.id,

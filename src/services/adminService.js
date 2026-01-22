@@ -318,26 +318,58 @@ const adminService = {
     },
 
     // --- User Management ---
-    async getUsers(filters = {}) {
+    async getUsers(options = {}) {
+        const {
+            search,
+            role,
+            status, // 'active', 'suspended', or 'all'
+            account_type,
+            sortBy = 'created_at',
+            sortOrder = 'desc',
+            page = 1,
+            limit = 50
+        } = options;
+
         try {
-            // OPTIMIZED: Select specific columns + robust filters
+            // Select profiles with count
             let query = supabase
                 .from('profiles')
-                .select('id, full_name, email, phone, role, is_active, verified, created_at, location')
-                .order('created_at', { ascending: false });
+                .select('*, id, full_name, email, phone, role, is_active, verified, created_at, location, account_type', { count: 'exact' });
 
-            if (filters.search) {
-                query = query.or(`full_name.ilike.%${filters.search}%,email.ilike.%${filters.search}%`);
+            if (search) {
+                // ILIKE for insensitive match
+                query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`);
             }
-            if (filters.account_type) query = query.eq('account_type', filters.account_type);
-            if (filters.role) query = query.eq('role', filters.role);
+            if (account_type) query = query.eq('account_type', account_type);
 
-            // Default limit 100
-            query = query.limit(filters.limit || 100);
+            // Handle Role Filter (String or Array)
+            if (role) {
+                if (Array.isArray(role)) {
+                    query = query.in('role', role);
+                } else if (role !== 'all') {
+                    query = query.eq('role', role);
+                }
+            }
 
-            const { data, error } = await query;
+            // Handle Status Filter
+            if (status && status !== 'all') {
+                if (status === 'active') query = query.eq('is_active', true);
+                if (status === 'suspended') query = query.eq('is_active', false);
+            }
+
+            // Sorting
+            query = query.order(sortBy, { ascending: sortOrder === 'asc' });
+
+            // Pagination
+            const from = (page - 1) * limit;
+            const to = from + limit - 1;
+            query = query.range(from, to);
+
+            const { data, error, count } = await query;
             if (error) throw error;
-            return data;
+
+            // Return object with data and count
+            return { users: data || [], count: count || 0 };
         } catch (error) {
             console.error('Error fetching users:', error);
             throw error;
