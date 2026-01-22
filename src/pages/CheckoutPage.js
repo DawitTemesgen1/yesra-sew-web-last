@@ -198,7 +198,8 @@ const PaymentProcessingModal = ({ open, status, error, onRetry, onClose }) => {
                     borderRadius: 4,
                     p: 2,
                     textAlign: 'center',
-                    background: 'rgba(255, 255, 255, 0.95)',
+                    background: theme.palette.background.paper,
+                    backgroundImage: 'none', // Remove gradients if any
                     backdropFilter: 'blur(10px)'
                 }
             }}
@@ -227,7 +228,7 @@ const PaymentProcessingModal = ({ open, status, error, onRetry, onClose }) => {
                                     <Security color="primary" sx={{ fontSize: 32 }} />
                                 </Box>
                             </Box>
-                            <Typography variant="h6" fontWeight="bold" gutterBottom>
+                            <Typography variant="h6" fontWeight="bold" gutterBottom color="text.primary">
                                 Securing Transaction
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
@@ -244,7 +245,7 @@ const PaymentProcessingModal = ({ open, status, error, onRetry, onClose }) => {
                             <Box sx={{ mb: 3, display: 'inline-flex', p: 2, borderRadius: '50%', bgcolor: alpha(theme.palette.success.main, 0.1) }}>
                                 <Check sx={{ fontSize: 50, color: theme.palette.success.main }} />
                             </Box>
-                            <Typography variant="h6" fontWeight="bold" gutterBottom>
+                            <Typography variant="h6" fontWeight="bold" gutterBottom color="text.primary">
                                 Connection Established
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
