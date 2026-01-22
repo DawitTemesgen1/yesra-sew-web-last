@@ -1385,7 +1385,7 @@ const adminService = {
 
             const { data, error } = await supabase
                 .from('user_subscriptions')
-                .insert({
+                .upsert({
                     user_id: userId,
                     plan_id: planId,
                     status: 'active',
@@ -1394,8 +1394,9 @@ const adminService = {
                     payment_status: 'paid', // Admin granted
                     payment_provider: 'admin_grant',
                     amount_paid: 0,
-                    currency: 'ETB'
-                })
+                    currency: 'ETB',
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'user_id, plan_id' })
                 .select()
                 .single();
 
