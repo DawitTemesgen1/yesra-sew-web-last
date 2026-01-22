@@ -28,7 +28,21 @@ import { useAdminAuth } from '../../context/AdminAuthContext';
 const UserManagementScreen = ({ t, handleRefresh: propHandleRefresh, refreshing: propRefreshing, searchTerm, setSearchTerm, filterStatus, setFilterStatus }) => {
   const navigate = useNavigate();
   const { adminUser } = useAdminAuth();
-  const isOwner = adminUser?.user_metadata?.role === 'owner' || adminUser?.user_metadata?.role === 'super_admin';
+  const [currentRole, setCurrentRole] = useState(adminUser?.user_metadata?.role || 'user');
+
+  React.useEffect(() => {
+    const fetchRole = async () => {
+      if (adminUser?.id) {
+        try {
+          const profile = await adminService.getUserById(adminUser.id);
+          if (profile?.role) setCurrentRole(profile.role);
+        } catch (e) { console.error(e); }
+      }
+    };
+    fetchRole();
+  }, [adminUser]);
+
+  const isOwner = currentRole === 'owner' || currentRole === 'super_admin';
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedItems, setSelectedItems] = useState([]);

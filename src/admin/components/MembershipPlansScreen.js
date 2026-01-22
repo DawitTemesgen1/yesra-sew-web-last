@@ -287,7 +287,8 @@ const MembershipPlansScreen = ({ t }) => {
             setAddSubscriberOpen(false);
             handleViewSubscribers(viewingPlan); // Refresh list
         } catch (error) {
-            toast.error('Failed to grant subscription');
+            console.error(error);
+            toast.error('Failed to grant subscription: ' + (error.message || error.error_description || 'Unknown error'));
         }
     };
 
