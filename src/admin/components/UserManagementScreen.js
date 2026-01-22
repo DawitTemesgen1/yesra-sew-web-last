@@ -8,7 +8,7 @@ import {
   DialogActions, Avatar, Badge, Tabs, Tab, Divider, List, ListItem,
   ListItemText, ListItemIcon, ListItemSecondaryAction, Alert,
   LinearProgress, Paper, Stack, Tooltip, Accordion, AccordionSummary,
-  AccordionDetails
+  AccordionDetails, Radio
 } from '@mui/material';
 import {
   Search, Refresh, Visibility, Edit, Delete, CheckCircle, Cancel,
@@ -37,6 +37,25 @@ const UserManagementScreen = ({ t, handleRefresh: propHandleRefresh, refreshing:
   const [roleDialog, setRoleDialog] = useState(false);
   const [userDetailOpen, setUserDetailOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(null);
+  const [pendingRole, setPendingRole] = useState(null);
+
+  const handleSaveRole = async () => {
+    if (!selectedUserId || !pendingRole) return;
+
+    // Optional: Confirm for high-privilege roles
+    if (['admin', 'owner'].includes(pendingRole) && !window.confirm(`Promoting a user to ${pendingRole.toUpperCase()} grants significant access. Are you sure?`)) {
+      return;
+    }
+
+    try {
+      await adminService.updateUserRole(selectedUserId, pendingRole);
+      toast.success(`User role updated to ${pendingRole}`);
+      setRoleDialog(false);
+      fetchUsers();
+    } catch (error) {
+      toast.error(error.message || 'Failed to update role');
+    }
+  };
 
   // State for dynamic data from Supabase
   const [userStats, setUserStats] = useState({
@@ -107,7 +126,7 @@ const UserManagementScreen = ({ t, handleRefresh: propHandleRefresh, refreshing:
       user.role.toLowerCase().includes((searchTerm || '').toLowerCase());
     const matchesFilter = filterStatus === 'all' || user.status === filterStatus;
     const matchesTab = activeTab === 0 ||
-      (activeTab === 1 && user.role === 'admin') ||
+      (activeTab === 1 && ['admin', 'owner', 'super_admin'].includes(user.role)) ||
       (activeTab === 2 && user.role === 'moderator') ||
       (activeTab === 3 && user.role === 'premium_user') ||
       (activeTab === 4 && user.role === 'user');
@@ -491,6 +510,7 @@ const UserManagementScreen = ({ t, handleRefresh: propHandleRefresh, refreshing:
                               color="secondary"
                               onClick={() => {
                                 setSelectedUserId(user.id);
+                                setPendingRole(user.role || 'user');
                                 setRoleDialog(true);
                               }}
                             >
@@ -528,46 +548,62 @@ const UserManagementScreen = ({ t, handleRefresh: propHandleRefresh, refreshing:
         </DialogActions>
       </Dialog>
 
-      {/* Manage Roles Dialog */}
-      <Dialog open={roleDialog} onClose={() => setRoleDialog(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Manage User Roles</DialogTitle>
-        <DialogContent>
-          <Box sx={{ minWidth: 400, pt: 2 }}>
-            <Typography gutterBottom>
-              Select a new role for the user.
-            </Typography>
-            <FormControl fullWidth sx={{ mt: 2 }}>
-              <InputLabel>Role</InputLabel>
-              <Select
-                value={users.find(u => u.id === selectedUserId)?.role || 'user'}
-                label="Role"
-                onChange={(e) => {
-                  const newRole = e.target.value;
-                  if (window.confirm(`Are you sure you want to promote this user to ${newRole}? This grants significant privileges.`)) {
-                    adminService.updateUserRole(selectedUserId, newRole)
-                      .then(() => {
-                        toast.success(`Role updated to ${newRole}`);
-                        setRoleDialog(false);
-                        fetchUsers();
-                      })
-                      .catch(err => {
-                        toast.error(err.message || 'Failed to update role');
-                      });
-                  }
+      {/* Manage Roles Dialog - Improved UX */}
+      <Dialog open={roleDialog} onClose={() => setRoleDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ borderBottom: 1, borderColor: 'divider' }}>Manage User Role</DialogTitle>
+        <DialogContent sx={{ pt: 3 }}>
+          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+            Select an access level for <strong>{users.find(u => u.id === selectedUserId)?.name || 'User'}</strong>
+          </Typography>
+
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+            {['user', 'premium_user', 'moderator', 'admin', ...(isOwner ? ['owner'] : [])].map((roleOption) => (
+              <Paper
+                key={roleOption}
+                variant="outlined"
+                sx={{
+                  p: 2,
+                  cursor: 'pointer',
+                  borderColor: pendingRole === roleOption ? 'primary.main' : 'divider',
+                  bgcolor: pendingRole === roleOption ? 'action.selected' : 'background.paper',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 2,
+                  '&:hover': { bgcolor: 'action.hover' }
                 }}
+                onClick={() => setPendingRole(roleOption)}
               >
-                <MenuItem value="user">User</MenuItem>
-                <MenuItem value="premium_user">Premium User</MenuItem>
-                <MenuItem value="moderator">Moderator</MenuItem>
-                <MenuItem value="admin">Admin</MenuItem>
-                {isOwner && <MenuItem value="owner">Owner</MenuItem>}
-                {/* Only Owner can create other owners if needed, but let's restrict to Admin for now */}
-              </Select>
-            </FormControl>
+                <Radio
+                  checked={pendingRole === roleOption}
+                  onChange={() => setPendingRole(roleOption)}
+                  value={roleOption}
+                  size="small"
+                />
+                <Box>
+                  <Typography variant="body1" fontWeight="medium" sx={{ textTransform: 'capitalize' }}>
+                    {roleOption.replace('_', ' ')}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {roleOption === 'owner' ? 'Full system control, billing, and top-level management.' :
+                      roleOption === 'admin' ? 'Manage users, content, settings, and finances.' :
+                        roleOption === 'moderator' ? 'Review content and manage user reports.' :
+                          roleOption === 'premium_user' ? 'Access to premium features on the platform.' :
+                            'Standard user access, no special privileges.'}
+                  </Typography>
+                </Box>
+              </Paper>
+            ))}
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setRoleDialog(false)}>Close</Button>
+        <DialogActions sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
+          <Button onClick={() => setRoleDialog(false)} color="inherit">Cancel</Button>
+          <Button
+            variant="contained"
+            onClick={handleSaveRole}
+            disabled={!pendingRole || pendingRole === users.find(u => u.id === selectedUserId)?.role}
+          >
+            Update Role
+          </Button>
         </DialogActions>
       </Dialog>
 
