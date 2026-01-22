@@ -1394,7 +1394,6 @@ const adminService = {
                     payment_status: 'paid', // Admin granted
                     payment_provider: 'admin_grant',
                     amount_paid: 0,
-                    currency: 'ETB',
                     updated_at: new Date().toISOString()
                 }, { onConflict: 'user_id, plan_id' })
                 .select()
