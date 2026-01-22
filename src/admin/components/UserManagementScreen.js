@@ -560,6 +560,7 @@ const UserManagementScreen = ({ t, handleRefresh: propHandleRefresh, refreshing:
                 <MenuItem value="premium_user">Premium User</MenuItem>
                 <MenuItem value="moderator">Moderator</MenuItem>
                 <MenuItem value="admin">Admin</MenuItem>
+                {isOwner && <MenuItem value="owner">Owner</MenuItem>}
                 {/* Only Owner can create other owners if needed, but let's restrict to Admin for now */}
               </Select>
             </FormControl>
