@@ -90,7 +90,9 @@ const AdminDashboard = () => {
   const [tenders, setTenders] = useState([]);
   const [financialData, setFinancialData] = useState({ transactions: [] });
   const [analyticsData, setAnalyticsData] = useState({});
+
   const [systemSettings, setSystemSettings] = useState({});
+  const [categoryCounts, setCategoryCounts] = useState([]);
 
   // Fetch Data Based on Active Tab (Optimized for performance)
   const fetchDataForTab = useCallback(async (tabIndex, forceRefresh = false) => {
@@ -106,7 +108,9 @@ const AdminDashboard = () => {
         setTenders(data.tenders || []);
         setFinancialData(data.financial || {});
         setAnalyticsData(data.analytics || {});
+
         setSystemSettings(data.settings || {});
+        setCategoryCounts(data.categoryCounts || []);
       } else if (tabIndex === 1) { // Tenders
         // Always fetch fresh tenders to ensure search/filter works or just standard fresh data
         const tenderData = await adminService.getListings({ category: 'tenders', limit: 50 });
@@ -180,12 +184,13 @@ const AdminDashboard = () => {
     selectedItems, setSelectedItems: handleItemSelect,
     onBulkAction: handleBulkAction,
     onDialogOpen: handleDialogOpen, dialogOpen, onDialogClose: handleDialogClose,
-    stats, listings, users, tenders, financialData, analyticsData, systemSettings
+
+    stats, listings, users, tenders, financialData, analyticsData, systemSettings, categoryCounts
   };
 
   const renderActiveScreen = () => {
     switch (activeTab) {
-      case 0: return <AdminHomepage {...commonProps} listings={listings.slice(0, 5)} users={users.slice(0, 5)} />;
+      case 0: return <AdminHomepage {...commonProps} listings={listings.slice(0, 5)} users={users.slice(0, 5)} categoryCounts={categoryCounts} />;
       case 1: return <TenderScreen {...commonProps} tenders={filteredTenders} />;
       case 2: return <HomeScreen {...commonProps} homes={listings} />;
       case 3: return <CarsScreen {...commonProps} cars={listings} />;

@@ -89,36 +89,55 @@ const adminService = {
                     return data || [];
                 };
 
+                // Helper for safe RPC fetching
+                const getRpc = async (rpcName, params = {}) => {
+                    const { data, error } = await supabase.rpc(rpcName, params);
+                    if (error) {
+                        console.warn(`RPC ${rpcName} failed (migration might be missing):`, error);
+                        return null;
+                    }
+                    return { data };
+                };
+
                 // Batch 1: Key Counts (Parallel)
-                const [totalListings, pendingReview, approvedListings, rejectedListings, totalUsers] = await Promise.all([
+                const [totalListings, pendingReview, approvedListings, rejectedListings, totalUsers, revenueData, categoryCountsData] = await Promise.all([
                     getCount(supabase.from('listings').select('*', { count: 'exact', head: true })),
                     getCount(supabase.from('listings').select('*', { count: 'exact', head: true }).eq('status', 'pending')),
                     getCount(supabase.from('listings').select('*', { count: 'exact', head: true }).in('status', ['active', 'approved'])),
                     getCount(supabase.from('listings').select('*', { count: 'exact', head: true }).eq('status', 'rejected')),
-                    getCount(supabase.from('profiles').select('*', { count: 'exact', head: true }))
+                    getCount(supabase.from('profiles').select('*', { count: 'exact', head: true })),
+                    getRpc('get_total_revenue'),
+                    getRpc('get_category_counts')
                 ]);
+
+                // Fallback for revenue if RPC fails
+                let totalRevenue = revenueData?.data || 0;
+                const categoryCounts = categoryCountsData?.data || [];
 
                 // Batch 2: Lists (Parallel)
                 const [recentListings, recentUsers] = await Promise.all([
-                    getData(supabase.from('listings').select('id, title, status, created_at, category_id').order('created_at', { ascending: false }).limit(10)),
+                    getData(supabase.from('listings').select('id, title, status, created_at, category, profiles(full_name)').order('created_at', { ascending: false }).limit(10)),
                     getData(supabase.from('profiles').select('id, full_name, email, created_at, account_type').order('created_at', { ascending: false }).limit(10))
                 ]);
 
-                // Batch 3: Financials & Settings (Sequential to reduce load)
+                // Batch 3: Financials (Transactions)
                 const { data: transactions } = await supabase
                     .from('payment_transactions')
-                    .select('amount, status, created_at')
+                    .select('amount, status, created_at, currency')
                     .eq('status', 'completed')
                     .order('created_at', { ascending: false })
-                    .limit(20);
+                    .limit(10);
 
-                const totalRevenue = transactions?.reduce((sum, t) => sum + parseFloat(t.amount || 0), 0) || 0;
+                // Fallback: If RPC failed (revenueData is null), sum the recent transactions
+                if (!revenueData && transactions?.length > 0) {
+                    totalRevenue = transactions.reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+                }
 
                 // Safe settings fetch
                 let settings = {};
                 try {
                     settings = await this.getSystemSettings();
-                } catch (e) { console.warn("Settings fetch failed", e); } // Don't crash on settings
+                } catch (e) { console.warn("Settings fetch failed", e); }
 
                 return {
                     stats: {
@@ -132,10 +151,11 @@ const adminService = {
                     },
                     listings: recentListings,
                     users: recentUsers,
+                    categoryCounts: categoryCounts,
                     tenders: [],
                     financial: {
                         totalRevenue,
-                        monthlyRevenue: 0, // Simplified for now
+                        monthlyRevenue: 0,
                         pendingPayouts: 0,
                         completedPayouts: 0,
                         transactions: transactions || [],

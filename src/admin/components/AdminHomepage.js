@@ -9,56 +9,64 @@ import {
   Refresh, Add, AttachMoney, Notifications, ArrowUpward, ArrowDownward
 } from '@mui/icons-material';
 
-const AdminHomepage = ({ t, handleRefresh, refreshing, stats, listings, users, tenders }) => {
+const AdminHomepage = ({ t, handleRefresh, refreshing, stats, listings, users, tenders, categoryCounts = [] }) => {
   const theme = useTheme();
 
-  const recentActivity = [
-    {
-      id: 1,
-      action: 'New tender posted',
-      user: 'John Doe',
-      details: 'Government Construction Project',
-      timestamp: '2 hours ago',
-      status: 'success',
-      avatar: 'JD'
-    },
-    {
-      id: 2,
-      action: 'Home listing approved',
-      user: 'Admin',
-      details: 'Modern Apartment in Bole',
-      timestamp: '3 hours ago',
-      status: 'success',
-      avatar: 'AD'
-    },
-    {
-      id: 3,
-      action: 'Car listing rejected',
-      user: 'Admin',
-      details: 'Toyota Corolla 2018',
-      timestamp: '5 hours ago',
-      status: 'warning',
-      avatar: 'AD'
-    },
-    {
-      id: 4,
-      action: 'New user registered',
-      user: 'Jane Smith',
-      details: 'jane.smith@email.com',
-      timestamp: '6 hours ago',
-      status: 'success',
-      avatar: 'JS'
-    },
-    {
-      id: 5,
-      action: 'Job posting updated',
-      user: 'Mike Johnson',
-      details: 'Senior Software Developer',
-      timestamp: '8 hours ago',
-      status: 'info',
-      avatar: 'MJ'
-    }
-  ];
+  // Synthesize Recent Activity from Listings and Users
+  const recentActivity = React.useMemo(() => {
+    const activities = [];
+
+    // Add Listings
+    listings?.forEach(l => {
+      activities.push({
+        id: `l-${l.id}`,
+        action: `New ${l.category || 'Listing'} Posted`,
+        user: l.profiles?.full_name || 'Unknown User',
+        details: l.title,
+        timestamp: new Date(l.created_at), // Date object for sorting
+        status: l.status === 'active' || l.status === 'approved' ? 'success' : 'warning',
+        avatar: (l.profiles?.full_name || 'U').charAt(0).toUpperCase()
+      });
+    });
+
+    // Add Users
+    users?.forEach(u => {
+      activities.push({
+        id: `u-${u.id}`,
+        action: 'New User Registered',
+        user: u.full_name || 'User',
+        details: u.email,
+        timestamp: new Date(u.created_at),
+        status: 'info',
+        avatar: (u.full_name || 'U').charAt(0).toUpperCase()
+      });
+    });
+
+    // Sort by Date Descending
+    return activities
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .slice(0, 10)
+      .map(a => ({
+        ...a,
+        timestamp: timeAgo(a.timestamp) // Format for display
+      }));
+  }, [listings, users]);
+
+  // Helper for time ago
+  function timeAgo(date) {
+    const seconds = Math.floor((new Date() - date) / 1000);
+    let interval = seconds / 31536000;
+    if (interval > 1) return Math.floor(interval) + " years ago";
+    interval = seconds / 2592000;
+    if (interval > 1) return Math.floor(interval) + " months ago";
+    interval = seconds / 86400;
+    if (interval > 1) return Math.floor(interval) + " days ago";
+    interval = seconds / 3600;
+    if (interval > 1) return Math.floor(interval) + " hours ago";
+    interval = seconds / 60;
+    if (interval > 1) return Math.floor(interval) + " minutes ago";
+    return "just now";
+  }
 
   const quickStats = [
     {
@@ -67,7 +75,7 @@ const AdminHomepage = ({ t, handleRefresh, refreshing, stats, listings, users, t
       icon: <Assignment fontSize="large" />,
       color: theme.palette.primary.main,
       bgcolor: alpha(theme.palette.primary.main, 0.1),
-      change: '+12%',
+      change: '+12%', // Todo: Calculate real growth
       changeType: 'increase'
     },
     {
@@ -99,11 +107,20 @@ const AdminHomepage = ({ t, handleRefresh, refreshing, stats, listings, users, t
     }
   ];
 
+  // Helper to get count by category slug safely
+  const getCount = (slug) => {
+    // categoryCounts is Array<{ category_id (text), count (bigint) }>
+    // Note: RPC returns `category_id` as the column for category string if simple group by
+    // Let's check RPC: SELECT category, count(*) ... so col name is `category`
+    const match = categoryCounts.find(c => c.category === slug || c.category_id === slug); // Handle potential RPC naming
+    return match ? parseInt(match.count) : 0;
+  };
+
   const categoryStats = [
-    { name: 'Homes', icon: <Home />, count: listings?.filter(l => l.category === 'home').length || 0, color: '#3B82F6' },
-    { name: 'Cars', icon: <DirectionsCar />, count: listings?.filter(l => l.category === 'car').length || 0, color: '#10B981' },
-    { name: 'Jobs', icon: <Work />, count: listings?.filter(l => l.category === 'job').length || 0, color: '#F59E0B' },
-    { name: 'Tenders', icon: <Assignment />, count: tenders?.length || 0, color: '#EC4899' }
+    { name: 'Homes', icon: <Home />, count: getCount('home'), color: '#3B82F6' },
+    { name: 'Cars', icon: <DirectionsCar />, count: getCount('car'), color: '#10B981' },
+    { name: 'Jobs', icon: <Work />, count: getCount('job'), color: '#F59E0B' },
+    { name: 'Tenders', icon: <Assignment />, count: getCount('tenders'), color: '#EC4899' }
   ];
 
   const getStatusColor = (status) => {
