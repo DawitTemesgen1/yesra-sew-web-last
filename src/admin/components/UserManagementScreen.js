@@ -23,9 +23,12 @@ import adminService from '../../services/adminService';
 import toast from 'react-hot-toast';
 import { formatDistanceToNow } from '../../utils/dateUtils';
 import UserDetailDialog from './UserDetailDialog';
+import { useAdminAuth } from '../../context/AdminAuthContext';
 
 const UserManagementScreen = ({ t, handleRefresh: propHandleRefresh, refreshing: propRefreshing, searchTerm, setSearchTerm, filterStatus, setFilterStatus }) => {
   const navigate = useNavigate();
+  const { adminUser } = useAdminAuth();
+  const isOwner = adminUser?.user_metadata?.role === 'owner' || adminUser?.user_metadata?.role === 'super_admin';
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedItems, setSelectedItems] = useState([]);
@@ -149,7 +152,7 @@ const UserManagementScreen = ({ t, handleRefresh: propHandleRefresh, refreshing:
   };
 
   const handleBulkAction = (action) => {
-    
+
   };
 
   const handleTabChange = (event, newValue) => {
@@ -481,6 +484,20 @@ const UserManagementScreen = ({ t, handleRefresh: propHandleRefresh, refreshing:
                             {user.verified ? <Security /> : <Verified />}
                           </IconButton>
                         </Tooltip>
+                        {isOwner && (
+                          <Tooltip title="Change Role">
+                            <IconButton
+                              size="small"
+                              color="secondary"
+                              onClick={() => {
+                                setSelectedUserId(user.id);
+                                setRoleDialog(true);
+                              }}
+                            >
+                              <AdminPanelSettings />
+                            </IconButton>
+                          </Tooltip>
+                        )}
                         <Tooltip title="Delete User">
                           <IconButton size="small" color="error" onClick={() => handleDeleteUser(user.id)}>
                             <Delete />
@@ -515,10 +532,38 @@ const UserManagementScreen = ({ t, handleRefresh: propHandleRefresh, refreshing:
       <Dialog open={roleDialog} onClose={() => setRoleDialog(false)} maxWidth="md" fullWidth>
         <DialogTitle>Manage User Roles</DialogTitle>
         <DialogContent>
-          <Typography variant="body2" color="text.secondary">
-            Configure user roles, permissions, and access levels.
-          </Typography>
-          {/* Role management interface here */}
+          <Box sx={{ minWidth: 400, pt: 2 }}>
+            <Typography gutterBottom>
+              Select a new role for the user.
+            </Typography>
+            <FormControl fullWidth sx={{ mt: 2 }}>
+              <InputLabel>Role</InputLabel>
+              <Select
+                value={users.find(u => u.id === selectedUserId)?.role || 'user'}
+                label="Role"
+                onChange={(e) => {
+                  const newRole = e.target.value;
+                  if (window.confirm(`Are you sure you want to promote this user to ${newRole}? This grants significant privileges.`)) {
+                    adminService.updateUserRole(selectedUserId, newRole)
+                      .then(() => {
+                        toast.success(`Role updated to ${newRole}`);
+                        setRoleDialog(false);
+                        fetchUsers();
+                      })
+                      .catch(err => {
+                        toast.error(err.message || 'Failed to update role');
+                      });
+                  }
+                }}
+              >
+                <MenuItem value="user">User</MenuItem>
+                <MenuItem value="premium_user">Premium User</MenuItem>
+                <MenuItem value="moderator">Moderator</MenuItem>
+                <MenuItem value="admin">Admin</MenuItem>
+                {/* Only Owner can create other owners if needed, but let's restrict to Admin for now */}
+              </Select>
+            </FormControl>
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setRoleDialog(false)}>Close</Button>

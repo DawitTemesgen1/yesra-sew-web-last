@@ -11,8 +11,8 @@ export const AdminAuthProvider = ({ children }) => {
     // Helper to check if a user has admin role (Retries 3 times)
     const verifyAdminRole = async (userId, userMetadata = null) => {
         // 1. Check user_metadata first (if provided) - it's faster and no DB query
-        if (userMetadata?.role === 'admin' || userMetadata?.role === 'super_admin') {
-            
+        if (userMetadata?.role === 'admin' || userMetadata?.role === 'super_admin' || userMetadata?.role === 'owner') {
+
             return true;
         }
 
@@ -20,8 +20,8 @@ export const AdminAuthProvider = ({ children }) => {
         // we can be 95% sure they are not admin. For standard users, we skip the DB check
         // unless they are specifically hitting an admin route (which can be checked elsewhere)
         // or we have a forced check.
-        if (userMetadata && userMetadata.role && !['admin', 'super_admin'].includes(userMetadata.role)) {
-            
+        if (userMetadata && userMetadata.role && !['admin', 'super_admin', 'owner'].includes(userMetadata.role)) {
+
             return false;
         }
 
@@ -57,7 +57,7 @@ export const AdminAuthProvider = ({ children }) => {
         };
 
         const start = Date.now();
-        
+
 
         // For non-admin metadata users, only try ONCE to avoid hanging the app
         const maxAttempts = (userMetadata && !userMetadata.role) ? 1 : 2;
@@ -67,14 +67,14 @@ export const AdminAuthProvider = ({ children }) => {
                 const profile = await fetchRoleWithTimeout();
 
                 const duration = Date.now() - start;
-                
 
-                if (profile?.role === 'admin' || profile?.role === 'super_admin') {
+
+                if (profile?.role === 'admin' || profile?.role === 'super_admin' || profile?.role === 'owner') {
                     return true;
                 }
 
                 // If they are not admin, cache it for this session to avoid re-checking
-                
+
                 sessionStorage.setItem(cacheKey, 'true');
                 return false;
 
@@ -93,7 +93,7 @@ export const AdminAuthProvider = ({ children }) => {
         let mounted = true;
 
         const initializeAuth = async () => {
-            
+
             try {
                 // 1. Get current session
                 const { data: { session }, error } = await supabase.auth.getSession();
@@ -142,7 +142,7 @@ export const AdminAuthProvider = ({ children }) => {
         // 3. Listen for Auth Changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
             if (!mounted) return;
-            
+
 
             if (event === 'SIGNED_OUT') {
                 setAdminUser(null);
@@ -179,7 +179,7 @@ export const AdminAuthProvider = ({ children }) => {
                 if (session) {
                     // Refresh the session
                     await supabase.auth.refreshSession();
-                    
+
                 }
             } catch (error) {
                 console.error('Error refreshing session:', error);
@@ -198,7 +198,7 @@ export const AdminAuthProvider = ({ children }) => {
 
     const signIn = async (email, password) => {
         try {
-            
+
 
             // 1. Perform Login
             // We await this directly. If network is slow, it will wait.
@@ -223,8 +223,8 @@ export const AdminAuthProvider = ({ children }) => {
 
             // SELF-HEALING: If we verified they are admin (likely via DB), ensure metadata is in sync
             // This ensures future page reloads are fast and resilient to RLS issues
-            if (data.user?.user_metadata?.role !== 'admin' && data.user?.user_metadata?.role !== 'super_admin') {
-                
+            if (data.user?.user_metadata?.role !== 'admin' && data.user?.user_metadata?.role !== 'super_admin' && data.user?.user_metadata?.role !== 'owner') {
+
                 const { error: updateError } = await supabase.auth.updateUser({
                     data: { role: 'admin' }
                 });

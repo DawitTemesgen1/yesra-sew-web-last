@@ -365,6 +365,23 @@ const adminService = {
         }
     },
 
+    async updateUserRole(userId, newRole) {
+        try {
+            const { data, error } = await supabase.functions.invoke('admin-actions', {
+                body: { action: 'update_role', userId, newRole }
+            });
+
+            if (error) throw error;
+            if (data?.error) throw new Error(data.error);
+
+            cache.clear('users');
+            return data;
+        } catch (error) {
+            console.error('Error updating user role:', error);
+            throw error;
+        }
+    },
+
     async getListingById(id) {
         try {
             const { data, error } = await supabase
