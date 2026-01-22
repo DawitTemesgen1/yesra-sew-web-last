@@ -1383,18 +1383,46 @@ const adminService = {
             if (durationUnit === 'months') endDate.setMonth(startDate.getMonth() + durationValue);
             if (durationUnit === 'years') endDate.setFullYear(startDate.getFullYear() + durationValue);
 
-            const { data, error } = await supabase
+            // Manual UPSERT to avoid constraint dependency issues
+            // 1. Check for existing subscription
+            const { data: existing } = await supabase
                 .from('user_subscriptions')
-                .upsert({
-                    user_id: userId,
-                    plan_id: planId,
-                    status: 'active',
-                    start_date: startDate.toISOString(),
-                    end_date: endDate.toISOString(),
-                    updated_at: new Date().toISOString()
-                }, { onConflict: 'user_id, plan_id' })
-                .select()
+                .select('id')
+                .eq('user_id', userId)
+                .eq('plan_id', planId)
                 .single();
+
+            let result;
+            if (existing) {
+                // 2. Update existing
+                result = await supabase
+                    .from('user_subscriptions')
+                    .update({
+                        status: 'active',
+                        start_date: startDate.toISOString(),
+                        end_date: endDate.toISOString(),
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', existing.id)
+                    .select()
+                    .single();
+            } else {
+                // 3. Insert new
+                result = await supabase
+                    .from('user_subscriptions')
+                    .insert({
+                        user_id: userId,
+                        plan_id: planId,
+                        status: 'active',
+                        start_date: startDate.toISOString(),
+                        end_date: endDate.toISOString(),
+                        updated_at: new Date().toISOString()
+                    })
+                    .select()
+                    .single();
+            }
+
+            const { data, error } = result;
 
             if (error) throw error;
             return data;
