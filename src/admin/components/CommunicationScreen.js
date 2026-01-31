@@ -41,7 +41,7 @@ const CommunicationScreen = ({ t, handleRefresh, refreshing, searchTerm, setSear
 
   // Template Form State
   const [activeTemplate, setActiveTemplate] = useState(null); // null = list mode, object = edit mode
-  const [templateForm, setTemplateForm] = useState({ name: '', subject: '', content: '', type: 'email' });
+  const [templateForm, setTemplateForm] = useState({ name: '', subject: '', body: '', type: 'email' });
 
   // Local state for filters if not provided by parent
   const [localSearchTerm, setLocalSearchTerm] = useState('');
@@ -202,7 +202,7 @@ const CommunicationScreen = ({ t, handleRefresh, refreshing, searchTerm, setSear
       const newData = await adminService.getCommunicationTemplates();
       setTemplates(newData);
       setActiveTemplate(null); // back to list
-      setTemplateForm({ name: '', subject: '', content: '', type: 'email' });
+      setTemplateForm({ name: '', subject: '', body: '', type: 'email' });
     } catch (error) {
       toast.error('Failed to save template');
     }
@@ -223,7 +223,7 @@ const CommunicationScreen = ({ t, handleRefresh, refreshing, searchTerm, setSear
       setCampaignForm(prev => ({
         ...prev,
         subject: tmpl.subject,
-        message: tmpl.content
+        message: tmpl.body
       }));
     }
   };
@@ -565,12 +565,12 @@ const CommunicationScreen = ({ t, handleRefresh, refreshing, searchTerm, setSear
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Typography variant="h6">{activeTemplate ? 'Edit Template' : (activeTemplate === null && templateForm.name ? 'New Template' : 'Manage Templates')}</Typography>
             {activeTemplate === null && !templateForm.name && (
-              <Button startIcon={<Add />} size="small" onClick={() => setTemplateForm({ name: 'New Template', subject: '', content: '', type: 'email' })}>
+              <Button startIcon={<Add />} size="small" onClick={() => setTemplateForm({ name: 'New Template', subject: '', body: '', type: 'email' })}>
                 New Template
               </Button>
             )}
             {(activeTemplate || templateForm.name) && (
-              <Button size="small" onClick={() => { setActiveTemplate(null); setTemplateForm({ name: '', subject: '', content: '', type: 'email' }); }}>
+              <Button size="small" onClick={() => { setActiveTemplate(null); setTemplateForm({ name: '', subject: '', body: '', type: 'email' }); }}>
                 Back to List
               </Button>
             )}
@@ -621,8 +621,8 @@ const CommunicationScreen = ({ t, handleRefresh, refreshing, searchTerm, setSear
                 multiline
                 rows={8}
                 fullWidth
-                value={templateForm.content}
-                onChange={(e) => setTemplateForm({ ...templateForm, content: e.target.value })}
+                value={templateForm.body}
+                onChange={(e) => setTemplateForm({ ...templateForm, body: e.target.value })}
                 helperText="Supports HTML. Use {{name}} for dynamic names."
               />
             </Stack>

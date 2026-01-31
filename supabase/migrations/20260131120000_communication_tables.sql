@@ -14,12 +14,12 @@ CREATE TABLE IF NOT EXISTS public.communications (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Create communication_templates table (if not exists)
+-- communication_templates table
 CREATE TABLE IF NOT EXISTS public.communication_templates (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL,
     subject TEXT,
-    content TEXT NOT NULL,
+    body TEXT NOT NULL,
     type VARCHAR(50) DEFAULT 'email',
     category VARCHAR(50) DEFAULT 'general',
     status VARCHAR(50) DEFAULT 'active',
@@ -31,9 +31,17 @@ CREATE TABLE IF NOT EXISTS public.communication_templates (
 DO $$
 BEGIN
     -- communication_templates columns
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'communication_templates' AND column_name = 'content') THEN
-        ALTER TABLE public.communication_templates ADD COLUMN content TEXT;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'communication_templates' AND column_name = 'body') THEN
+        -- If 'content' exists but 'body' doesn't, rename it
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'communication_templates' AND column_name = 'content') THEN
+            ALTER TABLE public.communication_templates RENAME COLUMN content TO body;
+        ELSE
+            ALTER TABLE public.communication_templates ADD COLUMN body TEXT;
+        END IF;
     END IF;
+
+    -- Ensure body is NOT NULL if it was just added as nullable
+    ALTER TABLE public.communication_templates ALTER COLUMN body SET NOT NULL;
     
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'communication_templates' AND column_name = 'subject') THEN
         ALTER TABLE public.communication_templates ADD COLUMN subject TEXT;
@@ -75,19 +83,19 @@ ON public.communication_templates FOR ALL TO authenticated
 USING ( true ) WITH CHECK ( true );
 
 -- Insert default templates (using SELECT WHERE NOT EXISTS to avoid duplicates)
-INSERT INTO public.communication_templates (name, subject, content, type, category) 
+INSERT INTO public.communication_templates (name, subject, body, type, category) 
 SELECT 'Welcome Email', 'Welcome to YesraSew!', '<p>Hi {{name}},</p><p>Welcome to YesraSew, the premier marketplace for tenders, jobs, and assets.</p>', 'email', 'onboarding'
 WHERE NOT EXISTS (
     SELECT 1 FROM public.communication_templates WHERE name = 'Welcome Email'
 );
 
-INSERT INTO public.communication_templates (name, subject, content, type, category) 
+INSERT INTO public.communication_templates (name, subject, body, type, category) 
 SELECT 'Payment Success', 'Payment Received', '<p>Hi {{name}},</p><p>We have received your payment correctly.</p>', 'email', 'transactional'
 WHERE NOT EXISTS (
     SELECT 1 FROM public.communication_templates WHERE name = 'Payment Success'
 );
 
-INSERT INTO public.communication_templates (name, subject, content, type, category) 
+INSERT INTO public.communication_templates (name, subject, body, type, category) 
 SELECT 'Weekly Digest', 'Your Weekly Opportunities', '<p>Hi {{name}},</p><p>Here are the latest opportunities matching your profile.</p>', 'email', 'newsletter'
 WHERE NOT EXISTS (
     SELECT 1 FROM public.communication_templates WHERE name = 'Weekly Digest'
