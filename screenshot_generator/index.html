@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yesra Sew Screenshot Generator</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            background: #eef2f6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #1a1a1a;
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        p.subtitle {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        /* ZOOM CONTROL */
+        .controls {
+            margin-bottom: 20px;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .controls label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .controls input {
+            cursor: pointer;
+        }
+
+        .gallery {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+            /* Allow scaling via var */
+            transform-origin: top center;
+        }
+
+        /* 
+           RESIZED FOR SCREENSHOTS:
+           Play Store Ratio 9:16.
+           Old: 400x711 (Too big)
+           New Target: 340px width -> Approx 604px height.
+           This fits easily on most laptop screens.
+        */
+        .screenshot-card {
+            width: 340px;
+            height: 604px;
+            position: relative;
+            background: linear-gradient(135deg, #004e92, #000428);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+            transition: transform 0.2s;
+            /* Flex layout tweak to push phone up */
+            justify-content: flex-start;
+        }
+
+        /* Hover effect optional now to keep things steady for screenshot */
+        .screenshot-card:hover {
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.35);
+        }
+
+        /* Generated backgrounds */
+        .bg-style-1 {
+            background: linear-gradient(135deg, #004e92, #000428);
+        }
+
+        .bg-style-2 {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+        }
+
+        .bg-style-3 {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+        }
+
+        .bg-style-4 {
+            background: linear-gradient(135deg, #FC466B, #3F5EFB);
+        }
+
+        .bg-style-5 {
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        }
+
+        .bg-style-6 {
+            background: linear-gradient(135deg, #8E2DE2, #4A00E0);
+        }
+
+        .accent-shape {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 50%;
+            z-index: 1;
+        }
+
+        /* Text overlay */
+        .text-area {
+            z-index: 10;
+            color: white;
+            text-align: center;
+            margin-top: 35px;
+            /* Reduced top margin */
+            margin-bottom: 10px;
+            /* Reduced bottom margin */
+            width: 90%;
+            height: 80px;
+            /* Fixed height for consistency */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .text-area h2 {
+            font-size: 24px;
+            /* Slightly smaller for balance */
+            line-height: 1.2;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            outline: none;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.15);
+        }
+
+        .text-area h2:focus {
+            border-bottom: 1px solid white;
+        }
+
+        .phone-container {
+            z-index: 5;
+            width: 280px;
+            flex-grow: 1;
+            /* Fill rest of card */
+            display: flex;
+            align-items: flex-start;
+            /* Top align */
+            justify-content: center;
+            /* Pull phone UP */
+            margin-top: 0px;
+            transform: translateY(-5px);
+        }
+
+        /* SVG Phone styling */
+        .mockup-svg {
+            width: 260px;
+            /* Matches resized card */
+            filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.5));
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Screenshot Generator</h1>
+    <div class="controls">
+        <label for="zoomRange">Size:</label>
+        <input type="range" id="zoomRange" min="0.5" max="1.5" step="0.1" value="1.0">
+    </div>
+
+    <div class="gallery" id="gallery">
+        <!-- Cards injected via JS -->
+    </div>
+
+    <script>
+        // Use the scale slider
+        const gallery = document.getElementById('gallery');
+        const zoomRange = document.getElementById('zoomRange');
+        zoomRange.addEventListener('input', (e) => {
+            gallery.style.transform = `scale(${e.target.value})`;
+            // Adjust margin to prevent overlapping when zooming out
+            gallery.style.marginTop = (e.target.value < 1) ? "-50px" : "0px";
+        });
+
+        const images = [
+            "photo_2026-01-24_09-56-15.jpg",
+            "photo_2026-01-24_09-56-17.jpg",
+            "photo_2026-01-24_09-56-18.jpg",
+            "photo_2026-01-24_09-56-19.jpg",
+            "photo_2026-01-24_09-56-20.jpg",
+            "photo_2026-01-24_09-56-21.jpg",
+            "photo_2026-01-24_09-56-22.jpg",
+            "photo_2026-01-24_09-56-23.jpg",
+            "photo_2026-01-24_09-56-24.jpg",
+            "photo_2026-01-24_09-56-25.jpg",
+            "photo_2026-01-24_09-56-26 (2).jpg",
+            "photo_2026-01-24_09-56-26.jpg"
+        ];
+
+        const defaultTitles = [
+            "Your Digital<br>Marketplace",
+            "Browse Top<br>Categories",
+            "Secure<br>Transactions",
+            "Sell Your Car<br>Fast",
+            "Find Your<br>Dream Home",
+            "Easy Photo<br>Uploads",
+            "Verified<br>Users",
+            "Premium<br>Experience",
+            "Quick<br>Search",
+            "Local<br>Deals",
+            "Chat<br>Instantly",
+            "Join<br>Today"
+        ];
+
+        // PREMIUM PHONE SVG
+        // Thinner bezels, Titanium finish, Punch hole
+        function getPhoneSVG(imagePath) {
+            return `
+            <svg class="mockup-svg" viewBox="0 0 300 600" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMin slice">
+                <defs>
+                    <clipPath id="screenMask">
+                        <rect x="10" y="10" width="280" height="580" rx="32" ry="32" />
+                    </clipPath>
+                    
+                    <!-- Titanium Frame Gradient -->
+                    <linearGradient id="frameReflect" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#e0e0e0;stop-opacity:1" />
+                        <stop offset="20%" style="stop-color:#ffffff;stop-opacity:1" />
+                        <stop offset="50%" style="stop-color:#c0c0c0;stop-opacity:1" />
+                        <stop offset="80%" style="stop-color:#ffffff;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#d0d0d0;stop-opacity:1" />
+                    </linearGradient>
+
+                    <!-- Inner Bezel Shadow -->
+                    <filter id="innerShadow">
+                        <feComponentTransfer in="SourceAlpha">
+                            <feFuncA type="table" tableValues="1 0" />
+                        </feComponentTransfer>
+                        <feGaussianBlur stdDeviation="2"/>
+                        <feOffset dx="0" dy="2" result="offsetblur"/>
+                        <feFlood flood-color="rgba(0,0,0,0.5)" result="color"/>
+                        <feComposite in2="offsetblur" operator="in"/>
+                        <feComposite in2="SourceAlpha" operator="in" />
+                        <feMerge>
+                            <feMergeNode in="SourceGraphic" />
+                            <feMergeNode />
+                        </feMerge>
+                    </filter>
+                </defs>
+                
+                <!-- Phone Body: Titanium Rim -->
+                <rect x="0" y="0" width="300" height="600" rx="42" ry="42" fill="url(#frameReflect)" />
+                
+                <!-- Thin Black Bezel -->
+                <rect x="4" y="4" width="292" height="592" rx="38" ry="38" fill="#111" />
+
+                <!-- Screen Content (Masked) -->
+                <g clip-path="url(#screenMask)">
+                     <!-- Use image tag inside SVG -->
+                     <image href="assets/${imagePath}" x="10" y="10" width="280" height="600" preserveAspectRatio="xMidYMin slice" />
+                     
+                     <!-- Screen Gloss Reflection (Diag) -->
+                     <path d="M -50 -50 L 200 -50 L 100 650 L -150 650 Z" fill="white" fill-opacity="0.04" style="pointer-events: none;" />
+                </g>
+
+                <!-- PUNCH HOLE CAMERA -->
+                <!-- Centered: 300/2 = 150 -->
+                <circle cx="150" cy="30" r="7" fill="black" stroke="#222" stroke-width="1" />
+                
+                <!-- Subtle Reflective highlight on the rim -->
+                <path d="M 42 2 L 258 2 A 40 40 0 0 1 298 42 L 298 558 A 40 40 0 0 1 258 598 L 42 598 A 40 40 0 0 1 2 558 L 2 42 A 40 40 0 0 1 42 2" fill="none" stroke="white" stroke-width="1" stroke-opacity="0.4" />
+
+            </svg>
+            `;
+        }
+
+        images.forEach((img, index) => {
+            const card = document.createElement('div');
+            let bgIndex = (index % 6) + 1;
+            card.className = `screenshot-card bg-style-${bgIndex}`;
+
+            const title = defaultTitles[index] || "Edit Text";
+
+            card.innerHTML = `
+                <div class="accent-shape" style="width: 200px; height: 200px; top: -80px; left: -80px;"></div>
+                <div class="accent-shape" style="width: 120px; height: 120px; bottom: 40px; right: -40px;"></div>
+                
+                <div class="text-area">
+                    <h2 contenteditable="true" spellcheck="false">${title}</h2>
+                </div>
+                
+                <div class="phone-container">
+                    ${getPhoneSVG(img)}
+                </div>
+            `;
+
+            gallery.appendChild(card);
+        });
+    </script>
+</body>
+
+</html>

@@ -46,10 +46,24 @@ serve(async (req) => {
         // Note: For email, 'phone' column stores the email address
         // Note: 'identifier' should be formatted/normalized by frontend before sending
 
+        // Normalize identifier if it looks like a phone number (start with +, 09, 251, 9)
+        // This matches the logic in send-ethiopian-sms
+        let lookupIdentifier = identifier;
+        if (type === 'phone' || /^[+0-9]+$/.test(identifier)) {
+            let clean = identifier.trim().replace(/[^\d+]/g, '');
+            clean = clean.replace(/\+/g, '');
+            if (clean.startsWith('2510')) clean = '251' + clean.substring(4);
+            else if (clean.startsWith('0') && clean.length === 10) clean = '251' + clean.substring(1);
+            else if (clean.startsWith('9') && clean.length === 9) clean = '251' + clean;
+            else if (clean.startsWith('7') && clean.length === 9) clean = '251' + clean;
+
+            lookupIdentifier = '+' + clean;
+        }
+
         const { data: otpRecord, error: otpError } = await supabaseAdmin
             .from('otps')
             .select('*')
-            .eq('phone', identifier) // phone column holds identifier (email or phone)
+            .eq('phone', lookupIdentifier) // Use normalized phone
             .eq('otp', otp)
             .eq('purpose', 'password_reset')
             .eq('used', false)
@@ -86,20 +100,49 @@ serve(async (req) => {
                 const user = users?.users.find(u => u.email === identifier)
                 if (user) userId = user.id
             } else {
-                // Phone lookup is harder via admin API list, but we can try
-                // or assumption is we won't reach here if frontend did job right
-                // Let's rely on frontend sending formatted phone which matches profiles
+                // Phone lookup via admin API list
+                // Phone is checked against multiple formats
+                const { data: usersData, error: listError } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 })
+
+                if (listError) throw listError;
+
+                // Normalize phone input
+                const cleanInput = identifier.replace(/[^\d]/g, ''); // 2519...
+                const formats = [
+                    '+' + cleanInput, // +2519...
+                    cleanInput,       // 2519...
+                    '0' + cleanInput.substring(3) // 09... (assuming 251 prefix)
+                ];
+
+                const user = usersData?.users.find(u => {
+                    // Check against phone column
+                    if (u.phone) {
+                        const cleanUserPhone = u.phone.replace(/[^\d]/g, '');
+                        if (cleanInput === cleanUserPhone) return true;
+                    }
+
+                    // Check against EMAIL (for legacy users stored as phone_251...@yesrasew.com)
+                    // The format seen in DB is: phone_251901270712@yesrasew.com
+                    // distinct format: phone_<number_without_plus>@yesrasew.com
+                    const potentialEmail = `phone_${cleanInput}@yesrasew.com`;
+                    if (u.email === potentialEmail) return true;
+
+                    return false;
+                });
+
+                if (user) userId = user.id
             }
 
             if (!userId) {
+                // Return 200 with success: false so the client can show the error message gracefully
                 return new Response(
                     JSON.stringify({
                         success: false,
-                        error: 'User not found for password reset',
+                        error: 'User not found. Please check your number or register first.',
                     }),
                     {
                         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-                        status: 400,
+                        status: 200,
                     }
                 )
             }

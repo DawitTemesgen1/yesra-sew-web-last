@@ -24,6 +24,24 @@ serve(async (req) => {
     try {
         const { phone, userId, purpose }: SMSRequest = await req.json()
 
+        // Normalize phone number to ensure consistency (Always +251...)
+        let normalizedPhone = phone.trim().replace(/[^\d+]/g, '');
+        normalizedPhone = normalizedPhone.replace(/\+/g, ''); // Remove + temporarily
+
+        if (normalizedPhone.startsWith('2510')) {
+            normalizedPhone = '251' + normalizedPhone.substring(4);
+        } else if (normalizedPhone.startsWith('251')) {
+            // 251... - Good
+        } else if (normalizedPhone.startsWith('0') && normalizedPhone.length === 10) {
+            normalizedPhone = '251' + normalizedPhone.substring(1);
+        } else if (normalizedPhone.startsWith('9') && normalizedPhone.length === 9) {
+            normalizedPhone = '251' + normalizedPhone;
+        } else if (normalizedPhone.startsWith('7') && normalizedPhone.length === 9) {
+            normalizedPhone = '251' + normalizedPhone;
+        }
+
+        const dbPhone = '+' + normalizedPhone; // Store with + in DB
+
         // Initialize Supabase client
         const supabaseClient = createClient(
             Deno.env.get('SUPABASE_URL') ?? '',
@@ -36,6 +54,46 @@ serve(async (req) => {
             }
         )
 
+        // CHECK IF USER ALREADY REGISTERED (Pre-flight check)
+        if (purpose === 'registration') {
+            // Construct the canonical dummy email for this phone
+            const potentialEmail = `phone_${normalizedPhone}@yesrasew.com`;
+
+            // 1. Check direct profile existence (Fastest) with fuzzy phone match
+            const { data: profile } = await supabaseClient
+                .from('profiles')
+                .select('id')
+                .or(`phone.eq.+${normalizedPhone},phone.eq.${normalizedPhone},phone.eq.0${normalizedPhone.substring(3)},email.eq.${potentialEmail}`)
+                .maybeSingle();
+
+            if (profile) {
+                return new Response(
+                    JSON.stringify({ success: false, error: 'User already registered. Please login.' }),
+                    { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 } // Return 200 so client sees error message
+                );
+            }
+
+            // 2. Deep check in Auth Users (for legacy users missing profiles)
+            // We use listUsers... optimized by checking the specific email algorithm first if possible?
+            // Since we know the Exact Email format:
+            // We can unfortunately only List.
+            const { data: usersData } = await supabaseClient.auth.admin.listUsers({ page: 1, perPage: 1000 });
+            const exists = usersData.users.some((u: any) => {
+                // Legacy email match
+                if (u.email === potentialEmail) return true;
+                // Phone match
+                if (u.phone && u.phone.replace(/[^\d]/g, '') === normalizedPhone) return true;
+                return false;
+            });
+
+            if (exists) {
+                return new Response(
+                    JSON.stringify({ success: false, error: 'User already registered. Please login.' }),
+                    { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+                );
+            }
+        }
+
         // Generate 4-digit OTP
         const otp = Math.floor(1000 + Math.random() * 9000).toString()
 
@@ -43,7 +101,7 @@ serve(async (req) => {
         const { error: insertError } = await supabaseClient
             .from('otps')
             .insert({
-                phone: phone,
+                phone: dbPhone, // Use standardized format
                 otp: otp,
                 purpose: purpose,
                 expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10 minutes
@@ -105,7 +163,7 @@ serve(async (req) => {
             JSON.stringify({
                 success: true,
                 message: 'OTP sent successfully',
-                otp: otp, // Return OTP for development/testing
+                // otp: otp, // REMOVED for production security
                 smsStatus: smsResult,
             }),
             {
