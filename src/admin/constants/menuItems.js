@@ -28,13 +28,13 @@ export const MENU_ITEMS = [
   { id: 32, icon: 'Article', label: 'blogManagement', category: 'integrated', badge: 'New' },
   { id: 33, icon: 'Message', label: 'contactMessages', category: 'integrated', badge: 'New' },
   { id: 34, icon: 'HelpOutline', label: 'faqManagement', category: 'integrated', badge: 'New' },
+  { id: 11, icon: 'Email', label: 'communication', category: 'integrated', badge: 'New' },
 
   // ========================================
   // PENDING IMPLEMENTATION (Mock Data) - Hidden for Production Polish
   // ========================================
   // { id: 8, icon: 'TrendingUp', label: 'analytics', category: 'mock' },
   // { id: 10, icon: 'Payments', label: 'financial', category: 'mock' },
-  // { id: 11, icon: 'Email', label: 'communication', category: 'mock' },
   // { id: 12, icon: 'Security', label: 'contentModeration', category: 'mock' },
   // { id: 13, icon: 'CardMembership', label: 'membership', category: 'mock' },
   // { id: 14, icon: 'Gavel', label: 'legalCompliance', category: 'mock' },
