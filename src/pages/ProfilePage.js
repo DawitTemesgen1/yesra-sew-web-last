@@ -262,6 +262,8 @@ const ProfilePage = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editForm, setEditForm] = useState({});
   const [uploading, setUploading] = useState(false);
+  const [openLogoutDialog, setOpenLogoutDialog] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // 1. Fetch User Profile
   const { data: user, isLoading: profileLoading, error: profileError } = useQuery(
@@ -489,8 +491,20 @@ const ProfilePage = () => {
   };
 
   const handleLogout = () => {
-    logout();
-    navigate('/');
+    setOpenLogoutDialog(true);
+  };
+
+  const performLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    } finally {
+      setIsLoggingOut(false);
+      setOpenLogoutDialog(false);
+    }
   };
 
   // Loading state
@@ -1182,6 +1196,24 @@ const ProfilePage = () => {
         <DialogActions>
           <Button onClick={() => setEditDialogOpen(false)}>{t.cancel}</Button>
           <Button onClick={handleSaveProfile} variant="contained">{t.saveChanges}</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Logout Confirmation Dialog */}
+      <Dialog
+        open={openLogoutDialog}
+        onClose={() => !isLoggingOut && setOpenLogoutDialog(false)}
+        aria-labelledby="logout-dialog-title"
+      >
+        <DialogTitle id="logout-dialog-title">Confirm Logout</DialogTitle>
+        <DialogContent>
+          <Typography>Do you want to logout?</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenLogoutDialog(false)} disabled={isLoggingOut}>No</Button>
+          <Button onClick={performLogout} color="error" autoFocus disabled={isLoggingOut}>
+            {isLoggingOut ? 'Logging out...' : 'Yes'}
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

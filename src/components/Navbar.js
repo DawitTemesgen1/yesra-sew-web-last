@@ -167,6 +167,7 @@ const Navbar = ({ activeTab, setActiveTab }) => {
   const t = translations[language] || translations.en;
 
   const [openLogoutDialog, setOpenLogoutDialog] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Local storage sync is handled by LanguageContext, so we don't need it here.
 
@@ -212,10 +213,17 @@ const Navbar = ({ activeTab, setActiveTab }) => {
     setOpenLogoutDialog(true);
   };
 
-  const performLogout = () => {
-    logout();
-    setOpenLogoutDialog(false);
-    navigate('/');
+  const performLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    } finally {
+      setIsLoggingOut(false);
+      setOpenLogoutDialog(false);
+    }
   };
 
   const getActiveTabIndex = () => {
@@ -252,7 +260,7 @@ const Navbar = ({ activeTab, setActiveTab }) => {
   const logoutDialog = (
     <Dialog
       open={openLogoutDialog}
-      onClose={() => setOpenLogoutDialog(false)}
+      onClose={() => !isLoggingOut && setOpenLogoutDialog(false)}
       aria-labelledby="logout-dialog-title"
     >
       <DialogTitle id="logout-dialog-title">Confirm Logout</DialogTitle>
@@ -260,8 +268,10 @@ const Navbar = ({ activeTab, setActiveTab }) => {
         <DialogContentText>Do you want to logout?</DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button onClick={() => setOpenLogoutDialog(false)}>No</Button>
-        <Button onClick={performLogout} color="error" autoFocus>Yes</Button>
+        <Button onClick={() => setOpenLogoutDialog(false)} disabled={isLoggingOut}>No</Button>
+        <Button onClick={performLogout} color="error" autoFocus disabled={isLoggingOut}>
+          {isLoggingOut ? 'Logging out...' : 'Yes'}
+        </Button>
       </DialogActions>
     </Dialog>
   );
