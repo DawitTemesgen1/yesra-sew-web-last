@@ -14,8 +14,7 @@ CREATE TABLE IF NOT EXISTS public.communications (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Note: The user might have a partial table created without the 'content' column if a previous run failed.
--- Let's make sure the table exists correctly.
+-- Create communication_templates table (if not exists)
 CREATE TABLE IF NOT EXISTS public.communication_templates (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL,
@@ -28,15 +27,33 @@ CREATE TABLE IF NOT EXISTS public.communication_templates (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Force add columns if they are missing (idempotent fix)
+-- Force add columns if they are missing (idempotent fix for existing tables)
 DO $$
 BEGIN
+    -- communication_templates columns
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'communication_templates' AND column_name = 'content') THEN
         ALTER TABLE public.communication_templates ADD COLUMN content TEXT;
     END IF;
     
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'communication_templates' AND column_name = 'subject') THEN
         ALTER TABLE public.communication_templates ADD COLUMN subject TEXT;
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'communication_templates' AND column_name = 'category') THEN
+        ALTER TABLE public.communication_templates ADD COLUMN category VARCHAR(50) DEFAULT 'general';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'communication_templates' AND column_name = 'type') THEN
+        ALTER TABLE public.communication_templates ADD COLUMN type VARCHAR(50) DEFAULT 'email';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'communication_templates' AND column_name = 'status') THEN
+        ALTER TABLE public.communication_templates ADD COLUMN status VARCHAR(50) DEFAULT 'active';
+    END IF;
+
+    -- communications columns
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'communications' AND column_name = 'category') THEN
+        ALTER TABLE public.communications ADD COLUMN category VARCHAR(50);
     END IF;
 END $$;
 
@@ -57,10 +74,7 @@ CREATE POLICY "Admins can do everything on templates"
 ON public.communication_templates FOR ALL TO authenticated 
 USING ( true ) WITH CHECK ( true );
 
--- Insert default templates (using ON CONFLICT DO NOTHING to avoid duplicates)
--- Note: 'name' is not unique by default, so we just check lightly or rely on IDs.
--- Since we can't easily upsert without a unique constraint, we just insert.
--- Users can delete duplicates if they run this multiple times.
+-- Insert default templates (using SELECT WHERE NOT EXISTS to avoid duplicates)
 INSERT INTO public.communication_templates (name, subject, content, type, category) 
 SELECT 'Welcome Email', 'Welcome to YesraSew!', '<p>Hi {{name}},</p><p>Welcome to YesraSew, the premier marketplace for tenders, jobs, and assets.</p>', 'email', 'onboarding'
 WHERE NOT EXISTS (
