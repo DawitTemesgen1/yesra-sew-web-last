@@ -1157,6 +1157,20 @@ const adminService = {
         }
     },
 
+    async sendBulkEmail(payload) {
+        try {
+            const { data, error } = await supabase.functions.invoke('send-bulk-email', {
+                body: payload
+            });
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error('Error sending bulk email:', error);
+            throw error;
+        }
+    },
+
     async updateCommunicationTemplate(id, updates) {
         try {
             const { data, error } = await supabase
