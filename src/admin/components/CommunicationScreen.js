@@ -347,6 +347,7 @@ const CommunicationScreen = ({ t, handleRefresh, refreshing, searchTerm, setSear
                   <TableCell>Type</TableCell>
                   <TableCell>Recipient</TableCell>
                   <TableCell>Status</TableCell>
+                  <TableCell>Stats (S/F)</TableCell>
                   <TableCell>Sent At</TableCell>
                   <TableCell>Actions</TableCell>
                 </TableRow>
@@ -386,6 +387,15 @@ const CommunicationScreen = ({ t, handleRefresh, refreshing, searchTerm, setSear
                         color={getStatusColor(comm.status)}
                         size="small"
                       />
+                    </TableCell>
+                    <TableCell>
+                      {comm.metadata?.sent !== undefined ? (
+                        <Typography variant="caption" sx={{ display: 'flex', gap: 0.5 }}>
+                          <Box component="span" sx={{ color: 'success.main', fontWeight: 'bold' }}>{comm.metadata.sent}</Box>
+                          /
+                          <Box component="span" sx={{ color: 'error.main', fontWeight: 'bold' }}>{comm.metadata.failed || 0}</Box>
+                        </Typography>
+                      ) : '-'}
                     </TableCell>
                     <TableCell>
                       {comm.scheduled ? (

@@ -1158,6 +1158,7 @@ const adminService = {
     },
 
     async sendBulkEmail(payload) {
+        console.log('🚀 Invoking Edge Function: send-bulk-email', payload);
         try {
             const { data, error } = await supabase.functions.invoke('send-bulk-email', {
                 body: payload
@@ -1166,7 +1167,8 @@ const adminService = {
             if (error) throw error;
             return data;
         } catch (error) {
-            console.error('Error sending bulk email:', error);
+            console.error('❌ Request Failed:', error);
+            // Just throw the raw error so we can see 502/404 etc.
             throw error;
         }
     },

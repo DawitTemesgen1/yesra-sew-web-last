@@ -1,8 +1,11 @@
 
-// Supabase Edge Function for sending Bulk Emails
+// Supabase Edge Function: send-bulk-email
+// Handles: Mass Email Campaigns to segments or all users
+// Using Nodemailer for stability (same as email-auth)
+
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { SMTPClient } from 'https://deno.land/x/denomailer@1.6.0/mod.ts'
+import nodemailer from 'npm:nodemailer@6.9.13'
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -10,157 +13,152 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-    if (req.method === 'OPTIONS') {
-        return new Response('ok', { headers: corsHeaders })
-    }
+    // 1. Handle CORS preflight
+    if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
     try {
+        // 2. Parse Request
         const payload = await req.json()
         const { subject, message, isTest, testEmail, filters } = payload
 
-        // Initialize Supabase Client
-        const supabaseClient = createClient(
+        // 3. Initialize Supabase Admin
+        const supabase = createClient(
             Deno.env.get('SUPABASE_URL') ?? '',
             Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-            {
-                auth: { persistSession: false, autoRefreshToken: false }
-            }
+            { auth: { persistSession: false } }
         )
 
-        // 1. Get SMTP Configuration
-        const { data: smtpSettings, error: settingsError } = await supabaseClient
-            .from('system_settings')
-            .select('value')
-            .eq('key', 'smtp_config')
-            .single()
+        // 4. Get SMTP Config
+        const { data: settings } = await supabase.from('system_settings').select('value').eq('key', 'smtp_config').single()
+        if (!settings) throw new Error('SMTP Config Missing')
 
-        if (settingsError || !smtpSettings) {
-            throw new Error('SMTP Config not found in system_settings')
-        }
+        const config = settings.value
+        const port = Number(config.port || 587)
 
-        const smtpConfig = smtpSettings.value
-        const client = new SMTPClient({
-            connection: {
-                hostname: smtpConfig.host || 'smtp.gmail.com',
-                port: Number(smtpConfig.port || 587),
-                tls: Number(smtpConfig.port) === 465,
-                auth: {
-                    username: smtpConfig.username,
-                    password: smtpConfig.password,
-                },
-            },
+        // 5. Create Transporter
+        const transporter = nodemailer.createTransport({
+            host: config.host,
+            port: port,
+            secure: port === 465,
+            auth: { user: config.username, pass: config.password }
         })
 
-        // 2. Determine Recipients
-        let recipients: any[] = []
-
+        // 6. Setup Recipients with Filtering
+        let recipients = []
         if (isTest) {
-            if (!testEmail) throw new Error('Test email is required for test mode')
             recipients = [{ email: testEmail, full_name: 'Tester' }]
         } else {
-            // Build Query
-            let query = supabaseClient.from('profiles').select('id, email, full_name, phone')
+            console.log('Fetching recipients with filters:', filters)
 
-            // Filter by Plans (if specific plans selected)
+            let query = supabase.from('profiles').select('id, email, full_name, phone')
+
+            // Filter by Registration Method
+            if (filters?.regMethod === 'email') {
+                query = query.not('email', 'ilike', 'phone_%')
+            } else if (filters?.regMethod === 'phone') {
+                query = query.not('email', 'is', null)
+            }
+
+            // JOIN logic for Plan filtering
             if (filters?.targetType === 'filtered' && filters?.plans?.length > 0) {
-                // Get users with these plans
-                const { data: subData } = await supabaseClient
+                const { data: subscribedUserIds } = await supabase
                     .from('user_subscriptions')
                     .select('user_id')
                     .in('plan_id', filters.plans)
                     .eq('status', 'active')
 
-                const userIds = subData?.map(s => s.user_id) || []
-
+                const userIds = subscribedUserIds?.map((s: any) => s.user_id) || []
                 if (userIds.length === 0) {
-                    return new Response(JSON.stringify({ success: true, count: 0, message: 'No users found for selected plans' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+                    return new Response(JSON.stringify({ success: true, count: 0, message: 'No users found with selected plans' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
                 }
                 query = query.in('id', userIds)
             }
 
-            // Filter by Registration Method
-            if (filters?.targetType === 'filtered' && filters?.regMethod !== 'all') {
-                if (filters.regMethod === 'email') {
-                    // Must have email AND not be a phone placeholder
-                    query = query.not('email', 'is', null).not('email', 'ilike', 'phone_%')
-                } else if (filters.regMethod === 'phone') {
-                    // Must have phone
-                    query = query.not('phone', 'is', null)
-                }
-            }
+            const { data: users, error: dbError } = await query
+            if (dbError) throw dbError
 
-            const { data: users, error: userError } = await query
-            if (userError) throw userError
-
-            // Post-process to filter out invalid emails (e.g. placeholders for phone users)
-            recipients = (users || []).filter((u: any) => {
-                if (!u.email) return false
-                // If filtering specifically for phone users, we might still want to send email IF they have one?
-                // Or does the user imply sending SMS? The prompt says "Email Sending Screen".
-                // I will filter out placeholder emails (phone_...@yesrasew.com) unless we are just dumping.
-                // But generally bulk email should only go to real emails.
-                return !u.email.startsWith('phone_') && u.email.includes('@')
-            })
+            // Final filter to ensure real emails and exclude placeholders
+            recipients = (users as any[] || []).filter((u: any) => u.email && u.email.includes('@') && !u.email.startsWith('phone_'))
         }
 
         console.log(`Sending to ${recipients.length} recipients...`)
 
-        // 3. Send Emails (Batching/Loop)
-        // Note: For large lists, this should be queued. For now, simple loop.
+        // 7. Send Emails (Loop)
         let sentCount = 0
         let failedCount = 0
+        const failedRecipients = []
 
         for (const recipient of recipients) {
             try {
-                const personalizedMessage = message.replace('{{name}}', recipient.full_name || 'Valued User')
+                // Process the message: Replace name and handle newlines
+                let personalized = message.replace(/{{name}}/g, recipient.full_name || 'Valued User');
+                const htmlMessage = personalized.replace(/\n/g, '<br/>');
 
-                const htmlContent = `
+                // Professional Template with branding
+                const htmlBody = `
                 <!DOCTYPE html>
                 <html>
-                <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-                    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-                        <div style="background:linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%); padding: 20px; text-align: center; color: white; border-radius: 8px 8px 0 0;">
-                             <h2>YesraSew</h2>
+                <head>
+                    <meta charset="utf-8">
+                    <style>
+                        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f7f9fc; }
+                        .email-container { max-width: 600px; margin: 30px auto; border: 1px solid #e1e4e8; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05); background: #ffffff; }
+                        .email-header { background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%); padding: 40px 30px; text-align: center; color: white; }
+                        .email-body { padding: 40px; font-size: 16px; color: #374151; }
+                        .email-footer { background: #f9fafb; padding: 25px; text-align: center; font-size: 12px; color: #6b7280; border-top: 1px solid #f3f4f6; }
+                        .brand-name { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; margin: 0; }
+                        .brand-tagline { font-size: 14px; opacity: 0.9; margin: 5px 0 0 0; }
+                    </style>
+                </head>
+                <body>
+                    <div class="email-container">
+                        <div class="email-header">
+                            <h1 class="brand-name">YesraSew Solution</h1>
+                            <p class="brand-tagline">Connecting professionals, driving careers.</p>
                         </div>
-                        <div style="background: #f9f9f9; padding: 20px; border: 1px solid #ddd; border-top: none; border-radius: 0 0 8px 8px;">
-                             ${personalizedMessage}
-                             <p style="margin-top: 30px; font-size: 12px; color: #888; text-align: center;">
-                                © ${new Date().getFullYear()} YesraSew Solution. All rights reserved.<br>
-                                You are receiving this email because you are a registered user.
-                             </p>
+                        <div class="email-body">
+                            ${htmlMessage}
+                        </div>
+                        <div class="email-footer">
+                            <p style="margin: 0 0 10px 0;">© ${new Date().getFullYear()} YesraSew Solution. All rights reserved.</p>
+                            <p style="margin: 0;">You are receiving this because you are a registered member of our platform.</p>
+                            <p style="margin: 8px 0 0 0;"><a href="#" style="color: #3b82f6; text-decoration: none;">Unsubscribe</a> | <a href="#" style="color: #3b82f6; text-decoration: none;">Global Settings</a></p>
                         </div>
                     </div>
                 </body>
                 </html>
                 `
 
-                await client.send({
-                    from: `YesraSew <${smtpConfig.username}>`,
+                await transporter.sendMail({
+                    from: `"YesraSew Support" <${config.username}>`,
                     to: recipient.email,
-                    subject: subject,
-                    content: 'text/html',
-                    html: htmlContent,
+                    subject: isTest ? `[TEST] ${subject}` : subject,
+                    html: htmlBody
                 })
                 sentCount++
-            } catch (err) {
+            } catch (err: any) {
                 console.error(`Failed to send to ${recipient.email}:`, err)
                 failedCount++
+                failedRecipients.push({ email: recipient.email, error: err.message })
             }
         }
 
-        await client.close()
-
-        // 4. Log Communication Record
-        if (!isTest && sentCount > 0) {
-            await supabaseClient.from('communications').insert({
+        // 8. Log the Campaign in communications table
+        if (!isTest && (sentCount > 0 || failedCount > 0)) {
+            await supabase.from('communications').insert({
                 type: 'email',
                 subject: subject,
-                message: message, // Store raw message or summary
-                recipient: filters?.targetType === 'all' ? 'All Users' : 'Filtered Group',
-                status: 'sent',
+                message: message,
+                recipient: filters?.targetType === 'all' ? 'All Users' : 'Filtered Recipients',
+                status: failedCount > 0 && sentCount === 0 ? 'failed' : 'sent',
                 sent_at: new Date().toISOString(),
-                category: 'bulk_campaign',
-                metadata: { sent: sentCount, failed: failedCount, filters }
+                category: 'campaign',
+                metadata: {
+                    sent: sentCount,
+                    failed: failedCount,
+                    filters: filters,
+                    failed_details: failedRecipients.slice(0, 10) // Store first 10 errors
+                }
             })
         }
 
@@ -169,16 +167,17 @@ serve(async (req) => {
                 success: true,
                 count: sentCount,
                 failed: failedCount,
-                message: `Sent ${sentCount} emails, skipped ${failedCount}`
+                message: isTest ? "Test email sent successfully" : `Successfully sent to ${sentCount} users, ${failedCount} failed.`
             }),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
         )
 
     } catch (error) {
-        console.error('Bulk Email Error:', error)
+        console.error('Bulk Email Function Error:', error)
+        const errorMessage = error instanceof Error ? error.message : String(error)
         return new Response(
-            JSON.stringify({ success: false, error: error.message }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+            JSON.stringify({ success: false, error: errorMessage }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
         )
     }
 })
